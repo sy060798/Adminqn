@@ -32,7 +32,7 @@ return result.join(", ");
 }
 
 
-// mencari kolom walau ada spasi / huruf beda
+// mencari kolom walau ada spasi
 function getColumn(row,name){
 
 for(let key in row){
@@ -48,7 +48,7 @@ return "";
 }
 
 
-// mencari kolom report installation
+// ambil report installation
 function getReportInstallation(row){
 
 for(let key in row){
@@ -97,6 +97,11 @@ jsonData.forEach(row=>{
 
 const status = getColumn(row,"Status");
 
+// FILTER hanya DONE
+if(!status || status.toLowerCase() !== "done"){
+return;
+}
+
 const result = {
 
 dispatch: status,
@@ -118,17 +123,17 @@ const tr = document.createElement("tr");
 
 tr.innerHTML = `
 
-<td>${result.dispatch || ""}</td>
-<td>${result.status || ""}</td>
-<td>${result.wo || ""}</td>
-<td>${result.tanggal || ""}</td>
-<td>${result.alamat || ""}</td>
-<td>${result.ont || ""}</td>
-<td>${result.stb || ""}</td>
-<td>${result.router || ""}</td>
-<td>${result.precon || ""}</td>
+<td>${result.dispatch}</td>
+<td>${result.status}</td>
+<td>${result.wo}</td>
+<td>${result.tanggal}</td>
+<td>${result.alamat}</td>
+<td>${result.ont}</td>
+<td>${result.stb}</td>
+<td>${result.router}</td>
+<td>${result.precon}</td>
 <td style="max-width:600px;word-break:break-word;">
-${result.report || ""}
+${result.report}
 </td>
 
 `;
@@ -160,6 +165,6 @@ const workbook = XLSX.utils.book_new();
 
 XLSX.utils.book_append_sheet(workbook,worksheet,"Summary IB");
 
-XLSX.writeFile(workbook,"summary_ib.xlsx");
+XLSX.writeFile(workbook,"summary_ib_done.xlsx");
 
 }
