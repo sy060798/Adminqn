@@ -31,6 +31,23 @@ return result.join(", ");
 
 }
 
+
+// fungsi untuk mencari kolom walau ada spasi / beda huruf
+function findColumn(row, columnName){
+
+for(let key in row){
+
+if(key.toLowerCase().trim() === columnName.toLowerCase().trim()){
+return row[key];
+}
+
+}
+
+return "";
+
+}
+
+
 function processExcel(){
 
 const fileInput = document.getElementById("excelFile").files[0];
@@ -66,15 +83,15 @@ const precon = getPrecon(row);
 
 const result = {
 
-Status: row["Status"],
-WO: row["No Wo Klien"],
-Tanggal: row["Tanggal Kunjungan"],
-Alamat: row["Alamat"],
-ONT: row["ONT"],
-STB: row["STB"],
-Router: row["Router"],
+Status: findColumn(row,"Status"),
+WO: findColumn(row,"No Wo Klien"),
+Tanggal: findColumn(row,"Tanggal Kunjungan"),
+Alamat: findColumn(row,"Alamat"),
+ONT: findColumn(row,"ONT"),
+STB: findColumn(row,"STB"),
+Router: findColumn(row,"Router"),
 Precon: precon,
-ReportInstallation: row["Report Installation"]
+ReportInstallation: findColumn(row,"Report Installation")
 
 };
 
@@ -83,7 +100,6 @@ processedData.push(result);
 const tr = document.createElement("tr");
 
 tr.innerHTML = `
-
 <td>${result.Status || ""}</td>
 <td>${result.WO || ""}</td>
 <td>${result.Tanggal || ""}</td>
@@ -92,8 +108,7 @@ tr.innerHTML = `
 <td>${result.STB || ""}</td>
 <td>${result.Router || ""}</td>
 <td>${result.Precon || ""}</td>
-<td>${result.Report Installation || ""}</td>
-
+<td>${result.ReportInstallation || ""}</td>
 `;
 
 tbody.appendChild(tr);
@@ -106,14 +121,12 @@ reader.readAsArrayBuffer(fileInput);
 
 }
 
+
 function downloadExcel(){
 
 if(processedData.length == 0){
-
 alert("Belum ada data yang diproses");
-
 return;
-
 }
 
 const worksheet = XLSX.utils.json_to_sheet(processedData);
