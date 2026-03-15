@@ -2,81 +2,102 @@
 <html lang="id">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BOQ LMS Updater</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<title>BOQ LMS Updater</title>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f9;
-      padding: 40px;
-      margin: 0;
-    }
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
-    .container {
-      background: white;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-      max-width: 900px;
-      margin: auto;
-    }
+<style>
 
-    h2 {
-      margin-top: 0;
-    }
+body{
+font-family:Arial;
+background:#f4f6f9;
+padding:40px;
+margin:0;
+}
 
-    input {
-      margin-bottom: 10px;
-    }
+.container{
+background:white;
+padding:30px;
+border-radius:8px;
+box-shadow:0 3px 10px rgba(0,0,0,0.1);
+max-width:900px;
+margin:auto;
+}
 
-    button {
-      padding: 10px 18px;
-      background: #2c7be5;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-top: 10px;
-      margin-right: 10px;
-    }
+h2{
+margin-top:0;
+}
 
-    button:hover {
-      background: #1a5ed8;
-    }
+button{
+padding:10px 18px;
+background:#2c7be5;
+color:white;
+border:none;
+border-radius:5px;
+cursor:pointer;
+margin-top:10px;
+margin-right:10px;
+}
 
-    #status {
-      margin-top: 20px;
-      font-weight: bold;
-    }
-  </style>
+button:hover{
+background:#1a5ed8;
+}
+
+.progress-box{
+width:100%;
+height:25px;
+background:#ddd;
+border-radius:5px;
+margin-top:20px;
+overflow:hidden;
+}
+
+#progressBar{
+height:100%;
+width:0%;
+background:#28a745;
+text-align:center;
+color:white;
+line-height:25px;
+}
+
+#status{
+margin-top:15px;
+font-weight:bold;
+}
+
+</style>
 </head>
 
 <body>
 
-  <div class="container">
+<div class="container">
 
-    <h2>BOQ LMS Updater</h2>
+<h2>BOQ LMS Updater</h2>
 
-    <p><b>Upload BOQ Template</b></p>
-    <input type="file" id="boqFile" accept=".xlsx,.xls">
+<p><b>Upload BOQ Template</b></p>
+<input type="file" id="boqFile" accept=".xlsx,.xls">
 
-    <p><b>Upload File LMS (boleh banyak)</b></p>
-    <input type="file" id="lmsFiles" accept=".xlsx,.xls" multiple>
+<p><b>Upload File LMS (boleh banyak)</b></p>
+<input type="file" id="lmsFiles" accept=".xlsx,.xls" multiple>
 
-    <br>
+<br>
 
-    <button onclick="processFiles()">Proses Update BOQ</button>
-    <button onclick="downloadBOQ()">Download BOQ</button>
+<button onclick="processFiles()">Proses Update BOQ</button>
+<button onclick="downloadBOQ()">Download BOQ</button>
 
-    <p id="status">Menunggu file...</p>
+<div class="progress-box">
+<div id="progressBar">0%</div>
+</div>
 
-  </div>
+<p id="status">Menunggu file...</p>
 
-  <script src="../js/boq-lms.js"></script>
+</div>
+
+<script src="../js/boq-lms.js"></script>
 
 </body>
 </html>
