@@ -1,0 +1,97 @@
+/* Reset dasar */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body */
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f4f6f9;
+}
+
+/* Header */
+header {
+    background: #1e293b;
+    color: white;
+    padding: 15px 20px;
+    font-size: 20px;
+}
+
+/* Layout utama */
+.container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 220px;
+    background: #0f172a;
+    color: white;
+    padding-top: 20px;
+}
+
+/* Menu sidebar */
+.sidebar ul {
+    list-style: none;
+}
+
+.sidebar ul li {
+    padding: 15px 20px;
+}
+
+.sidebar ul li a {
+    text-decoration: none;
+    color: white;
+    display: block;
+}
+
+.sidebar ul li:hover {
+    background: #1e293b;
+}
+
+/* Konten utama */
+.content {
+    flex: 1;
+    padding: 25px;
+}
+
+/* Card summary */
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
+}
+
+/* Judul card */
+.card h3 {
+    margin-bottom: 10px;
+}
+
+/* Grid summary */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+
+    .container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+}
