@@ -110,7 +110,6 @@ processedData.push(result);
 const tr = document.createElement("tr");
 
 tr.innerHTML = `
-
 <td>${result.dispatch || ""}</td>
 <td>${result.status || ""}</td>
 <td>${result.wo || ""}</td>
@@ -120,8 +119,9 @@ tr.innerHTML = `
 <td>${result.stb || ""}</td>
 <td>${result.router || ""}</td>
 <td>${result.precon || ""}</td>
-<td>${result.report || ""}</td>
-
+<td style="max-width:600px;word-break:break-word;">
+${result.report || ""}
+</td>
 `;
 
 tbody.appendChild(tr);
