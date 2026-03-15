@@ -1,4 +1,4 @@
-let resultData = [];
+let resultData=[];
 
 function updateStatus(text){
 document.getElementById("statusText").innerText=text;
@@ -22,9 +22,7 @@ return;
 resultData=[];
 document.querySelector("#resultTable tbody").innerHTML="";
 
-updateStatus("Membaca file Excel...");
-
-for(let f=0; f<files.length; f++){
+for(let f=0;f<files.length;f++){
 
 await readExcel(files[f]);
 
@@ -34,11 +32,11 @@ updateProgress(percent);
 
 }
 
-updateStatus("Selesai membaca "+files.length+" file Excel");
+updateStatus("Selesai membaca "+files.length+" file");
 
 }
 
-async function readExcel(file){
+function readExcel(file){
 
 return new Promise((resolve)=>{
 
@@ -58,31 +56,35 @@ let project="";
 let spk="";
 let tanggal="";
 
-rows.forEach(r=>{
+for(let r of rows){
 
-let text=(r[0]||"").toString();
+let col0=(r[0]||"").toString();
 
-if(text.includes("NAMA PROJECT")) project=r[2];
-if(text.includes("NO. SPK")) spk=r[2];
-if(text.includes("TANGGAL")) tanggal=r[2];
+if(col0.includes("NAMA PROJECT")) project=r[2];
+if(col0.includes("NO. SPK")) spk=r[2];
+if(col0.includes("TANGGAL")) tanggal=r[2];
 
-});
+}
 
-rows.forEach(r=>{
+for(let r of rows){
 
 let no=r[0];
 let item=r[1];
 let qty=r[3];
 
+if(typeof no==="number" && item){
+
 qty=parseFloat(qty);
 
-if(!isNaN(no) && item && qty>0){
+if(!isNaN(qty) && qty>0){
 
 addRow(project,spk,tanggal,no,item,qty);
 
 }
 
-});
+}
+
+}
 
 resolve();
 
@@ -101,9 +103,9 @@ const tbody=document.querySelector("#resultTable tbody");
 const tr=document.createElement("tr");
 
 tr.innerHTML=`
-<td>${project}</td>
-<td>${spk}</td>
-<td>${tanggal}</td>
+<td>${project||""}</td>
+<td>${spk||""}</td>
+<td>${tanggal||""}</td>
 <td>${no}</td>
 <td>${item}</td>
 <td>${qty}</td>
@@ -112,14 +114,12 @@ tr.innerHTML=`
 tbody.appendChild(tr);
 
 resultData.push({
-
 Project:project,
 SPK:spk,
 Tanggal:tanggal,
 No:no,
 Item:item,
 Qty:qty
-
 });
 
 }
