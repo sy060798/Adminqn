@@ -20,24 +20,20 @@ const preconMap = {
 let result = [];
 
 for(let key in preconMap){
-
 if(row[key] == 1){
 result.push(preconMap[key]);
 }
-
 }
 
 return result.join(", ");
 
 }
 
-
-// fungsi untuk mencari kolom walau ada spasi / beda huruf
-function findColumn(row, columnName){
+function getColumn(row,name){
 
 for(let key in row){
 
-if(key.toLowerCase().trim() === columnName.toLowerCase().trim()){
+if(key.toLowerCase().trim() === name.toLowerCase()){
 return row[key];
 }
 
@@ -47,13 +43,28 @@ return "";
 
 }
 
+function getReportInstallation(row){
+
+for(let key in row){
+
+let name = key.toLowerCase();
+
+if(name.includes("report") && name.includes("installation")){
+return row[key];
+}
+
+}
+
+return "";
+
+}
 
 function processExcel(){
 
-const fileInput = document.getElementById("excelFile").files[0];
+const file = document.getElementById("excelFile").files[0];
 
-if(!fileInput){
-alert("Silakan upload file Excel terlebih dahulu");
+if(!file){
+alert("Upload Excel dulu");
 return;
 }
 
@@ -65,9 +76,7 @@ const data = new Uint8Array(e.target.result);
 
 const workbook = XLSX.read(data,{type:"array"});
 
-const sheetName = workbook.SheetNames[0];
-
-const sheet = workbook.Sheets[sheetName];
+const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
 const jsonData = XLSX.utils.sheet_to_json(sheet);
 
@@ -77,22 +86,22 @@ tbody.innerHTML = "";
 
 processedData = [];
 
-jsonData.forEach(row => {
+jsonData.forEach(row=>{
 
-const status = findColumn(row,"Status");
+const status = getColumn(row,"Status");
 
 const result = {
 
-DispatchStatus: status,
-Status: status,
-WO: findColumn(row,"No Wo Klien"),
-Tanggal: findColumn(row,"Tanggal Kunjungan"),
-Alamat: findColumn(row,"Alamat"),
-ONT: findColumn(row,"ONT"),
-STB: findColumn(row,"STB"),
-Router: findColumn(row,"Router"),
-Precon: precon,
-ReportInstallation: getReportInstallation(row)
+dispatch: status,
+status: status,
+wo: getColumn(row,"No Wo Klien"),
+tanggal: getColumn(row,"Tanggal Kunjungan"),
+alamat: getColumn(row,"Alamat"),
+ont: getColumn(row,"ONT"),
+stb: getColumn(row,"STB"),
+router: getColumn(row,"Router"),
+precon: getPrecon(row),
+report: getReportInstallation(row)
 
 };
 
@@ -101,15 +110,18 @@ processedData.push(result);
 const tr = document.createElement("tr");
 
 tr.innerHTML = `
-<td>${result.Status || ""}</td>
-<td>${result.WO || ""}</td>
-<td>${result.Tanggal || ""}</td>
-<td>${result.Alamat || ""}</td>
-<td>${result.ONT || ""}</td>
-<td>${result.STB || ""}</td>
-<td>${result.Router || ""}</td>
-<td>${result.Precon || ""}</td>
-<td>${result.ReportInstallation || ""}</td>
+
+<td>${result.dispatch || ""}</td>
+<td>${result.status || ""}</td>
+<td>${result.wo || ""}</td>
+<td>${result.tanggal || ""}</td>
+<td>${result.alamat || ""}</td>
+<td>${result.ont || ""}</td>
+<td>${result.stb || ""}</td>
+<td>${result.router || ""}</td>
+<td>${result.precon || ""}</td>
+<td>${result.report || ""}</td>
+
 `;
 
 tbody.appendChild(tr);
@@ -118,15 +130,14 @@ tbody.appendChild(tr);
 
 };
 
-reader.readAsArrayBuffer(fileInput);
+reader.readAsArrayBuffer(file);
 
 }
-
 
 function downloadExcel(){
 
 if(processedData.length == 0){
-alert("Belum ada data yang diproses");
+alert("Belum ada data");
 return;
 }
 
@@ -134,8 +145,8 @@ const worksheet = XLSX.utils.json_to_sheet(processedData);
 
 const workbook = XLSX.utils.book_new();
 
-XLSX.utils.book_append_sheet(workbook, worksheet, "Summary IB");
+XLSX.utils.book_append_sheet(workbook,worksheet,"Summary IB");
 
-XLSX.writeFile(workbook, "summary_ib.xlsx");
+XLSX.writeFile(workbook,"summary_ib.xlsx");
 
 }
