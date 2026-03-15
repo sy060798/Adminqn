@@ -32,7 +32,7 @@ return result.join(", ");
 }
 
 
-// cari kolom tanpa peduli huruf besar kecil
+// ambil kolom fleksibel
 function getColumn(row,name){
 
 for(let key in row){
@@ -48,14 +48,14 @@ return "";
 }
 
 
-// ambil report installation
-function getReportInstallation(row){
+// ambil kolom STATUS BY DISPATCH
+function getDispatchStatus(row){
 
 for(let key in row){
 
 let col = key.toLowerCase();
 
-if(col.includes("report") && col.includes("installation")){
+if(col.includes("dispatch")){
 return row[key];
 }
 
@@ -66,14 +66,14 @@ return "";
 }
 
 
-// ambil status dispatch
-function getDispatchStatus(row){
+// ambil report
+function getReportInstallation(row){
 
 for(let key in row){
 
 let col = key.toLowerCase();
 
-if(col.includes("status") && col.includes("dispatch")){
+if(col.includes("report")){
 return row[key];
 }
 
@@ -113,17 +113,20 @@ processedData = [];
 
 jsonData.forEach(row=>{
 
-const dispatchStatus = getDispatchStatus(row);
+let dispatchStatus = getDispatchStatus(row);
 
-// FILTER HANYA DONE
-if(!dispatchStatus || dispatchStatus.toLowerCase() !== "done"){
+// NORMALISASI TEXT
+dispatchStatus = String(dispatchStatus).trim().toLowerCase();
+
+// FILTER DONE SAJA
+if(dispatchStatus !== "done"){
 return;
 }
 
 const result = {
 
-dispatch: dispatchStatus,
-status: dispatchStatus,
+dispatch: "Done",
+status: "Done",
 wo: getColumn(row,"No Wo Klien"),
 tanggal: getColumn(row,"Tanggal Kunjungan"),
 alamat: getColumn(row,"Alamat"),
