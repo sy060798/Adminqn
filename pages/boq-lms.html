@@ -8,19 +8,13 @@
 
 <title>BOQ LMS Reader</title>
 
-<!-- PDF Reader -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-
-<!-- OCR -->
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
-
-<!-- Excel -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <style>
 
 body{
-font-family: Arial, sans-serif;
+font-family:Arial;
 padding:20px;
 background:#f4f4f4;
 }
@@ -50,7 +44,6 @@ th,td{
 border:1px solid #ddd;
 padding:8px;
 font-size:13px;
-text-align:left;
 }
 
 th{
@@ -75,10 +68,6 @@ text-align:center;
 line-height:25px;
 }
 
-.uploadBox{
-margin-bottom:15px;
-}
-
 </style>
 
 </head>
@@ -87,23 +76,17 @@ margin-bottom:15px;
 
 <h2>BOQ LMS Reader</h2>
 
-<div class="uploadBox">
-
 <b>Upload PDF</b><br>
 <input type="file" id="pdfFiles" multiple accept=".pdf">
 
-</div>
-
-<div class="uploadBox">
+<br><br>
 
 <b>Upload Excel</b><br>
 <input type="file" id="excelFile" accept=".xlsx,.xls">
 
-</div>
+<br><br>
 
-<br>
-
-<button onclick="processPDFs()">Proses PDF</button>
+<button onclick="processPDF()">Proses PDF</button>
 <button onclick="processExcel()">Proses Excel</button>
 <button onclick="downloadExcel()">Download Excel</button>
 
@@ -118,16 +101,12 @@ margin-bottom:15px;
 <thead>
 <tr>
 <th>Project</th>
-<th>No WO</th>
-<th>Tanggal</th>
-<th>No</th>
 <th>Item</th>
 <th>Qty</th>
 </tr>
 </thead>
 
-<tbody>
-</tbody>
+<tbody></tbody>
 
 </table>
 
