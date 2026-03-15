@@ -1,77 +1,83 @@
 let resultData = [];
 
 function updateStatus(text){
-document.getElementById("statusText").innerText=text;
+document.getElementById("statusText").innerText = text;
 }
 
-function updateProgress(done,total){
+function updateProgress(percent){
 
-let percent=Math.round((done/total)*100);
+const bar = document.getElementById("progressBar");
 
-const bar=document.getElementById("progressBar");
+bar.style.width = percent + "%";
 
-bar.style.width=percent+"%";
-bar.innerText=percent+"%";
+bar.innerText = percent + "%";
 
 }
 
 function processExcel(){
 
-const file=document.getElementById("excelFile").files[0];
+const file = document.getElementById("excelFile").files[0];
 
 if(!file){
-alert("Upload Excel dulu");
+alert("Upload file Excel dulu");
 return;
 }
 
-resultData=[];
+resultData = [];
+
 document.querySelector("#resultTable tbody").innerHTML="";
 
-updateStatus("Membaca Excel...");
+updateStatus("Membaca file Excel...");
 
-const reader=new FileReader();
+const reader = new FileReader();
 
-reader.onload=function(e){
+reader.onload = function(e){
 
-const data=new Uint8Array(e.target.result);
+const data = new Uint8Array(e.target.result);
 
-const workbook=XLSX.read(data,{type:'array'});
+const workbook = XLSX.read(data,{type:'array'});
 
-const sheet=workbook.Sheets[workbook.SheetNames[0]];
+const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
-const rows=XLSX.utils.sheet_to_json(sheet,{header:1});
+const rows = XLSX.utils.sheet_to_json(sheet,{header:1});
 
 let project="";
-let wo="";
+let spk="";
 let tanggal="";
 
 rows.forEach(r=>{
 
-if(String(r[0]).includes("NAMA PROJECT")) project=r[2];
-if(String(r[0]).includes("NO. SPK")) wo=r[2];
-if(String(r[0]).includes("TANGGAL")) tanggal=r[2];
+let text = (r[0]||"").toString();
+
+if(text.includes("NAMA PROJECT")) project = r[2];
+if(text.includes("NO. SPK")) spk = r[2];
+if(text.includes("TANGGAL")) tanggal = r[2];
 
 });
 
-let total=rows.length;
+let total = rows.length;
 
-rows.forEach((r,index)=>{
+rows.forEach((r,i)=>{
 
-let no=r[0];
-let item=r[1];
-let qty=r[3];
+let no = r[0];
+let item = r[1];
+let qty = r[3];
 
-qty=parseFloat(qty);
+qty = parseFloat(qty);
 
-if(!isNaN(no) && qty>0){
+if(!isNaN(no) && item && qty>0){
 
-addRow(project,wo,tanggal,no,item,qty);
+addRow(project,spk,tanggal,no,item,qty);
 
 }
 
-updateProgress(index+1,total);
+let percent = Math.round((i/total)*100);
+
+updateProgress(percent);
 
 });
+
+updateProgress(100);
 
 updateStatus("Selesai membaca Excel");
 
@@ -81,21 +87,19 @@ reader.readAsArrayBuffer(file);
 
 }
 
-function addRow(project,wo,tanggal,no,item,qty){
+function addRow(project,spk,tanggal,no,item,qty){
 
-const tbody=document.querySelector("#resultTable tbody");
+const tbody = document.querySelector("#resultTable tbody");
 
-const tr=document.createElement("tr");
+const tr = document.createElement("tr");
 
-tr.innerHTML=`
-
+tr.innerHTML = `
 <td>${project}</td>
-<td>${wo}</td>
+<td>${spk}</td>
 <td>${tanggal}</td>
 <td>${no}</td>
 <td>${item}</td>
 <td>${qty}</td>
-
 `;
 
 tbody.appendChild(tr);
@@ -103,7 +107,7 @@ tbody.appendChild(tr);
 resultData.push({
 
 Project:project,
-WO:wo,
+SPK:spk,
 Tanggal:tanggal,
 No:no,
 Item:item,
@@ -123,12 +127,12 @@ return;
 
 }
 
-const ws=XLSX.utils.json_to_sheet(resultData);
+const ws = XLSX.utils.json_to_sheet(resultData);
 
-const wb=XLSX.utils.book_new();
+const wb = XLSX.utils.book_new();
 
 XLSX.utils.book_append_sheet(wb,ws,"BOQ");
 
-XLSX.writeFile(wb,"boq_lms_result.xlsx");
+XLSX.writeFile(wb,"boq_result.xlsx");
 
 }
