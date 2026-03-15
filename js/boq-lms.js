@@ -1,142 +1,84 @@
-let resultData=[];
+<!DOCTYPE html>
+<html lang="id">
 
-function updateStatus(text){
-document.getElementById("statusText").innerText=text;
+<head>
+
+<meta charset="UTF-8">
+<title>BOQ LMS Updater</title>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f4f6f9;
+padding:40px;
 }
 
-function updateProgress(percent){
-const bar=document.getElementById("progressBar");
-bar.style.width=percent+"%";
-bar.innerText=percent+"%";
+.container{
+background:white;
+padding:30px;
+border-radius:8px;
+box-shadow:0 3px 10px rgba(0,0,0,0.1);
+max-width:900px;
+margin:auto;
 }
 
-async function processExcel(){
-
-const files=document.getElementById("excelFile").files;
-
-if(files.length===0){
-alert("Upload Excel dulu");
-return;
+h2{
+margin-top:0;
 }
 
-resultData=[];
-document.querySelector("#resultTable tbody").innerHTML="";
-
-for(let f=0;f<files.length;f++){
-
-await readExcel(files[f]);
-
-let percent=Math.round(((f+1)/files.length)*100);
-
-updateProgress(percent);
-
+input{
+margin-bottom:10px;
 }
 
-updateStatus("Selesai membaca "+files.length+" file");
-
+button{
+padding:10px 18px;
+background:#2c7be5;
+color:white;
+border:none;
+border-radius:5px;
+cursor:pointer;
+margin-top:10px;
 }
 
-function readExcel(file){
-
-return new Promise((resolve)=>{
-
-const reader=new FileReader();
-
-reader.onload=function(e){
-
-const data=new Uint8Array(e.target.result);
-
-const workbook=XLSX.read(data,{type:'array'});
-
-const sheet=workbook.Sheets[workbook.SheetNames[0]];
-
-const rows=XLSX.utils.sheet_to_json(sheet,{header:1});
-
-let project="";
-let spk="";
-let tanggal="";
-
-for(let r of rows){
-
-let col0=(r[0]||"").toString();
-
-if(col0.includes("NAMA PROJECT")) project=r[2];
-if(col0.includes("NO. SPK")) spk=r[2];
-if(col0.includes("TANGGAL")) tanggal=r[2];
-
+button:hover{
+background:#1a5ed8;
 }
 
-for(let r of rows){
-
-let no=r[0];
-let item=r[1];
-let qty=r[3];
-
-if(typeof no==="number" && item){
-
-qty=parseFloat(qty);
-
-if(!isNaN(qty) && qty>0){
-
-addRow(project,spk,tanggal,no,item,qty);
-
+#status{
+margin-top:20px;
+font-weight:bold;
 }
 
-}
+</style>
 
-}
+</head>
 
-resolve();
+<body>
 
-};
+<div class="container">
 
-reader.readAsArrayBuffer(file);
+<h2>BOQ LMS Updater</h2>
 
-});
+<p><b>Upload BOQ Template</b></p>
+<input type="file" id="boqFile">
 
-}
+<p><b>Upload File LMS (boleh banyak)</b></p>
+<input type="file" id="lmsFiles" multiple>
 
-function addRow(project,spk,tanggal,no,item,qty){
+<br>
 
-const tbody=document.querySelector("#resultTable tbody");
+<button onclick="processFiles()">Proses Update BOQ</button>
 
-const tr=document.createElement("tr");
+<button onclick="downloadBOQ()">Download BOQ</button>
 
-tr.innerHTML=`
-<td>${project||""}</td>
-<td>${spk||""}</td>
-<td>${tanggal||""}</td>
-<td>${no}</td>
-<td>${item}</td>
-<td>${qty}</td>
-`;
+<p id="status"></p>
 
-tbody.appendChild(tr);
+</div>
 
-resultData.push({
-Project:project,
-SPK:spk,
-Tanggal:tanggal,
-No:no,
-Item:item,
-Qty:qty
-});
+<script src="../js/boq-lms.js"></script>
 
-}
-
-function downloadExcel(){
-
-if(resultData.length===0){
-alert("Tidak ada data");
-return;
-}
-
-const ws=XLSX.utils.json_to_sheet(resultData);
-
-const wb=XLSX.utils.book_new();
-
-XLSX.utils.book_append_sheet(wb,ws,"BOQ");
-
-XLSX.writeFile(wb,"BOQ_LMS_RESULT.xlsx");
-
-}
+</body>
+</html>
