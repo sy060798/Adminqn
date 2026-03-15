@@ -92,7 +92,7 @@ tr.innerHTML = `
 <td>${result.STB || ""}</td>
 <td>${result.Router || ""}</td>
 <td>${result.Precon || ""}</td>
-<td>${result.ReportInstallation || ""}</td>
+<td>${result.Report Installation || ""}</td>
 
 `;
 
