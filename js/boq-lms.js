@@ -1,5 +1,30 @@
 let resultData=[];
 
+function updateStatus(text){
+
+document.getElementById("statusText").innerText=text;
+
+}
+
+function updateProgress(done,total){
+
+let percent=Math.round((done/total)*100);
+
+const bar=document.getElementById("progressBar");
+
+bar.style.width=percent+"%";
+bar.innerText=percent+"%";
+
+}
+
+function sleep(ms){
+
+return new Promise(resolve=>setTimeout(resolve,ms));
+
+}
+
+
+
 async function processPDFs(){
 
 const files=document.getElementById("pdfFiles").files;
@@ -12,16 +37,11 @@ return;
 
 }
 
-resultData=[];
-
-const tbody=document.querySelector("#resultTable tbody");
-tbody.innerHTML="";
-
 const total=files.length;
 
 for(let i=0;i<total;i++){
 
-updateStatus("Memproses file "+(i+1)+" dari "+total);
+updateStatus("Memproses PDF "+(i+1)+" dari "+total);
 
 await readPDF(files[i]);
 
@@ -31,37 +51,7 @@ await sleep(200);
 
 }
 
-updateStatus("Selesai memproses semua PDF");
-
-}
-
-
-
-function updateStatus(text){
-
-document.getElementById("statusText").innerText=text;
-
-}
-
-
-
-function updateProgress(done,total){
-
-let percent=Math.round((done/total)*100);
-
-const bar=document.getElementById("progressBar");
-
-bar.style.width=percent+"%";
-
-bar.innerText=percent+"%";
-
-}
-
-
-
-function sleep(ms){
-
-return new Promise(resolve=>setTimeout(resolve,ms));
+updateStatus("Selesai membaca PDF");
 
 }
 
@@ -137,9 +127,51 @@ extractData(result.data.text);
 
 
 
-function extractData(text){
+function processExcel(){
 
-const tbody=document.querySelector("#resultTable tbody");
+const file=document.getElementById("excelFile").files[0];
+
+if(!file){
+
+alert("Upload Excel dulu");
+
+return;
+
+}
+
+const reader=new FileReader();
+
+reader.onload=function(e){
+
+const data=new Uint8Array(e.target.result);
+
+const workbook=XLSX.read(data,{type:'array'});
+
+const sheet=workbook.Sheets[workbook.SheetNames[0]];
+
+const rows=XLSX.utils.sheet_to_json(sheet);
+
+rows.forEach(r=>{
+
+if(r.Qty>0){
+
+addRow(r.Project,r["No WO"],r.Tanggal,r.No,r.Item,r.Qty);
+
+}
+
+});
+
+updateStatus("Excel berhasil dibaca");
+
+};
+
+reader.readAsArrayBuffer(file);
+
+}
+
+
+
+function extractData(text){
 
 let project="";
 let wo="";
@@ -166,24 +198,27 @@ let qty=parseInt(match[3]);
 
 if(qty>0){
 
-const row={
-project,
-wo,
-tanggal,
-no,
-item,
-qty
-};
+addRow(project,wo,tanggal,no,item,qty);
 
-resultData.push(row);
+}
+
+}
+
+}
+
+
+
+function addRow(project,wo,tanggal,no,item,qty){
+
+const tbody=document.querySelector("#resultTable tbody");
 
 const tr=document.createElement("tr");
 
 tr.innerHTML=`
 
-<td>${project}</td>
-<td>${wo}</td>
-<td>${tanggal}</td>
+<td>${project||""}</td>
+<td>${wo||""}</td>
+<td>${tanggal||""}</td>
 <td>${no}</td>
 <td>${item}</td>
 <td>${qty}</td>
@@ -192,9 +227,16 @@ tr.innerHTML=`
 
 tbody.appendChild(tr);
 
-}
+resultData.push({
 
-}
+Project:project,
+WO:wo,
+Tanggal:tanggal,
+No:no,
+Item:item,
+Qty:qty
+
+});
 
 }
 
