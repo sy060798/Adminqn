@@ -1,37 +1,37 @@
-let resultData = [];
+let resultData=[];
 
 async function processPDF(){
 
-const file = document.getElementById("pdfFile").files[0];
+const file=document.getElementById("pdfFile").files[0];
 
 if(!file){
 alert("Upload PDF dulu");
 return;
 }
 
-const reader = new FileReader();
+const reader=new FileReader();
 
-reader.onload = async function(){
+reader.onload=async function(){
 
-const typedarray = new Uint8Array(this.result);
+const typedarray=new Uint8Array(this.result);
 
-const pdf = await pdfjsLib.getDocument(typedarray).promise;
+const pdf=await pdfjsLib.getDocument(typedarray).promise;
 
-let textContent = "";
+let lines=[];
 
-for(let i=1;i<=pdf.numPages;i++){
+for(let pageNum=1;pageNum<=pdf.numPages;pageNum++){
 
-const page = await pdf.getPage(i);
+const page=await pdf.getPage(pageNum);
 
-const text = await page.getTextContent();
+const textContent=await page.getTextContent();
 
-text.items.forEach(item=>{
-textContent += item.str + " ";
+textContent.items.forEach(item=>{
+lines.push(item.str.trim());
 });
 
 }
 
-parseBOQ(textContent);
+parseBOQ(lines);
 
 };
 
@@ -40,9 +40,10 @@ reader.readAsArrayBuffer(file);
 }
 
 
-function parseBOQ(text){
 
-const tbody = document.querySelector("#resultTable tbody");
+function parseBOQ(lines){
+
+const tbody=document.querySelector("#resultTable tbody");
 
 tbody.innerHTML="";
 
@@ -52,51 +53,55 @@ let project="";
 let wo="";
 let tanggal="";
 
-const projectMatch = text.match(/Project\s*[:\-]?\s*(.*?)\s{2,}/i);
-if(projectMatch) project = projectMatch[1];
+lines.forEach(line=>{
 
-const woMatch = text.match(/WO\s*[:\-]?\s*(\S+)/i);
-if(woMatch) wo = woMatch[1];
+let lower=line.toLowerCase();
 
-const dateMatch = text.match(/Tanggal\s*[:\-]?\s*(\S+)/i);
-if(dateMatch) tanggal = dateMatch[1];
+if(lower.includes("project")){
+project=line.replace(/project/i,"").trim();
+}
 
-const itemRegex = /(\d+)\s+([A-Za-z0-9\s\(\)\-\/]+?)\s+(\d+)/g;
+if(lower.includes("wo")){
+wo=line.replace(/no/i,"").trim();
+}
 
-let match;
+if(lower.includes("tanggal")){
+tanggal=line.replace(/tanggal/i,"").trim();
+}
 
-while((match = itemRegex.exec(text)) !== null){
+});
 
-let no = match[1];
-let item = match[2].trim();
-let qty = match[3];
+for(let i=0;i<lines.length;i++){
 
-if(qty > 0){
+let no=lines[i];
 
-const row = {
+if(!isNaN(no)){
 
+let item=lines[i+1];
+let qty=lines[i+2];
+
+if(!isNaN(qty) && Number(qty)>0){
+
+const row={
 project,
 wo,
 tanggal,
 no,
 item,
 qty
-
 };
 
 resultData.push(row);
 
-const tr = document.createElement("tr");
+const tr=document.createElement("tr");
 
 tr.innerHTML=`
-
 <td>${project}</td>
 <td>${wo}</td>
 <td>${tanggal}</td>
 <td>${no}</td>
 <td>${item}</td>
 <td>${qty}</td>
-
 `;
 
 tbody.appendChild(tr);
@@ -107,20 +112,26 @@ tbody.appendChild(tr);
 
 }
 
+}
+
+
 
 function downloadExcel(){
 
-if(resultData.length==0){
+if(resultData.length===0){
+
 alert("Tidak ada data");
+
 return;
+
 }
 
-const ws = XLSX.utils.json_to_sheet(resultData);
+const ws=XLSX.utils.json_to_sheet(resultData);
 
-const wb = XLSX.utils.book_new();
+const wb=XLSX.utils.book_new();
 
 XLSX.utils.book_append_sheet(wb,ws,"BOQ");
 
-XLSX.writeFile(wb,"summary_boq.xlsx");
+XLSX.writeFile(wb,"summary_boq_lms.xlsx");
 
 }
