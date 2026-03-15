@@ -1,45 +1,58 @@
 let resultData = [];
 
 function updateStatus(text){
-document.getElementById("statusText").innerText = text;
+document.getElementById("statusText").innerText=text;
 }
 
 function updateProgress(percent){
-
-const bar = document.getElementById("progressBar");
-
-bar.style.width = percent + "%";
-
-bar.innerText = percent + "%";
-
+const bar=document.getElementById("progressBar");
+bar.style.width=percent+"%";
+bar.innerText=percent+"%";
 }
 
-function processExcel(){
+async function processExcel(){
 
-const file = document.getElementById("excelFile").files[0];
+const files=document.getElementById("excelFile").files;
 
-if(!file){
-alert("Upload file Excel dulu");
+if(files.length===0){
+alert("Upload Excel dulu");
 return;
 }
 
-resultData = [];
-
+resultData=[];
 document.querySelector("#resultTable tbody").innerHTML="";
 
 updateStatus("Membaca file Excel...");
 
-const reader = new FileReader();
+for(let f=0; f<files.length; f++){
 
-reader.onload = function(e){
+await readExcel(files[f]);
 
-const data = new Uint8Array(e.target.result);
+let percent=Math.round(((f+1)/files.length)*100);
 
-const workbook = XLSX.read(data,{type:'array'});
+updateProgress(percent);
 
-const sheet = workbook.Sheets[workbook.SheetNames[0]];
+}
 
-const rows = XLSX.utils.sheet_to_json(sheet,{header:1});
+updateStatus("Selesai membaca "+files.length+" file Excel");
+
+}
+
+async function readExcel(file){
+
+return new Promise((resolve)=>{
+
+const reader=new FileReader();
+
+reader.onload=function(e){
+
+const data=new Uint8Array(e.target.result);
+
+const workbook=XLSX.read(data,{type:'array'});
+
+const sheet=workbook.Sheets[workbook.SheetNames[0]];
+
+const rows=XLSX.utils.sheet_to_json(sheet,{header:1});
 
 let project="";
 let spk="";
@@ -47,23 +60,21 @@ let tanggal="";
 
 rows.forEach(r=>{
 
-let text = (r[0]||"").toString();
+let text=(r[0]||"").toString();
 
-if(text.includes("NAMA PROJECT")) project = r[2];
-if(text.includes("NO. SPK")) spk = r[2];
-if(text.includes("TANGGAL")) tanggal = r[2];
+if(text.includes("NAMA PROJECT")) project=r[2];
+if(text.includes("NO. SPK")) spk=r[2];
+if(text.includes("TANGGAL")) tanggal=r[2];
 
 });
 
-let total = rows.length;
+rows.forEach(r=>{
 
-rows.forEach((r,i)=>{
+let no=r[0];
+let item=r[1];
+let qty=r[3];
 
-let no = r[0];
-let item = r[1];
-let qty = r[3];
-
-qty = parseFloat(qty);
+qty=parseFloat(qty);
 
 if(!isNaN(no) && item && qty>0){
 
@@ -71,29 +82,25 @@ addRow(project,spk,tanggal,no,item,qty);
 
 }
 
-let percent = Math.round((i/total)*100);
-
-updateProgress(percent);
-
 });
 
-updateProgress(100);
-
-updateStatus("Selesai membaca Excel");
+resolve();
 
 };
 
 reader.readAsArrayBuffer(file);
 
+});
+
 }
 
 function addRow(project,spk,tanggal,no,item,qty){
 
-const tbody = document.querySelector("#resultTable tbody");
+const tbody=document.querySelector("#resultTable tbody");
 
-const tr = document.createElement("tr");
+const tr=document.createElement("tr");
 
-tr.innerHTML = `
+tr.innerHTML=`
 <td>${project}</td>
 <td>${spk}</td>
 <td>${tanggal}</td>
@@ -120,19 +127,16 @@ Qty:qty
 function downloadExcel(){
 
 if(resultData.length===0){
-
 alert("Tidak ada data");
-
 return;
-
 }
 
-const ws = XLSX.utils.json_to_sheet(resultData);
+const ws=XLSX.utils.json_to_sheet(resultData);
 
-const wb = XLSX.utils.book_new();
+const wb=XLSX.utils.book_new();
 
 XLSX.utils.book_append_sheet(wb,ws,"BOQ");
 
-XLSX.writeFile(wb,"boq_result.xlsx");
+XLSX.writeFile(wb,"BOQ_LMS_RESULT.xlsx");
 
 }
