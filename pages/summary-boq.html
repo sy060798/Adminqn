@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+
+<meta charset="UTF-8">
+<title>Summary BOQ</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<style>
+
+body{
+font-family:Arial;
+padding:20px;
+background:#f4f4f4;
+}
+
+button{
+padding:8px 14px;
+margin-top:10px;
+margin-right:10px;
+cursor:pointer;
+}
+
+table{
+border-collapse:collapse;
+width:100%;
+margin-top:20px;
+background:white;
+}
+
+th,td{
+border:1px solid #ddd;
+padding:8px;
+font-size:14px;
+}
+
+th{
+background:#eee;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>Summary BOQ PDF</h2>
+
+<input type="file" id="pdfFile" accept=".pdf">
+
+<br><br>
+
+<button onclick="processPDF()">Proses PDF</button>
+<button onclick="downloadExcel()">Download Excel</button>
+
+<table id="resultTable">
+
+<thead>
+<tr>
+<th>Nama Project</th>
+<th>No WO</th>
+<th>Tanggal</th>
+<th>No</th>
+<th>Item</th>
+<th>Qty</th>
+</tr>
+</thead>
+
+<tbody></tbody>
+
+</table>
+
+<script src="../js/summary-boq.js"></script>
+
+</body>
+</html>
