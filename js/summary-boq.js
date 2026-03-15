@@ -1,152 +1,103 @@
-let resultData=[];
+<!DOCTYPE html>
+<html lang="id">
 
-async function processPDFs(){
+<head>
 
-const files=document.getElementById("pdfFiles").files;
+<meta charset="UTF-8">
+<title>BOQ LMS</title>
 
-if(files.length===0){
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
-alert("Upload PDF terlebih dahulu");
+<style>
 
-return;
-
+body{
+font-family:Arial;
+padding:20px;
+background:#f4f4f4;
 }
 
-const tbody=document.querySelector("#resultTable tbody");
-
-tbody.innerHTML="";
-
-resultData=[];
-
-for(let file of files){
-
-await readPDF(file);
-
+button{
+padding:8px 14px;
+margin-right:10px;
+cursor:pointer;
 }
 
+table{
+border-collapse:collapse;
+width:100%;
+margin-top:20px;
+background:white;
 }
 
-
-
-async function readPDF(file){
-
-const reader=new FileReader();
-
-reader.onload=async function(){
-
-const typedarray=new Uint8Array(this.result);
-
-const pdf=await pdfjsLib.getDocument(typedarray).promise;
-
-let text="";
-
-for(let pageNum=1;pageNum<=pdf.numPages;pageNum++){
-
-const page=await pdf.getPage(pageNum);
-
-const content=await page.getTextContent();
-
-content.items.forEach(item=>{
-
-text+=item.str+" ";
-
-});
-
+th,td{
+border:1px solid #ddd;
+padding:8px;
+font-size:13px;
 }
 
-extractData(text);
-
-};
-
-reader.readAsArrayBuffer(file);
-
+th{
+background:#eee;
 }
 
-
-
-function extractData(text){
-
-const tbody=document.querySelector("#resultTable tbody");
-
-let project="";
-let wo="";
-let tanggal="";
-
-const projectMatch=text.match(/project\s*[:\-]?\s*(.*?)\s{2,}/i);
-if(projectMatch) project=projectMatch[1];
-
-const woMatch=text.match(/wo\s*[:\-]?\s*(\S+)/i);
-if(woMatch) wo=woMatch[1];
-
-const dateMatch=text.match(/tanggal\s*[:\-]?\s*(\S+)/i);
-if(dateMatch) tanggal=dateMatch[1];
-
-const itemRegex=/(\d+)\s+([A-Za-z0-9\s\(\)\-\/]+?)\s+(\d+)/g;
-
-let match;
-
-while((match=itemRegex.exec(text))!==null){
-
-let no=match[1];
-
-let item=match[2].trim();
-
-let qty=parseInt(match[3]);
-
-if(qty>0){
-
-const row={
-
-project,
-wo,
-tanggal,
-no,
-item,
-qty
-
-};
-
-resultData.push(row);
-
-const tr=document.createElement("tr");
-
-tr.innerHTML=`
-
-<td>${project}</td>
-<td>${wo}</td>
-<td>${tanggal}</td>
-<td>${no}</td>
-<td>${item}</td>
-<td>${qty}</td>
-
-`;
-
-tbody.appendChild(tr);
-
+#progressBox{
+margin-top:15px;
+width:100%;
+background:#ddd;
+height:25px;
+border-radius:5px;
+overflow:hidden;
 }
 
+#progressBar{
+height:100%;
+width:0%;
+background:#4CAF50;
+text-align:center;
+color:white;
+line-height:25px;
 }
 
-}
+</style>
 
+</head>
 
+<body>
 
-function downloadExcel(){
+<h2>BOQ LMS Reader</h2>
 
-if(resultData.length===0){
+<input type="file" id="pdfFiles" multiple accept=".pdf">
 
-alert("Tidak ada data");
+<br><br>
 
-return;
+<button onclick="processPDFs()">Proses PDF</button>
+<button onclick="downloadExcel()">Download Excel</button>
 
-}
+<div id="progressBox">
+<div id="progressBar">0%</div>
+</div>
 
-const ws=XLSX.utils.json_to_sheet(resultData);
+<p id="statusText"></p>
 
-const wb=XLSX.utils.book_new();
+<table id="resultTable">
 
-XLSX.utils.book_append_sheet(wb,ws,"BOQ");
+<thead>
+<tr>
+<th>Project</th>
+<th>No WO</th>
+<th>Tanggal</th>
+<th>No</th>
+<th>Item</th>
+<th>Qty</th>
+</tr>
+</thead>
 
-XLSX.writeFile(wb,"summary_boq_lms.xlsx");
+<tbody></tbody>
 
-}
+</table>
+
+<script src="../js/boq-lms.js"></script>
+
+</body>
+</html>
