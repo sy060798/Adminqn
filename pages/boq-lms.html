@@ -4,8 +4,6 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>BOQ LMS Reader</title>
 
 <!-- PDF JS -->
@@ -14,92 +12,22 @@
 <!-- Excel -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
-<style>
-
-body{
-font-family:Arial;
-padding:20px;
-background:#f4f4f4;
-}
-
-button{
-padding:8px 14px;
-margin-right:10px;
-cursor:pointer;
-background:#2c7be5;
-color:white;
-border:none;
-border-radius:4px;
-}
-
-button:hover{
-background:#1a5ed8;
-}
-
-table{
-border-collapse:collapse;
-width:100%;
-margin-top:20px;
-background:white;
-}
-
-th,td{
-border:1px solid #ddd;
-padding:8px;
-font-size:13px;
-}
-
-th{
-background:#eee;
-}
-
-#progressBox{
-width:100%;
-background:#ddd;
-height:25px;
-border-radius:5px;
-overflow:hidden;
-margin-top:10px;
-}
-
-#progressBar{
-height:100%;
-width:0%;
-background:#4CAF50;
-color:white;
-text-align:center;
-line-height:25px;
-}
-
-</style>
-
 </head>
 
 <body>
 
 <h2>BOQ LMS Reader</h2>
 
-<b>Upload PDF</b><br>
 <input type="file" id="pdfFiles" multiple accept=".pdf">
 
 <br><br>
 
-<b>Upload Excel</b><br>
-<input type="file" id="excelFile" accept=".xlsx,.xls">
-
-<br><br>
-
 <button onclick="processPDF()">Proses PDF</button>
-<button onclick="processExcel()">Proses Excel</button>
 <button onclick="downloadExcel()">Download Excel</button>
-
-<div id="progressBox">
-<div id="progressBar">0%</div>
-</div>
 
 <p id="statusText"></p>
 
-<table id="resultTable">
+<table border="1" id="resultTable">
 
 <thead>
 <tr>
@@ -113,13 +41,13 @@ line-height:25px;
 
 </table>
 
-<!-- PENTING: set worker pdf -->
 <script>
+
 pdfjsLib.GlobalWorkerOptions.workerSrc =
 "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
+
 </script>
 
-<!-- JS utama -->
 <script src="../js/boq-lms.js"></script>
 
 </body>
