@@ -1,6 +1,6 @@
-let resultData=[];
+let resultData = [];
 
-const MATERIAL_LIST=[
+const MATERIAL_LIST = [
 
 "Kabel Drop 2 Core",
 "Kabel Udara ADSS span 100 2 core",
@@ -29,7 +29,7 @@ function updateProgress(done,total){
 
 let percent=Math.round((done/total)*100);
 
-const bar=document.getElementById("progressBar");
+let bar=document.getElementById("progressBar");
 
 bar.style.width=percent+"%";
 bar.innerText=percent+"%";
@@ -53,6 +53,10 @@ return;
 
 }
 
+resultData=[];
+
+document.querySelector("#resultTable tbody").innerHTML="";
+
 for(let i=0;i<files.length;i++){
 
 updateStatus("Membaca "+files[i].name);
@@ -63,7 +67,7 @@ updateProgress(i+1,files.length);
 
 }
 
-updateStatus("Selesai");
+updateStatus("Selesai membaca semua PDF");
 
 }
 
@@ -99,9 +103,9 @@ function findMaterial(text,project){
 
 MATERIAL_LIST.forEach(item=>{
 
-const regex=new RegExp(item+"\\s+(\\d+)","i");
+let regex=new RegExp(item+"\\s*(\\d+)","i");
 
-const match=text.match(regex);
+let match=text.match(regex);
 
 if(match){
 
@@ -148,9 +152,11 @@ MATERIAL_LIST.forEach(item=>{
 
 if(r.Item && r.Item.toLowerCase().includes(item.toLowerCase())){
 
-if(r.Qty>0){
+let qty=parseInt(r.Qty);
 
-addRow(r.Project||"Excel",item,r.Qty);
+if(qty>0){
+
+addRow(r.Project || "Excel",item,qty);
 
 }
 
@@ -170,14 +176,16 @@ reader.readAsArrayBuffer(file);
 
 function addRow(project,item,qty){
 
-const tbody=document.querySelector("#resultTable tbody");
+let tbody=document.querySelector("#resultTable tbody");
 
-const tr=document.createElement("tr");
+let tr=document.createElement("tr");
 
 tr.innerHTML=`
+
 <td>${project}</td>
 <td>${item}</td>
 <td>${qty}</td>
+
 `;
 
 tbody.appendChild(tr);
@@ -196,18 +204,17 @@ function downloadExcel(){
 
 if(resultData.length===0){
 
-alert("Tidak ada data");
+alert("Tidak ada data untuk didownload");
 return;
 
 }
 
-const ws=XLSX.utils.json_to_sheet(resultData);
+let ws=XLSX.utils.json_to_sheet(resultData);
 
-const wb=XLSX.utils.book_new();
+let wb=XLSX.utils.book_new();
 
 XLSX.utils.book_append_sheet(wb,ws,"BOQ");
 
-XLSX.writeFile(wb,"boq_lms_result.xlsx");
+XLSX.writeFile(wb,"BOQ_LMS_RESULT.xlsx");
 
 }
-
