@@ -2,6 +2,8 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Summary IB</title>
 
 <link rel="stylesheet" href="../css/style.css">
@@ -11,7 +13,7 @@
 <style>
 
 body{
-font-family: Arial;
+font-family: Arial, sans-serif;
 padding:20px;
 background:#f7f7f7;
 }
@@ -25,6 +27,14 @@ padding:8px 14px;
 margin-top:10px;
 margin-right:10px;
 cursor:pointer;
+border:none;
+background:#2c7be5;
+color:white;
+border-radius:4px;
+}
+
+button:hover{
+background:#1a68d1;
 }
 
 table{
@@ -45,20 +55,26 @@ th{
 background:#f0f0f0;
 }
 
+input[type="file"]{
+padding:6px;
+}
+
 </style>
 
 </head>
 
 <body>
 
+<main>
+
 <h2>Summary Installation Baru (IB)</h2>
 
-<input type="file" id="excelFile" accept=".xlsx,.xls">
+<input type="file" id="excelFile" accept=".xlsx,.xls" required>
 
 <br><br>
 
-<button onclick="processExcel()">Proses Data</button>
-<button onclick="downloadExcel()">Download Hasil</button>
+<button type="button" onclick="processExcel()">Proses Data</button>
+<button type="button" onclick="downloadExcel()">Download Hasil</button>
 
 <table id="resultTable">
 
@@ -77,10 +93,11 @@ background:#f0f0f0;
 </thead>
 
 <tbody>
-
 </tbody>
 
 </table>
+
+</main>
 
 <script src="../js/summary-ib.js"></script>
 
