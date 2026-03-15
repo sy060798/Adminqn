@@ -3,6 +3,7 @@ let processedData = [];
 function getPrecon(row){
 
 const preconMap = {
+
 "Kabel Precon 35 Old": "PRECON - 35 M",
 "Kabel Precon 50 Old": "PRECON - 50 M",
 "Kabel Precon 75 Old": "PRECON - 75 M",
@@ -13,6 +14,7 @@ const preconMap = {
 "Kabel Precon 200 Old": "PRECON - 200 M",
 "Kabel Precon 225 Old": "PRECON - 225 M",
 "Kabel Precon 250 Old": "PRECON - 250 M"
+
 };
 
 let result = [];
@@ -34,7 +36,7 @@ function processExcel(){
 const fileInput = document.getElementById("excelFile").files[0];
 
 if(!fileInput){
-alert("Upload file Excel dulu");
+alert("Silakan upload file Excel terlebih dahulu");
 return;
 }
 
@@ -54,11 +56,11 @@ const jsonData = XLSX.utils.sheet_to_json(sheet);
 
 const tbody = document.querySelector("#resultTable tbody");
 
-tbody.innerHTML="";
+tbody.innerHTML = "";
 
 processedData = [];
 
-jsonData.forEach(row=>{
+jsonData.forEach(row => {
 
 const precon = getPrecon(row);
 
@@ -71,7 +73,8 @@ Alamat: row["Alamat"],
 ONT: row["ONT"],
 STB: row["STB"],
 Router: row["Router"],
-Precon: precon
+Precon: precon,
+ReportInstallation: row["Report Installation"]
 
 };
 
@@ -80,6 +83,7 @@ processedData.push(result);
 const tr = document.createElement("tr");
 
 tr.innerHTML = `
+
 <td>${result.Status || ""}</td>
 <td>${result.WO || ""}</td>
 <td>${result.Tanggal || ""}</td>
@@ -88,6 +92,8 @@ tr.innerHTML = `
 <td>${result.STB || ""}</td>
 <td>${result.Router || ""}</td>
 <td>${result.Precon || ""}</td>
+<td>${result.ReportInstallation || ""}</td>
+
 `;
 
 tbody.appendChild(tr);
@@ -103,16 +109,19 @@ reader.readAsArrayBuffer(fileInput);
 function downloadExcel(){
 
 if(processedData.length == 0){
-alert("Belum ada data");
+
+alert("Belum ada data yang diproses");
+
 return;
+
 }
 
 const worksheet = XLSX.utils.json_to_sheet(processedData);
 
 const workbook = XLSX.utils.book_new();
 
-XLSX.utils.book_append_sheet(workbook,worksheet,"Summary IB");
+XLSX.utils.book_append_sheet(workbook, worksheet, "Summary IB");
 
-XLSX.writeFile(workbook,"summary_ib.xlsx");
+XLSX.writeFile(workbook, "summary_ib.xlsx");
 
 }
