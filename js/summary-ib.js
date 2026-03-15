@@ -32,7 +32,7 @@ return result.join(", ");
 }
 
 
-// mencari kolom walau ada spasi
+// cari kolom tanpa peduli huruf besar kecil
 function getColumn(row,name){
 
 for(let key in row){
@@ -56,6 +56,24 @@ for(let key in row){
 let col = key.toLowerCase();
 
 if(col.includes("report") && col.includes("installation")){
+return row[key];
+}
+
+}
+
+return "";
+
+}
+
+
+// ambil status dispatch
+function getDispatchStatus(row){
+
+for(let key in row){
+
+let col = key.toLowerCase();
+
+if(col.includes("status") && col.includes("dispatch")){
 return row[key];
 }
 
@@ -95,17 +113,17 @@ processedData = [];
 
 jsonData.forEach(row=>{
 
-const status = getColumn(row,"Status");
+const dispatchStatus = getDispatchStatus(row);
 
-// FILTER hanya DONE
-if(!status || status.toLowerCase() !== "done"){
+// FILTER HANYA DONE
+if(!dispatchStatus || dispatchStatus.toLowerCase() !== "done"){
 return;
 }
 
 const result = {
 
-dispatch: status,
-status: status,
+dispatch: dispatchStatus,
+status: dispatchStatus,
 wo: getColumn(row,"No Wo Klien"),
 tanggal: getColumn(row,"Tanggal Kunjungan"),
 alamat: getColumn(row,"Alamat"),
@@ -133,7 +151,7 @@ tr.innerHTML = `
 <td>${result.router}</td>
 <td>${result.precon}</td>
 <td style="max-width:600px;word-break:break-word;">
-${result.report}
+${result.report || ""}
 </td>
 
 `;
@@ -152,11 +170,8 @@ reader.readAsArrayBuffer(file);
 function downloadExcel(){
 
 if(processedData.length == 0){
-
 alert("Belum ada data");
-
 return;
-
 }
 
 const worksheet = XLSX.utils.json_to_sheet(processedData);
