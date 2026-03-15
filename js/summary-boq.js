@@ -1,103 +1,221 @@
-<!DOCTYPE html>
-<html lang="id">
+let resultData=[];
 
-<head>
+async function processPDFs(){
 
-<meta charset="UTF-8">
-<title>BOQ LMS</title>
+const files=document.getElementById("pdfFiles").files;
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+if(files.length===0){
 
-<style>
+alert("Upload PDF dulu");
 
-body{
-font-family:Arial;
-padding:20px;
-background:#f4f4f4;
+return;
+
 }
 
-button{
-padding:8px 14px;
-margin-right:10px;
-cursor:pointer;
+resultData=[];
+
+const tbody=document.querySelector("#resultTable tbody");
+tbody.innerHTML="";
+
+const total=files.length;
+
+for(let i=0;i<total;i++){
+
+updateStatus("Memproses file "+(i+1)+" dari "+total);
+
+await readPDF(files[i]);
+
+updateProgress(i+1,total);
+
+await sleep(200);
+
 }
 
-table{
-border-collapse:collapse;
-width:100%;
-margin-top:20px;
-background:white;
+updateStatus("Selesai memproses semua PDF");
+
 }
 
-th,td{
-border:1px solid #ddd;
-padding:8px;
-font-size:13px;
+
+
+function updateStatus(text){
+
+document.getElementById("statusText").innerText=text;
+
 }
 
-th{
-background:#eee;
+
+
+function updateProgress(done,total){
+
+let percent=Math.round((done/total)*100);
+
+const bar=document.getElementById("progressBar");
+
+bar.style.width=percent+"%";
+
+bar.innerText=percent+"%";
+
 }
 
-#progressBox{
-margin-top:15px;
-width:100%;
-background:#ddd;
-height:25px;
-border-radius:5px;
-overflow:hidden;
+
+
+function sleep(ms){
+
+return new Promise(resolve=>setTimeout(resolve,ms));
+
 }
 
-#progressBar{
-height:100%;
-width:0%;
-background:#4CAF50;
-text-align:center;
-color:white;
-line-height:25px;
+
+
+async function readPDF(file){
+
+const buffer=await file.arrayBuffer();
+
+const pdf=await pdfjsLib.getDocument({data:buffer}).promise;
+
+let text="";
+
+for(let pageNum=1;pageNum<=pdf.numPages;pageNum++){
+
+const page=await pdf.getPage(pageNum);
+
+const content=await page.getTextContent();
+
+content.items.forEach(item=>{
+
+text+=item.str+" ";
+
+});
+
 }
 
-</style>
+if(text.trim().length<50){
 
-</head>
+await runOCR(pdf);
 
-<body>
+}else{
 
-<h2>BOQ LMS Reader</h2>
+extractData(text);
 
-<input type="file" id="pdfFiles" multiple accept=".pdf">
+}
 
-<br><br>
+}
 
-<button onclick="processPDFs()">Proses PDF</button>
-<button onclick="downloadExcel()">Download Excel</button>
 
-<div id="progressBox">
-<div id="progressBar">0%</div>
-</div>
 
-<p id="statusText"></p>
+async function runOCR(pdf){
 
-<table id="resultTable">
+for(let pageNum=1;pageNum<=pdf.numPages;pageNum++){
 
-<thead>
-<tr>
-<th>Project</th>
-<th>No WO</th>
-<th>Tanggal</th>
-<th>No</th>
-<th>Item</th>
-<th>Qty</th>
-</tr>
-</thead>
+updateStatus("OCR membaca halaman "+pageNum);
 
-<tbody></tbody>
+const page=await pdf.getPage(pageNum);
 
-</table>
+const viewport=page.getViewport({scale:2});
 
-<script src="../js/boq-lms.js"></script>
+const canvas=document.createElement("canvas");
 
-</body>
-</html>
+const context=canvas.getContext("2d");
+
+canvas.height=viewport.height;
+canvas.width=viewport.width;
+
+await page.render({
+
+canvasContext:context,
+viewport:viewport
+
+}).promise;
+
+const result=await Tesseract.recognize(canvas,"eng");
+
+extractData(result.data.text);
+
+}
+
+}
+
+
+
+function extractData(text){
+
+const tbody=document.querySelector("#resultTable tbody");
+
+let project="";
+let wo="";
+let tanggal="";
+
+const projectMatch=text.match(/project\s*[:\-]?\s*(.*?)\n/i);
+if(projectMatch) project=projectMatch[1];
+
+const woMatch=text.match(/wo\s*[:\-]?\s*(\S+)/i);
+if(woMatch) wo=woMatch[1];
+
+const dateMatch=text.match(/tanggal\s*[:\-]?\s*(\S+)/i);
+if(dateMatch) tanggal=dateMatch[1];
+
+const itemRegex=/(\d+)\s+([A-Za-z0-9\s\(\)\-\/]+?)\s+(\d+)/g;
+
+let match;
+
+while((match=itemRegex.exec(text))!==null){
+
+let no=match[1];
+let item=match[2].trim();
+let qty=parseInt(match[3]);
+
+if(qty>0){
+
+const row={
+project,
+wo,
+tanggal,
+no,
+item,
+qty
+};
+
+resultData.push(row);
+
+const tr=document.createElement("tr");
+
+tr.innerHTML=`
+
+<td>${project}</td>
+<td>${wo}</td>
+<td>${tanggal}</td>
+<td>${no}</td>
+<td>${item}</td>
+<td>${qty}</td>
+
+`;
+
+tbody.appendChild(tr);
+
+}
+
+}
+
+}
+
+
+
+function downloadExcel(){
+
+if(resultData.length===0){
+
+alert("Tidak ada data");
+
+return;
+
+}
+
+const ws=XLSX.utils.json_to_sheet(resultData);
+
+const wb=XLSX.utils.book_new();
+
+XLSX.utils.book_append_sheet(wb,ws,"BOQ");
+
+XLSX.writeFile(wb,"boq_lms.xlsx");
+
+}
