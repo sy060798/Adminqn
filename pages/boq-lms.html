@@ -4,7 +4,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>BOQ LMS</title>
+<title>BOQ LMS Reader</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
@@ -42,21 +42,25 @@ background:#eee;
 }
 
 #progressBox{
-margin-top:15px;
 width:100%;
 background:#ddd;
 height:25px;
 border-radius:5px;
 overflow:hidden;
+margin-top:10px;
 }
 
 #progressBar{
 height:100%;
 width:0%;
 background:#4CAF50;
-text-align:center;
 color:white;
+text-align:center;
 line-height:25px;
+}
+
+.uploadBox{
+margin-bottom:15px;
 }
 
 </style>
@@ -67,11 +71,24 @@ line-height:25px;
 
 <h2>BOQ LMS Reader</h2>
 
+<div class="uploadBox">
+
+<b>Upload PDF</b><br>
 <input type="file" id="pdfFiles" multiple accept=".pdf">
 
-<br><br>
+</div>
+
+<div class="uploadBox">
+
+<b>Upload Excel</b><br>
+<input type="file" id="excelFile" accept=".xlsx,.xls">
+
+</div>
+
+<br>
 
 <button onclick="processPDFs()">Proses PDF</button>
+<button onclick="processExcel()">Proses Excel</button>
 <button onclick="downloadExcel()">Download Excel</button>
 
 <div id="progressBox">
