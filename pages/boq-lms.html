@@ -2,8 +2,9 @@
 <html lang="id">
 
 <head>
-
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>BOQ LMS Reader</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
@@ -14,37 +15,50 @@
 
 <body>
 
-<h2>BOQ LMS Reader</h2>
+<div class="container">
+
+<h1>BOQ LMS Reader</h1>
+
+<div class="upload-box">
 
 <input type="file" id="excelFile" accept=".xlsx,.xls">
 
-<br><br>
-
 <button onclick="processExcel()">Proses Excel</button>
+
 <button onclick="downloadExcel()">Download Excel</button>
 
-<div id="progressBox">
+</div>
+
+<div class="progress-area">
+
+<div class="progress-bar">
 <div id="progressBar">0%</div>
 </div>
 
 <p id="statusText"></p>
 
+</div>
+
 <table id="resultTable">
 
 <thead>
+
 <tr>
 <th>Project</th>
-<th>No WO</th>
+<th>No SPK</th>
 <th>Tanggal</th>
 <th>No</th>
 <th>Item</th>
 <th>Qty</th>
 </tr>
+
 </thead>
 
 <tbody></tbody>
 
 </table>
+
+</div>
 
 <script src="../js/boq-lms.js"></script>
 
