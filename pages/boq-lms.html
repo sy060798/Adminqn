@@ -4,16 +4,23 @@
 <head>
 
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>BOQ LMS Reader</title>
 
+<!-- PDF Reader -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+<!-- OCR -->
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+
+<!-- Excel -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <style>
 
 body{
-font-family:Arial;
+font-family: Arial, sans-serif;
 padding:20px;
 background:#f4f4f4;
 }
@@ -22,6 +29,14 @@ button{
 padding:8px 14px;
 margin-right:10px;
 cursor:pointer;
+background:#2c7be5;
+color:white;
+border:none;
+border-radius:4px;
+}
+
+button:hover{
+background:#1a5ed8;
 }
 
 table{
@@ -35,6 +50,7 @@ th,td{
 border:1px solid #ddd;
 padding:8px;
 font-size:13px;
+text-align:left;
 }
 
 th{
@@ -110,7 +126,8 @@ margin-bottom:15px;
 </tr>
 </thead>
 
-<tbody></tbody>
+<tbody>
+</tbody>
 
 </table>
 
