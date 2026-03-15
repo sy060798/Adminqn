@@ -9,14 +9,21 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <style>
+
 body{
 font-family: Arial;
 padding:20px;
+background:#f7f7f7;
+}
+
+h2{
+margin-bottom:20px;
 }
 
 button{
 padding:8px 14px;
 margin-top:10px;
+margin-right:10px;
 cursor:pointer;
 }
 
@@ -24,27 +31,31 @@ table{
 border-collapse: collapse;
 width:100%;
 margin-top:20px;
+background:white;
 }
 
 th,td{
 border:1px solid #ddd;
 padding:8px;
 font-size:14px;
+text-align:left;
 }
 
 th{
-background:#f4f4f4;
+background:#f0f0f0;
 }
+
 </style>
 
 </head>
+
 <body>
 
-<h2>SUMMARY IB</h2>
+<h2>Summary Installation Baru (IB)</h2>
 
 <input type="file" id="excelFile" accept=".xlsx,.xls">
 
-<br>
+<br><br>
 
 <button onclick="processExcel()">Proses Data</button>
 <button onclick="downloadExcel()">Download Hasil</button>
@@ -61,10 +72,12 @@ background:#f4f4f4;
 <th>STB</th>
 <th>Router</th>
 <th>PRECON</th>
+<th>Report Installation</th>
 </tr>
 </thead>
 
 <tbody>
+
 </tbody>
 
 </table>
