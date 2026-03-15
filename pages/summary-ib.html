@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,46 +11,55 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <style>
-
 body{
-font-family: Arial, sans-serif;
-padding:20px;
-background:#f7f7f7;
+    font-family: Arial, sans-serif;
+    padding:20px;
+    background:#f7f7f7;
+}
+
+h2{
+    margin-bottom:15px;
 }
 
 button{
-padding:8px 14px;
-margin-right:10px;
-cursor:pointer;
-background:#2c7be5;
-color:white;
-border:none;
-border-radius:4px;
+    padding:8px 14px;
+    margin-right:10px;
+    cursor:pointer;
+    background:#2c7be5;
+    color:white;
+    border:none;
+    border-radius:4px;
+}
+
+button:hover{
+    background:#1b5dc7;
 }
 
 table{
-border-collapse: collapse;
-width:100%;
-margin-top:20px;
-background:white;
+    border-collapse: collapse;
+    width:100%;
+    margin-top:20px;
+    background:white;
 }
 
-th,td{
-border:1px solid #ddd;
-padding:8px;
-font-size:13px;
-vertical-align:top;
+th, td{
+    border:1px solid #ddd;
+    padding:8px;
+    font-size:13px;
+    vertical-align:top;
 }
 
 th{
-background:#f0f0f0;
+    background:#f0f0f0;
+    text-align:left;
 }
-
 </style>
 
 </head>
 
 <body>
+
+<main>
 
 <h2>Summary Installation Baru (IB)</h2>
 
@@ -57,8 +67,8 @@ background:#f0f0f0;
 
 <br><br>
 
-<button onclick="processExcel()">Proses Data</button>
-<button onclick="downloadExcel()">Download Hasil</button>
+<button type="button" onclick="processExcel()">Proses Data</button>
+<button type="button" onclick="downloadExcel()">Download Hasil</button>
 
 <table id="resultTable">
 
@@ -77,9 +87,12 @@ background:#f0f0f0;
 </tr>
 </thead>
 
-<tbody></tbody>
+<tbody>
+</tbody>
 
 </table>
+
+</main>
 
 <script src="../js/summary-ib.js"></script>
 
