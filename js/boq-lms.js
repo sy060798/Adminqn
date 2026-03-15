@@ -2,6 +2,7 @@ let resultData = [];
 
 const MATERIAL_LIST = [
 
+"Jasa Perbaikan ODP Pedestal (INC COR)",
 "Kabel Drop 2 Core",
 "Kabel Udara ADSS span 100 2 core",
 "Kabel Udara ADSS span 100 12 core",
@@ -20,8 +21,7 @@ const MATERIAL_LIST = [
 "Tiang 9 meter",
 "ONT",
 "ODP",
-"SPLICING + OTDR",
-"Transport LMS"
+"SPLICING + OTDR"
 
 ];
 
@@ -76,109 +76,55 @@ const buffer=await file.arrayBuffer();
 
 const pdf=await pdfjsLib.getDocument({data:buffer}).promise;
 
-let lines=[];
+let text="";
 
-for(let pageNum=1;pageNum<=pdf.numPages;pageNum++){
+for(let page=1;page<=pdf.numPages;page++){
 
-const page=await pdf.getPage(pageNum);
+let pageData=await pdf.getPage(page);
 
-const content=await page.getTextContent();
+let txt=await pageData.getTextContent();
 
-content.items.forEach(item=>{
-lines.push(item.str);
+txt.items.forEach(t=>{
+text+=t.str+" ";
 });
 
 }
 
-parseLines(lines,project);
+findMaterial(text,project);
 
 }
 
-function parseLines(lines,project){
+function findMaterial(text,project){
 
-for(let i=0;i<lines.length;i++){
+let cleanText=text.replace(/\s+/g," ").toLowerCase();
 
-let line=lines[i].toLowerCase();
+MATERIAL_LIST.forEach(item=>{
 
-MATERIAL_LIST.forEach(material=>{
+let itemLower=item.toLowerCase();
 
-if(line.includes(material.toLowerCase())){
+if(cleanText.includes(itemLower)){
 
-let qty=0;
+let index=cleanText.indexOf(itemLower);
 
-for(let j=i+1;j<i+5;j++){
+let area=cleanText.substring(index,index+80);
 
-if(lines[j]){
+let numbers=area.match(/\d+/g);
 
-let num=parseInt(lines[j]);
+if(numbers){
 
-if(!isNaN(num)){
-qty=num;
-break;
-}
-
-}
-
-}
+let qty=parseInt(numbers[numbers.length-1]);
 
 if(qty>0){
 
-addRow(project,material,qty);
+addRow(project,item,qty);
 
 }
-
-}
-
-});
-
-}
-
-}
-
-function processExcel(){
-
-const file=document.getElementById("excelFile").files[0];
-
-if(!file){
-
-alert("Upload Excel dulu");
-return;
-
-}
-
-const reader=new FileReader();
-
-reader.onload=function(e){
-
-const data=new Uint8Array(e.target.result);
-
-const workbook=XLSX.read(data,{type:'array'});
-
-const sheet=workbook.Sheets[workbook.SheetNames[0]];
-
-const rows=XLSX.utils.sheet_to_json(sheet);
-
-rows.forEach(r=>{
-
-if(r.Item && r.Qty){
-
-let qty=parseInt(r.Qty);
-
-if(qty>0){
-
-addRow(r.Project || "Excel",r.Item,qty);
 
 }
 
 }
 
 });
-
-updateStatus("Excel berhasil dibaca");
-
-};
-
-reader.readAsArrayBuffer(file);
 
 }
 
