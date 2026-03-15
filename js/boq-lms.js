@@ -1,84 +1,183 @@
-<!DOCTYPE html>
-<html lang="id">
+let boqWorkbook;
+let boqData;
 
-<head>
+let itemTotals={};
 
-<meta charset="UTF-8">
-<title>BOQ LMS Updater</title>
-
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
-<style>
-
-body{
-font-family:Arial;
-background:#f4f6f9;
-padding:40px;
+function setStatus(t){
+document.getElementById("status").innerText=t;
 }
 
-.container{
-background:white;
-padding:30px;
-border-radius:8px;
-box-shadow:0 3px 10px rgba(0,0,0,0.1);
-max-width:900px;
-margin:auto;
+function setProgress(p){
+
+const bar=document.getElementById("progressBar");
+
+bar.style.width=p+"%";
+bar.innerText=p+"%";
+
 }
 
-h2{
-margin-top:0;
+function normalize(text){
+
+return text
+.toLowerCase()
+.replace(/[^a-z0-9]/g,"")
+.trim();
+
 }
 
-input{
-margin-bottom:10px;
+async function processFiles(){
+
+const boqFile=document.getElementById("boqFile").files[0];
+const lmsFiles=document.getElementById("lmsFiles").files;
+
+if(!boqFile){
+alert("Upload BOQ dulu");
+return;
 }
 
-button{
-padding:10px 18px;
-background:#2c7be5;
-color:white;
-border:none;
-border-radius:5px;
-cursor:pointer;
-margin-top:10px;
+if(lmsFiles.length===0){
+alert("Upload file LMS");
+return;
 }
 
-button:hover{
-background:#1a5ed8;
+itemTotals={};
+
+setStatus("Membaca BOQ...");
+setProgress(10);
+
+await readBOQ(boqFile);
+
+setStatus("Membaca file LMS...");
+setProgress(20);
+
+for(let i=0;i<lmsFiles.length;i++){
+
+await readLMS(lmsFiles[i]);
+
+let percent=20+Math.round((i+1)/lmsFiles.length*50);
+
+setProgress(percent);
+
 }
 
-#status{
-margin-top:20px;
-font-weight:bold;
+setStatus("Mencocokkan item...");
+setProgress(80);
+
+updateBOQ();
+
+setProgress(100);
+
+setStatus("Selesai ✔ Silakan download BOQ");
+
 }
 
-</style>
+function readBOQ(file){
 
-</head>
+return new Promise(resolve=>{
 
-<body>
+const reader=new FileReader();
 
-<div class="container">
+reader.onload=e=>{
 
-<h2>BOQ LMS Updater</h2>
+const data=new Uint8Array(e.target.result);
 
-<p><b>Upload BOQ Template</b></p>
-<input type="file" id="boqFile">
+boqWorkbook=XLSX.read(data,{type:'array'});
 
-<p><b>Upload File LMS (boleh banyak)</b></p>
-<input type="file" id="lmsFiles" multiple>
+const sheet=boqWorkbook.Sheets[boqWorkbook.SheetNames[0]];
 
-<br>
+boqData=XLSX.utils.sheet_to_json(sheet,{header:1});
 
-<button onclick="processFiles()">Proses Update BOQ</button>
+resolve();
 
-<button onclick="downloadBOQ()">Download BOQ</button>
+};
 
-<p id="status"></p>
+reader.readAsArrayBuffer(file);
 
-</div>
+});
 
-<script src="../js/boq-lms.js"></script>
+}
 
-</body>
-</html>
+function readLMS(file){
+
+return new Promise(resolve=>{
+
+const reader=new FileReader();
+
+reader.onload=e=>{
+
+const data=new Uint8Array(e.target.result);
+
+const wb=XLSX.read(data,{type:'array'});
+
+const sheet=wb.Sheets[wb.SheetNames[0]];
+
+const rows=XLSX.utils.sheet_to_json(sheet,{header:1});
+
+rows.forEach(r=>{
+
+let item=r[1];
+let qty=r[4];
+
+if(item && typeof qty==="number" && qty>0){
+
+let key=normalize(item);
+
+if(!itemTotals[key]) itemTotals[key]=0;
+
+itemTotals[key]+=qty;
+
+}
+
+});
+
+resolve();
+
+};
+
+reader.readAsArrayBuffer(file);
+
+});
+
+}
+
+function updateBOQ(){
+
+boqData.forEach(r=>{
+
+let item=r[1];
+
+if(!item) return;
+
+let key=normalize(item);
+
+for(let lmsItem in itemTotals){
+
+if(lmsItem.includes(key) || key.includes(lmsItem)){
+
+r[3]=itemTotals[lmsItem];
+
+}
+
+}
+
+});
+
+const newSheet=XLSX.utils.aoa_to_sheet(boqData);
+
+boqWorkbook.Sheets[boqWorkbook.SheetNames[0]]=newSheet;
+
+}
+
+function downloadBOQ(){
+
+if(!boqWorkbook){
+
+alert("Belum ada data");
+
+return;
+
+}
+
+XLSX.writeFile(boqWorkbook,"BOQ_UPDATED.xlsx");
+
+}
