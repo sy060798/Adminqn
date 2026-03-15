@@ -79,11 +79,12 @@ processedData = [];
 
 jsonData.forEach(row => {
 
-const precon = getPrecon(row);
+const status = findColumn(row,"Status");
 
 const result = {
 
-Status: findColumn(row,"Status"),
+DispatchStatus: status,
+Status: status,
 WO: findColumn(row,"No Wo Klien"),
 Tanggal: findColumn(row,"Tanggal Kunjungan"),
 Alamat: findColumn(row,"Alamat"),
@@ -91,7 +92,7 @@ ONT: findColumn(row,"ONT"),
 STB: findColumn(row,"STB"),
 Router: findColumn(row,"Router"),
 Precon: precon,
-ReportInstallation: findColumn(row,"Report Installation")
+ReportInstallation: getReportInstallation(row)
 
 };
 
