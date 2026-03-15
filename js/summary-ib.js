@@ -20,15 +20,19 @@ const preconMap = {
 let result = [];
 
 for(let key in preconMap){
+
 if(row[key] == 1){
 result.push(preconMap[key]);
 }
+
 }
 
 return result.join(", ");
 
 }
 
+
+// mencari kolom walau ada spasi / huruf beda
 function getColumn(row,name){
 
 for(let key in row){
@@ -43,13 +47,15 @@ return "";
 
 }
 
+
+// mencari kolom report installation
 function getReportInstallation(row){
 
 for(let key in row){
 
-let name = key.toLowerCase();
+let col = key.toLowerCase();
 
-if(name.includes("report") && name.includes("installation")){
+if(col.includes("report") && col.includes("installation")){
 return row[key];
 }
 
@@ -59,12 +65,13 @@ return "";
 
 }
 
+
 function processExcel(){
 
 const file = document.getElementById("excelFile").files[0];
 
 if(!file){
-alert("Upload Excel dulu");
+alert("Upload Excel terlebih dahulu");
 return;
 }
 
@@ -110,6 +117,7 @@ processedData.push(result);
 const tr = document.createElement("tr");
 
 tr.innerHTML = `
+
 <td>${result.dispatch || ""}</td>
 <td>${result.status || ""}</td>
 <td>${result.wo || ""}</td>
@@ -122,6 +130,7 @@ tr.innerHTML = `
 <td style="max-width:600px;word-break:break-word;">
 ${result.report || ""}
 </td>
+
 `;
 
 tbody.appendChild(tr);
@@ -134,11 +143,15 @@ reader.readAsArrayBuffer(file);
 
 }
 
+
 function downloadExcel(){
 
 if(processedData.length == 0){
+
 alert("Belum ada data");
+
 return;
+
 }
 
 const worksheet = XLSX.utils.json_to_sheet(processedData);
