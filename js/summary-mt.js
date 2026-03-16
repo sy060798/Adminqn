@@ -171,12 +171,12 @@ for(let line of lines){
 
 let lower=line.toLowerCase();
 
-if(!rfo && lower.startsWith("rfo")){
-rfo=line.replace(/rfo\s*:/i,"").trim();
+if(!rfo && (lower.startsWith("rfo") || lower.startsWith("problem"))){
+rfo=line.replace(/(rfo|problem)\s*:/i,"").trim();
 }
 
-if(!action && lower.startsWith("act")){
-action=line.replace(/act\s*:/i,"").trim();
+if(!action && (lower.startsWith("act") || lower.startsWith("action"))){
+action=line.replace(/(act|action)\s*:/i,"").trim();
 }
 
 }
