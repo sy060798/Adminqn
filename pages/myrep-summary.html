@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>MyRep Summary Generator</title>
 
 <link rel="stylesheet" href="../style.css">
@@ -12,16 +15,16 @@
 <style>
 
 body{
-font-family:Arial,sans-serif;
+font-family: Arial, sans-serif;
 background:#f4f6f9;
 padding:40px;
 }
 
 .container{
-background:#fff;
+background:#ffffff;
 padding:25px;
 border-radius:10px;
-box-shadow:0 2px 8px rgba(0,0,0,.1);
+box-shadow:0 2px 8px rgba(0,0,0,0.1);
 }
 
 h2{
@@ -35,7 +38,7 @@ margin-right:10px;
 cursor:pointer;
 border:none;
 background:#2c7be5;
-color:#fff;
+color:white;
 border-radius:5px;
 font-weight:bold;
 }
@@ -59,13 +62,17 @@ text-align:left;
 
 th{
 background:#2c3e50;
-color:#fff;
+color:white;
 }
 
 #progress{
 margin-top:12px;
 font-size:13px;
 color:#555;
+}
+
+hr{
+margin:25px 0;
 }
 
 </style>
@@ -78,21 +85,32 @@ color:#555;
 
 <h2>MyRep Payment → Summary</h2>
 
-<p>Upload OSS File (Customer Name)</p>
+<!-- OSS UPLOAD -->
+
+<p><b>Upload OSS File (Customer Name)</b></p>
+
 <input type="file" id="ossInput" accept=".xlsx,.xls" multiple>
+
 <br>
-<button onclick="loadOSS()">Load OSS Data</button>
+
+<button type="button" onclick="loadOSS()">Load OSS Data</button>
 
 <hr>
 
-<p>Upload MyRep Payment File</p>
+<!-- MYREP UPLOAD -->
+
+<p><b>Upload MyRep Payment File</b></p>
+
 <input type="file" id="fileInput" accept=".xlsx,.xls">
+
 <br>
 
-<button onclick="processFile()">Proses MyRep</button>
-<button onclick="downloadExcel()">Download Summary</button>
+<button type="button" onclick="processFile()">Proses MyRep</button>
+<button type="button" onclick="downloadExcel()">Download Summary</button>
 
 <div id="progress"></div>
+
+<!-- RESULT TABLE -->
 
 <table id="resultTable">
 
@@ -115,7 +133,8 @@ color:#555;
 </tr>
 </thead>
 
-<tbody></tbody>
+<tbody>
+</tbody>
 
 </table>
 
