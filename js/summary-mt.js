@@ -105,7 +105,7 @@ let text = report.toString();
 
 let lines = text.split(/\r?\n/);
 
-// bersihkan angka / simbol di awal baris
+// hapus angka / simbol di depan kalimat
 lines = lines.map(line =>
 line.replace(/^[\s\*\-\[\]\(\)\d\.]+/g,"").trim()
 );
@@ -115,36 +115,25 @@ line.replace(/^[\s\*\-\[\]\(\)\d\.]+/g,"").trim()
 // SISTEM 1 (FORMAT RESMI)
 // =======================
 
-// NEW ONT
 let newOntMatch = text.match(/SN\s*ONT\s*BARU\s*:?\s*(.*)/i);
 let newOnt = newOntMatch ? newOntMatch[1].trim() : "";
 
-// SPLICING dari sleeve
 let splacingMatch = text.match(/Sleeve\s*Protec\w*\s*:?[\s]*(\d+)/i);
 let splacing = splacingMatch ? splacingMatch[1] : "";
 
-// RFO
 let rfo = "";
-for(let line of lines){
-
-let lower = line.toLowerCase();
-
-if(lower.startsWith("rfo")){
-rfo = line.replace(/rfo\s*:/i,"").trim();
-break;
-}
-
-}
-
-// ACTION
 let action = "";
+
 for(let line of lines){
 
 let lower = line.toLowerCase();
 
-if(lower.startsWith("act")){
+if(!rfo && lower.startsWith("rfo")){
+rfo = line.replace(/rfo\s*:/i,"").trim();
+}
+
+if(!action && lower.startsWith("act")){
 action = line.replace(/act\s*:/i,"").trim();
-break;
 }
 
 }
@@ -163,12 +152,14 @@ let lower = line.toLowerCase();
 if(
 lower.includes("join") ||
 lower.includes("joint") ||
+lower.includes("rejoin") ||
 lower.includes("tarik")
 ){
 
 action = line;
 
-let num = action.match(/\d+/);
+let num = line.match(/\d+/);
+
 if(num) splacing = num[0];
 
 break;
@@ -180,7 +171,10 @@ break;
 }
 
 
+// =======================
 // RFO dari REMAKS
+// =======================
+
 if(!rfo){
 
 for(let i=0;i<lines.length;i++){
@@ -203,7 +197,7 @@ break;
 
 
 // =======================
-// TAMBAHAN SPLICE DARI RFO
+// SPLICE DARI RFO
 // =======================
 
 if(!splacing && rfo){
@@ -227,7 +221,6 @@ splacing = "1";
 }
 
 }
-
 
 return {newOnt,splacing,rfo,action};
 
@@ -299,7 +292,7 @@ report:report
 processedData.push(result);
 
 
-// tampilkan ke tabel
+// tampilkan tabel
 
 const tr = document.createElement("tr");
 
