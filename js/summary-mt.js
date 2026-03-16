@@ -1,5 +1,10 @@
 let processedData = [];
 
+
+// ==========================
+// PRECON
+// ==========================
+
 function getPrecon(row){
 
 const preconMap = {
@@ -101,58 +106,112 @@ function parseReport(report){
 
 if(!report) return {newOnt:"",splacing:"",rfo:"",action:""};
 
-let text = report.toString();
+let text = report.toLowerCase();
 
 let lines = text.split(/\r?\n/);
 
-
-// ===== NEW ONT =====
-
-let newOnt = "";
-let ontMatch = text.match(/SN\s*ONT\s*BARU\s*:?\s*(.*)/i);
-
-if(ontMatch){
-newOnt = ontMatch[1].trim();
-}
-
-
-// ===== SPLICING =====
-// toleran typo: sleeve, slevee, protec, protection
-
-let splacing = "";
-let spliceMatch = text.match(/slee\w*\s*prot\w*\s*:?\s*(\d+)/i);
-
-if(spliceMatch){
-splacing = spliceMatch[1];
-}
-
-
-// ===== RFO =====
-
+let action = "";
 let rfo = "";
+
+
+// =================
+// KEYWORD ACTION
+// =================
+
+const actionKeywords = [
+"joint",
+"join",
+"splice",
+"splicing",
+"tarik",
+"ganti",
+"repair",
+"perbaikan"
+];
+
+
+// =================
+// KEYWORD RFO
+// =================
+
+const rfoKeywords = [
+"putus",
+"los",
+"redam",
+"ketarik",
+"ditarik",
+"rusak",
+"down",
+"alarm"
+];
+
+
+// =================
+// CARI ACTION
+// =================
 
 for(let line of lines){
 
-if(line.trim().toLowerCase().startsWith("rfo")){
+for(let key of actionKeywords){
+
+if(line.includes(key)){
+action = line.trim();
+break;
+}
+
+}
+
+if(action) break;
+
+}
+
+
+// =================
+// CARI RFO
+// =================
+
+for(let line of lines){
+
+for(let key of rfoKeywords){
+
+if(line.includes(key)){
 rfo = line.trim();
 break;
 }
 
 }
 
-
-// ===== ACTION =====
-
-let action = "";
-
-for(let line of lines){
-
-if(line.trim().toLowerCase().startsWith("act")){
-action = line.trim();
-break;
-}
+if(rfo) break;
 
 }
+
+
+// =================
+// HITUNG SPLICING
+// =================
+
+let splacing = "";
+
+if(action){
+
+let numMatch = action.match(/\d+/);
+
+if(numMatch){
+
+splacing = numMatch[0];
+
+}
+
+else if(action.includes("satu")) splacing = "1";
+else if(action.includes("dua")) splacing = "2";
+else if(action.includes("tiga")) splacing = "3";
+else if(action.includes("empat")) splacing = "4";
+
+}
+
+
+// new ont dikosongkan
+let newOnt = "";
 
 return {newOnt,splacing,rfo,action};
 
@@ -182,9 +241,7 @@ const workbook = XLSX.read(data,{type:"array"});
 
 const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
-const jsonData = XLSX.utils.sheet_to_json(sheet,{
-defval:""
-});
+const jsonData = XLSX.utils.sheet_to_json(sheet,{defval:""});
 
 const tbody = document.querySelector("#resultTable tbody");
 
@@ -226,9 +283,9 @@ report:report
 processedData.push(result);
 
 
-// ==========================
-// TAMPILKAN KE TABLE
-// ==========================
+// =================
+// TAMPILKAN TABLE
+// =================
 
 const tr = document.createElement("tr");
 
