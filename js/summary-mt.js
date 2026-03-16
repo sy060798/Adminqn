@@ -94,7 +94,7 @@ return "";
 
 
 // =======================
-// AMBIL FAT (OLT SAJA)
+// AMBIL OLT (FAT)
 // =======================
 
 function getFat(report){
@@ -103,26 +103,13 @@ if(!report) return "";
 
 let text = report.toString();
 
-let lines = text.split(/\r?\n/);
+let match = text.match(/OLT\s*:?\s*([A-Z0-9\-]+)/i);
 
-let olt="";
-
-for(let line of lines){
-
-let lower=line.toLowerCase();
-
-if(!olt && lower.includes("olt")){
-
-olt = line
-.replace(/.*olt\s*:?/i,"")
-.split(" ")[0]
-.trim();
-
+if(match){
+return match[1];
 }
 
-}
-
-return olt;
+return "";
 
 }
 
@@ -133,7 +120,7 @@ return olt;
 
 function parseReport(report){
 
-if(!report) return {newOnt:"",splacing:"",rfo:"",action:""};
+if(!report) return {newOnt:"",oldOnt:"",splacing:"",rfo:"",action:""};
 
 let text = report.toString();
 
@@ -150,17 +137,35 @@ line
 
 
 // =======================
-// FORMAT RESMI
+// SN ONT BARU
 // =======================
 
-let newOntMatch = text.match(/SN\s*(ONT|PERANGKAT)\s*BARU\s*:?\s*(.*)/i);
-let newOnt = newOntMatch ? newOntMatch[2].trim() : "";
+let newOntMatch = text.match(/SN\s*(ONT|PERANGKAT)\s*BARU\s*:?\s*([A-Z0-9]+)/i);
+let newOnt = newOntMatch ? newOntMatch[2] : "";
+
+
+// =======================
+// SN ONT LAMA
+// =======================
+
+let oldOntMatch = text.match(/SN\s*(ONT|PERANGKAT)\s*LAMA\s*:?\s*([A-Z0-9]+)/i);
+let oldOnt = oldOntMatch ? oldOntMatch[2] : "";
+
+
+// =======================
+// SPLICE
+// =======================
 
 let splacingMatch = text.match(/Sleeve\s*Protec\w*\s*:?[\s]*(\d+)/i);
 let splacing = splacingMatch ? splacingMatch[1] : "";
 
 let rfo="";
 let action="";
+
+
+// =======================
+// FORMAT RFO ACT
+// =======================
 
 for(let line of lines){
 
@@ -266,7 +271,7 @@ splacing="1";
 
 }
 
-return {newOnt,splacing,rfo,action};
+return {newOnt,oldOnt,splacing,rfo,action};
 
 }
 
@@ -327,6 +332,7 @@ alamat:getColumn(row,"Alamat"),
 
 fat:fat,
 new_ont:parsed.newOnt,
+old_ont:parsed.oldOnt,
 splacing:parsed.splacing,
 rfo:parsed.rfo,
 action:parsed.action,
@@ -353,6 +359,7 @@ tr.innerHTML=`
 <td>${result.alamat}</td>
 <td>${result.fat}</td>
 <td>${result.new_ont}</td>
+<td>${result.old_ont}</td>
 <td>${result.splacing}</td>
 <td>${result.rfo}</td>
 <td>${result.action}</td>
