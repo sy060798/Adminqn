@@ -8,7 +8,7 @@
 
 <title>Summary Maintenance (MT)</title>
 
-<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="/style.css">
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
@@ -59,12 +59,10 @@ color:#000;
 font-weight:bold;
 }
 
-/* biar tabel lebih enak dibaca */
 tr:nth-child(even){
 background:#fafafa;
 }
 
-/* kolom report panjang */
 .report{
 max-width:600px;
 word-break:break-word;
@@ -85,8 +83,8 @@ white-space:pre-line;
 
 <br><br>
 
-<button type="button" onclick="processExcel()">Proses Data</button>
-<button type="button" onclick="downloadExcel()">Download Hasil</button>
+<button onclick="processExcel()">Proses Data</button>
+<button onclick="downloadExcel()">Download Hasil</button>
 
 <table id="resultTable">
 
@@ -116,7 +114,7 @@ white-space:pre-line;
 
 </main>
 
-<script src="../js/summary-mt.js"></script>
+<script src="/js/summary-mt.js"></script>
 
 </body>
 </html>
