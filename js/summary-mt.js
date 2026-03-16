@@ -1,5 +1,10 @@
 let processedData = [];
 
+
+// =======================
+// PRECON MATERIAL
+// =======================
+
 function getPrecon(row){
 
 const preconMap = {
@@ -17,11 +22,11 @@ const preconMap = {
 
 };
 
-let result = [];
+let result=[];
 
 for(let key in preconMap){
 
-if(row[key] == 1 || row[key] == "1"){
+if(row[key]==1 || row[key]=="1"){
 result.push(preconMap[key]);
 }
 
@@ -40,7 +45,7 @@ function getColumn(row,name){
 
 for(let key in row){
 
-if(key.toLowerCase().trim() === name.toLowerCase()){
+if(key.toLowerCase().trim()===name.toLowerCase()){
 return row[key];
 }
 
@@ -59,7 +64,7 @@ function getDispatchStatus(row){
 
 for(let key in row){
 
-let col = key.toLowerCase();
+let col=key.toLowerCase();
 
 if(col.includes("dispatch")){
 return row[key];
@@ -80,33 +85,12 @@ function getReportInstallation(row){
 
 for(let key in row){
 
-let col = key.toLowerCase();
+let col=key.toLowerCase();
 
 if(col.includes("report")){
 return row[key];
 }
 
-}
-
-return "";
-
-}
-
-
-// =======================
-// AMBIL OLT (FAT)
-// =======================
-
-function getFat(report){
-
-if(!report) return "";
-
-let text = report.toString();
-
-let match = text.match(/OLT\s*:?\s*([A-Z0-9\-]+)/i);
-
-if(match){
-return match[1];
 }
 
 return "";
@@ -122,13 +106,13 @@ function parseReport(report){
 
 if(!report) return {newOnt:"",oldOnt:"",splacing:"",rfo:"",action:""};
 
-let text = report.toString();
+let text=report.toString();
 
-let lines = text.split(/\r?\n/);
+let lines=text.split(/\r?\n/);
 
 
 // bersihkan simbol dan angka depan
-lines = lines.map(line =>
+lines=lines.map(line =>
 line
 .replace(/^\s*[\*\-\[\]\(\)]*/g,"")
 .replace(/^\s*\d+\s*[\.\)]\s*/g,"")
@@ -140,24 +124,24 @@ line
 // SN ONT BARU
 // =======================
 
-let newOntMatch = text.match(/SN\s*(ONT|PERANGKAT)\s*BARU\s*:?\s*([A-Z0-9]+)/i);
-let newOnt = newOntMatch ? newOntMatch[2] : "";
+let newOntMatch=text.match(/SN\s*(ONT|PERANGKAT)\s*BARU\s*:?\s*([A-Z0-9]+)/i);
+let newOnt=newOntMatch?newOntMatch[2]:"";
 
 
 // =======================
 // SN ONT LAMA
 // =======================
 
-let oldOntMatch = text.match(/SN\s*(ONT|PERANGKAT)\s*LAMA\s*:?\s*([A-Z0-9]+)/i);
-let oldOnt = oldOntMatch ? oldOntMatch[2] : "";
+let oldOntMatch=text.match(/SN\s*(ONT|PERANGKAT)\s*LAMA\s*:?\s*([A-Z0-9]+)/i);
+let oldOnt=oldOntMatch?oldOntMatch[2]:"";
 
 
 // =======================
 // SPLICE
 // =======================
 
-let splacingMatch = text.match(/Sleeve\s*Protec\w*\s*:?[\s]*(\d+)/i);
-let splacing = splacingMatch ? splacingMatch[1] : "";
+let splacingMatch=text.match(/Sleeve\s*Protec\w*\s*:?[\s]*(\d+)/i);
+let splacing=splacingMatch?splacingMatch[1]:"";
 
 let rfo="";
 let action="";
@@ -319,8 +303,6 @@ let report=getReportInstallation(row);
 
 let parsed=parseReport(report);
 
-let fat=getFat(report);
-
 const result={
 
 dispatch:"Done",
@@ -330,7 +312,8 @@ id:getColumn(row,"Cust ID Klien"),
 tanggal:getColumn(row,"Tanggal Kunjungan"),
 alamat:getColumn(row,"Alamat"),
 
-Cabang:Cabang,
+cabang:getColumn(row,"Cabang"),
+
 new_ont:parsed.newOnt,
 old_ont:parsed.oldOnt,
 splacing:parsed.splacing,
@@ -357,7 +340,7 @@ tr.innerHTML=`
 <td>${result.id}</td>
 <td>${result.tanggal}</td>
 <td>${result.alamat}</td>
-<td>${result.Cabang}</td>
+<td>${result.cabang}</td>
 <td>${result.new_ont}</td>
 <td>${result.old_ont}</td>
 <td>${result.splacing}</td>
