@@ -128,7 +128,7 @@ const result = {
 dispatch: "Done",
 status: "Done",
 wo: getColumn(row,"No Wo Klien"),
-ID: getColumn(row,"Cust ID Klien"),    
+ID: getColumn(row,"Cust ID Klien"),
 tanggal: getColumn(row,"Tanggal Kunjungan"),
 alamat: getColumn(row,"Alamat"),
 ont: getColumn(row,"ONT"),
@@ -148,7 +148,7 @@ tr.innerHTML = `
 <td>${result.dispatch}</td>
 <td>${result.status}</td>
 <td>${result.wo}</td>
-<td>${result.Cust ID Klien}</td>
+<td>${result.ID}</td>
 <td>${result.tanggal}</td>
 <td>${result.alamat}</td>
 <td>${result.ont}</td>
