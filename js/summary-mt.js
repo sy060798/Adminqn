@@ -156,7 +156,10 @@ if(
 lower.includes("join") ||
 lower.includes("joint") ||
 lower.includes("rejoin") ||
-lower.includes("tarik")
+lower.includes("rejoin ulang") ||
+lower.includes("splice") ||
+lower.includes("splicing") ||
+lower.includes("sambung")
 ){
 
 action = line;
@@ -210,6 +213,10 @@ let lower = rfo.toLowerCase();
 if(
 lower.includes("join") ||
 lower.includes("joint") ||
+lower.includes("rejoin") ||
+lower.includes("rejoin ulang") ||
+lower.includes("splice") ||
+lower.includes("splicing") ||
 lower.includes("sambung")
 ){
 
