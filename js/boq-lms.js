@@ -68,6 +68,7 @@ const data=new Uint8Array(e.target.result)
 
 const wb=XLSX.read(data,{type:'array'})
 
+// ambil sheet LMS
 const sheet=wb.Sheets["BoQ Aktual (Mitra)"]
 
 if(!sheet){
@@ -77,12 +78,31 @@ return
 
 const rows=XLSX.utils.sheet_to_json(sheet,{header:1})
 
+let qtyCol=-1
+
+// cari kolom header "BoQ Aktual (Mitra)"
+for(let c=0;c<rows[0].length;c++){
+
+let header=String(rows[0][c]).toLowerCase()
+
+if(header.includes("aktual")){
+qtyCol=c
+break
+}
+
+}
+
+if(qtyCol===-1){
+resolve([])
+return
+}
+
 let qtyList=[]
 
-// ambil hanya kolom Qty
+// ambil semua qty di bawah header
 for(let i=1;i<rows.length;i++){
 
-let qty=Number(rows[i][4])
+let qty=Number(rows[i][qtyCol])
 
 if(qty){
 qtyList.push(qty)
@@ -119,12 +139,12 @@ break
 // setiap LMS punya 2 kolom (Qty + Total)
 let col=startCol+(index*2)
 
-// isi judul file (baris kuning)
+// isi nama file di baris judul LMS
 boqData[1][col]=header
 
 let lmsIndex=0
 
-// mulai isi dari baris item
+// mulai isi item
 for(let i=5;i<boqData.length;i++){
 
 if(!boqData[i][1]) continue
