@@ -1,49 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 
 <head>
 
 <meta charset="UTF-8">
-<title>BOQ Auto Rekap</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<title>BOQ Auto Rekap LMS</title>
 
-<style>
+<link rel="stylesheet" href="../style.css">
 
-body{
-font-family:Arial;
-padding:40px;
-background:#f5f5f5;
-}
-
-.container{
-background:white;
-padding:25px;
-border-radius:10px;
-max-width:500px;
-box-shadow:0 0 10px rgba(0,0,0,0.1);
-}
-
-button{
-padding:10px 20px;
-margin-top:10px;
-cursor:pointer;
-}
-
-.progress{
-width:100%;
-background:#eee;
-margin-top:20px;
-}
-
-.progress-bar{
-width:0%;
-background:#4CAF50;
-color:white;
-text-align:center;
-}
-
-</style>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 </head>
 
@@ -53,29 +20,30 @@ text-align:center;
 
 <h2>BOQ Auto Rekap LMS</h2>
 
-<p>Upload BOQ</p>
-<input type="file" id="boqFile" accept=".xlsx">
+<label>Upload BOQ</label><br>
+<input type="file" id="boqFile" accept=".xlsx,.xls">
 
 <br><br>
 
-<p>Upload LMS (bisa banyak)</p>
-<input type="file" id="lmsFiles" multiple accept=".xlsx">
+<label>Upload File LMS (bisa banyak)</label><br>
+<input type="file" id="lmsFiles" multiple accept=".xlsx,.xls">
 
 <br><br>
 
 <button onclick="processFiles()">Proses Data</button>
-
 <button onclick="downloadBOQ()">Download BOQ</button>
 
 <div class="progress">
 <div id="progressBar" class="progress-bar">0%</div>
 </div>
 
-<p id="status">Menunggu file...</p>
+<p id="status">Menunggu upload file...</p>
 
 </div>
 
-<script src="script.js"></script>
+<!-- JS harus naik folder -->
+
+<script src="../js/boq-lms.js"></script>
 
 </body>
 </html>
