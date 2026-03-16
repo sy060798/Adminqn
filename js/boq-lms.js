@@ -79,15 +79,16 @@ const rows=XLSX.utils.sheet_to_json(sheet,{header:1})
 
 let qtyList=[]
 
-rows.forEach(r=>{
+// ambil hanya kolom Qty
+for(let i=1;i<rows.length;i++){
 
-let qty=Number(r[4])
+let qty=Number(rows[i][4])
 
 if(qty){
 qtyList.push(qty)
 }
 
-})
+}
 
 resolve(qtyList)
 
@@ -115,30 +116,30 @@ break
 
 }
 
-// karena ada Qty & Total
+// setiap LMS punya 2 kolom (Qty + Total)
 let col=startCol+(index*2)
 
-// isi judul
+// isi judul file (baris kuning)
 boqData[1][col]=header
 
 let lmsIndex=0
 
-for(let i=3;i<boqData.length;i++){
+// mulai isi dari baris item
+for(let i=5;i<boqData.length;i++){
 
 if(!boqData[i][1]) continue
 
 let qty=lmsRows[lmsIndex]
 
 if(qty){
-
 boqData[i][col]=qty
-
 }
 
 lmsIndex++
 
 }
 
+// update sheet
 const newSheet=XLSX.utils.aoa_to_sheet(boqData)
 
 boqWorkbook.Sheets[boqWorkbook.SheetNames[0]]=newSheet
