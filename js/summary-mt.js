@@ -125,8 +125,7 @@ const actionKeywords = [
 "splicing",
 "tarik",
 "ganti",
-"repair",
-"perbaikan"
+"repair"
 ];
 
 
