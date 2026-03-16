@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+<meta charset="UTF-8">
+<title>MyRep Summary Generator</title>
+
+<link rel="stylesheet" href="../style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="../js/myrep-summary.js"></script>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f4f6f9;
+padding:40px;
+}
+
+.container{
+background:white;
+padding:25px;
+border-radius:10px;
+box-shadow:0 2px 8px rgba(0,0,0,0.1);
+}
+
+button{
+padding:10px 18px;
+margin-top:10px;
+cursor:pointer;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
+}
+
+th,td{
+border:1px solid #ddd;
+padding:8px;
+font-size:13px;
+}
+
+th{
+background:#2c3e50;
+color:white;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>MyRep Payment → Summary</h2>
+
+<input type="file" id="fileInput" accept=".xlsx,.xls">
+
+<br>
+
+<button onclick="processFile()">Proses File</button>
+<button onclick="downloadExcel()">Download Summary</button>
+
+<table id="resultTable">
+
+<thead>
+<tr>
+<th>CUSTOMER ID</th>
+<th>CUSTOMER NAME</th>
+<th>WO ID</th>
+<th>WO DATE SCHEDULING</th>
+<th>BAST ID</th>
+<th>BAST DATE</th>
+<th>SERIAL NUMBER</th>
+<th>MAC ADDRESS</th>
+<th>Status</th>
+<th>Ket</th>
+<th>AREA</th>
+</tr>
+</thead>
+
+<tbody></tbody>
+
+</table>
+
+</div>
+
+</body>
+</html>
