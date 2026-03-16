@@ -1,6 +1,13 @@
 let boqWorkbook
 let boqData
 
+function normalize(text){
+return String(text)
+.toLowerCase()
+.replace(/[^a-z0-9]/g,"")
+.trim()
+}
+
 async function processFiles(){
 
 const boqFile=document.getElementById("boqFile").files[0]
@@ -20,9 +27,9 @@ await readBOQ(boqFile)
 
 for(let i=0;i<lmsFiles.length;i++){
 
-let lmsData=await readLMS(lmsFiles[i])
+let lmsItems=await readLMS(lmsFiles[i])
 
-fillBOQ(lmsData,lmsFiles[i].name,i)
+fillBOQ(lmsItems,lmsFiles[i].name,i)
 
 }
 
@@ -68,49 +75,31 @@ const data=new Uint8Array(e.target.result)
 
 const wb=XLSX.read(data,{type:'array'})
 
-// ambil sheet LMS
 const sheet=wb.Sheets["BoQ Aktual (Mitra)"]
 
 if(!sheet){
-resolve([])
+resolve({})
 return
 }
 
 const rows=XLSX.utils.sheet_to_json(sheet,{header:1})
 
-let qtyCol=-1
+let items={}
 
-// cari kolom header "BoQ Aktual (Mitra)"
-for(let c=0;c<rows[0].length;c++){
-
-let header=String(rows[0][c]).toLowerCase()
-
-if(header.includes("aktual")){
-qtyCol=c
-break
-}
-
-}
-
-if(qtyCol===-1){
-resolve([])
-return
-}
-
-let qtyList=[]
-
-// ambil semua qty di bawah header
 for(let i=1;i<rows.length;i++){
 
-let qty=Number(rows[i][qtyCol])
+let item=rows[i][1]   // kolom Item
+let qty=Number(rows[i][3]) // kolom BoQ Aktual
 
-if(qty){
-qtyList.push(qty)
+if(item && qty){
+
+items[normalize(item)]=qty
+
 }
 
 }
 
-resolve(qtyList)
+resolve(items)
 
 }
 
@@ -120,7 +109,7 @@ reader.readAsArrayBuffer(file)
 
 }
 
-function fillBOQ(lmsRows,fileName,index){
+function fillBOQ(lmsItems,fileName,index){
 
 let header=fileName.replace(".xlsx","")
 
@@ -136,30 +125,28 @@ break
 
 }
 
-// setiap LMS punya 2 kolom (Qty + Total)
+// tiap LMS punya Qty + Total
 let col=startCol+(index*2)
 
-// isi nama file di baris judul LMS
+// isi judul LMS
 boqData[1][col]=header
 
-let lmsIndex=0
-
-// mulai isi item
 for(let i=5;i<boqData.length;i++){
 
-if(!boqData[i][1]) continue
+let item=boqData[i][1]
 
-let qty=lmsRows[lmsIndex]
+if(!item) continue
 
-if(qty){
-boqData[i][col]=qty
+let key=normalize(item)
+
+if(lmsItems[key]){
+
+boqData[i][col]=lmsItems[key]
+
 }
 
-lmsIndex++
-
 }
 
-// update sheet
 const newSheet=XLSX.utils.aoa_to_sheet(boqData)
 
 boqWorkbook.Sheets[boqWorkbook.SheetNames[0]]=newSheet
