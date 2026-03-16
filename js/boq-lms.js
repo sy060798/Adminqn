@@ -8,6 +8,9 @@ return String(text)
 .trim()
 }
 
+document.getElementById("btnProses").addEventListener("click",processFiles)
+document.getElementById("btnDownload").addEventListener("click",downloadBOQ)
+
 async function processFiles(){
 
 const boqFile=document.getElementById("boqFile").files[0]
@@ -88,8 +91,8 @@ let items={}
 
 for(let i=1;i<rows.length;i++){
 
-let item=rows[i][1]   // kolom Item
-let qty=Number(rows[i][3]) // kolom BoQ Aktual (Mitra)
+let item=rows[i][1]
+let qty=Number(rows[i][3])
 
 if(item && qty){
 
@@ -113,7 +116,6 @@ function fillBOQ(lmsItems,fileName,index){
 
 let header=fileName.replace(".xlsx","")
 
-// cari kolom LMS pertama
 let startCol=0
 
 for(let c=0;c<boqData[0].length;c++){
@@ -125,10 +127,8 @@ break
 
 }
 
-// tiap LMS punya Qty + Total
 let col=startCol+(index*2)
 
-// isi judul LMS
 boqData[1][col]=header
 
 for(let i=5;i<boqData.length;i++){
@@ -154,6 +154,11 @@ boqWorkbook.Sheets[boqWorkbook.SheetNames[0]]=newSheet
 }
 
 function downloadBOQ(){
+
+if(!boqWorkbook){
+alert("Proses dulu sebelum download")
+return
+}
 
 XLSX.writeFile(boqWorkbook,"BOQ_REKAP_LMS.xlsx")
 
