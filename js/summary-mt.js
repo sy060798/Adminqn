@@ -32,7 +32,10 @@ return result.join(", ");
 }
 
 
-// ambil kolom fleksibel
+// ==========================
+// AMBIL KOLOM FLEKSIBEL
+// ==========================
+
 function getColumn(row,name){
 
 for(let key in row){
@@ -48,7 +51,10 @@ return "";
 }
 
 
-// ambil status dispatch
+// ==========================
+// STATUS DISPATCH
+// ==========================
+
 function getDispatchStatus(row){
 
 for(let key in row){
@@ -66,7 +72,10 @@ return "";
 }
 
 
-// ambil report installation
+// ==========================
+// AMBIL REPORT
+// ==========================
+
 function getReportInstallation(row){
 
 for(let key in row){
@@ -84,9 +93,9 @@ return "";
 }
 
 
-// ======================
-// PARSE DATA DARI REPORT
-// ======================
+// ==========================
+// PARSE REPORT TEKNISI
+// ==========================
 
 function parseReport(report){
 
@@ -94,32 +103,55 @@ if(!report) return {newOnt:"",splacing:"",rfo:"",action:""};
 
 let text = report.toString();
 
-let lines = text.split(/\n|\r/);
+let lines = text.split(/\r?\n/);
 
-// NEW ONT
-let newOntMatch = text.match(/SN\s*ONT\s*BARU\s*:?\s*(.*)/i);
-let newOnt = newOntMatch ? newOntMatch[1].trim() : "";
 
-// SPLICING (Sleeve Protection)
-let splacingMatch = text.match(/Sleeve\s*Protec\w*\s*:?[\s]*(\d+)/i);
-let splacing = splacingMatch ? splacingMatch[1] : "";
+// ===== NEW ONT =====
 
-// RFO
+let newOnt = "";
+let ontMatch = text.match(/SN\s*ONT\s*BARU\s*:?\s*(.*)/i);
+
+if(ontMatch){
+newOnt = ontMatch[1].trim();
+}
+
+
+// ===== SPLICING =====
+// toleran typo: sleeve, slevee, protec, protection
+
+let splacing = "";
+let spliceMatch = text.match(/slee\w*\s*prot\w*\s*:?\s*(\d+)/i);
+
+if(spliceMatch){
+splacing = spliceMatch[1];
+}
+
+
+// ===== RFO =====
+
 let rfo = "";
+
 for(let line of lines){
+
 if(line.trim().toLowerCase().startsWith("rfo")){
 rfo = line.trim();
 break;
 }
+
 }
 
-// ACTION
+
+// ===== ACTION =====
+
 let action = "";
+
 for(let line of lines){
+
 if(line.trim().toLowerCase().startsWith("act")){
 action = line.trim();
 break;
 }
+
 }
 
 return {newOnt,splacing,rfo,action};
@@ -127,9 +159,9 @@ return {newOnt,splacing,rfo,action};
 }
 
 
-// ======================
+// ==========================
 // PROCESS EXCEL
-// ======================
+// ==========================
 
 function processExcel(){
 
@@ -150,7 +182,9 @@ const workbook = XLSX.read(data,{type:"array"});
 
 const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
-const jsonData = XLSX.utils.sheet_to_json(sheet);
+const jsonData = XLSX.utils.sheet_to_json(sheet,{
+defval:""
+});
 
 const tbody = document.querySelector("#resultTable tbody");
 
@@ -192,9 +226,9 @@ report:report
 processedData.push(result);
 
 
-// ======================
+// ==========================
 // TAMPILKAN KE TABLE
-// ======================
+// ==========================
 
 const tr = document.createElement("tr");
 
@@ -211,7 +245,7 @@ tr.innerHTML = `
 <td>${result.rfo}</td>
 <td>${result.action}</td>
 <td>${result.precon}</td>
-<td style="max-width:600px;word-break:break-word;">${result.report || ""}</td>
+<td style="max-width:600px;word-break:break-word;white-space:pre-line;">${result.report}</td>
 
 `;
 
@@ -226,9 +260,9 @@ reader.readAsArrayBuffer(file);
 }
 
 
-// ======================
+// ==========================
 // DOWNLOAD EXCEL
-// ======================
+// ==========================
 
 function downloadExcel(){
 
