@@ -1,15 +1,31 @@
 let summaryData = [];
 
-function formatDate(value) {
+function formatDate(value){
 
-if (!value) return "";
+if(!value) return "";
 
+// jika angka (excel serial date)
+if(typeof value === "number"){
+
+const d = XLSX.SSF.parse_date_code(value);
+
+if(!d) return value;
+
+let day = String(d.d).padStart(2,'0');
+let month = String(d.m).padStart(2,'0');
+let year = d.y;
+
+return `${day}-${month}-${year}`;
+
+}
+
+// jika string date
 let date = new Date(value);
 
-if (isNaN(date)) return value;
+if(isNaN(date)) return value;
 
-let day = String(date.getDate()).padStart(2, "0");
-let month = String(date.getMonth() + 1).padStart(2, "0");
+let day = String(date.getDate()).padStart(2,'0');
+let month = String(date.getMonth()+1).padStart(2,'0');
 let year = date.getFullYear();
 
 return `${day}-${month}-${year}`;
