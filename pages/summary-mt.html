@@ -55,8 +55,20 @@ vertical-align:top;
 th{
 background:#f0f0f0;
 text-align:left;
-color:#000;      /* teks hitam */
+color:#000;
 font-weight:bold;
+}
+
+/* biar tabel lebih enak dibaca */
+tr:nth-child(even){
+background:#fafafa;
+}
+
+/* kolom report panjang */
+.report{
+max-width:600px;
+word-break:break-word;
+white-space:pre-line;
 }
 
 </style>
@@ -73,8 +85,8 @@ font-weight:bold;
 
 <br><br>
 
-<button onclick="processExcel()">Proses Data</button>
-<button onclick="downloadExcel()">Download Hasil</button>
+<button type="button" onclick="processExcel()">Proses Data</button>
+<button type="button" onclick="downloadExcel()">Download Hasil</button>
 
 <table id="resultTable">
 
@@ -94,11 +106,10 @@ font-weight:bold;
 <th>precon</th>
 <th>report</th>
 </tr>
-  
+
 </thead>
 
 <tbody>
-
 </tbody>
 
 </table>
