@@ -1,10 +1,26 @@
 let summaryData = [];
 
-function processFile(){
+function formatDate(value) {
+
+if (!value) return "";
+
+let date = new Date(value);
+
+if (isNaN(date)) return value;
+
+let day = String(date.getDate()).padStart(2, "0");
+let month = String(date.getMonth() + 1).padStart(2, "0");
+let year = date.getFullYear();
+
+return `${day}-${month}-${year}`;
+
+}
+
+function processFile() {
 
 const file = document.getElementById("fileInput").files[0];
 
-if(!file){
+if (!file) {
 alert("Upload file Excel dulu");
 return;
 }
@@ -13,11 +29,11 @@ document.getElementById("progress").innerText = "Membaca file...";
 
 const reader = new FileReader();
 
-reader.onload = function(e){
+reader.onload = function (e) {
 
 const data = new Uint8Array(e.target.result);
 
-const workbook = XLSX.read(data,{type:"array"});
+const workbook = XLSX.read(data, { type: "array" });
 
 const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
@@ -31,42 +47,43 @@ reader.readAsArrayBuffer(file);
 
 }
 
-function generateSummary(data){
+function generateSummary(data) {
 
 const tbody = document.querySelector("#resultTable tbody");
 
-tbody.innerHTML="";
+tbody.innerHTML = "";
 
-summaryData=[];
+summaryData = [];
 
-document.getElementById("progress").innerText="Memproses "+data.length+" data...";
+document.getElementById("progress").innerText =
+"Memproses " + data.length + " data...";
 
-data.forEach(row=>{
+data.forEach((row) => {
 
-const item={
+const item = {
 
-"CUSTOMER ID":row.subscription_id || "",
-"CUSTOMER NAME":"",
-"WO ID":row.work_order_number || "",
-"WO DATE SCHEDULING":row.service_activation_date || "",
-"BAST ID":row.work_order_number || "",
-"BAST DATE":row.service_activation_date || "",
-"SERIAL NUMBER":row.ont_serial_number || "",
-"MAC ADDRESS":row.ont_mac_address || "",
-"Status":row.service_status || "",
-"Ket":row.workorder_status || "",
-"AREA":row.area || ""
+"CUSTOMER ID": row.subscription_id || "",
+"CUSTOMER NAME": "",
+"WO ID": row.work_order_number || "",
+"WO DATE SCHEDULING": formatDate(row.service_activation_date),
+"BAST ID": row.work_order_number || "",
+"BAST DATE": formatDate(row.service_activation_date),
+"SERIAL NUMBER": row.ont_serial_number || "",
+"MAC ADDRESS": row.ont_mac_address || "",
+"Status": row.service_status || "",
+"Ket": row.workorder_status || "",
+"AREA": row.area || ""
 
 };
 
 summaryData.push(item);
 
-const tr=document.createElement("tr");
+const tr = document.createElement("tr");
 
-Object.values(item).forEach(val=>{
+Object.values(item).forEach((val) => {
 
-const td=document.createElement("td");
-td.textContent=val;
+const td = document.createElement("td");
+td.textContent = val;
 tr.appendChild(td);
 
 });
@@ -75,23 +92,27 @@ tbody.appendChild(tr);
 
 });
 
-document.getElementById("progress").innerText="Selesai. Total "+summaryData.length+" data.";
+document.getElementById("progress").innerText =
+"Selesai. Total " + summaryData.length + " data.";
 
 }
 
-function downloadExcel(){
+function downloadExcel() {
 
-if(summaryData.length===0){
-alert("Belum ada data");
+if (summaryData.length === 0) {
+
+alert("Belum ada data untuk didownload");
+
 return;
+
 }
 
-const worksheet=XLSX.utils.json_to_sheet(summaryData);
+const worksheet = XLSX.utils.json_to_sheet(summaryData);
 
-const workbook=XLSX.utils.book_new();
+const workbook = XLSX.utils.book_new();
 
-XLSX.utils.book_append_sheet(workbook,worksheet,"Summary");
+XLSX.utils.book_append_sheet(workbook, worksheet, "Summary");
 
-XLSX.writeFile(workbook,"myrep_summary.xlsx");
+XLSX.writeFile(workbook, "myrep_summary.xlsx");
 
 }
