@@ -106,15 +106,63 @@ function parseReport(report){
 
 if(!report) return {newOnt:"",splacing:"",rfo:"",action:""};
 
-let lines = report.split(/\r?\n/);
+let text = report.toString();
+
+
+// bersihkan simbol aneh
+text = text.replace(/[\*\[\]\(\)#]/g,"");
+
+let lines = text.split(/\r?\n/);
 
 let action = "";
 let rfo = "";
 
 
-// =================
-// KEYWORD ACTION
-// =================
+// ======================
+// FORMAT RFO / ACT
+// ======================
+
+let rfoMatch = text.match(/rfo\s*[:\-]\s*(.*)/i);
+if(rfoMatch){
+rfo = rfoMatch[1].trim();
+}
+
+let actMatch = text.match(/act\s*[:\-]\s*(.*)/i);
+if(actMatch){
+action = actMatch[1].trim();
+}
+
+
+// ======================
+// FORMAT REMARK
+// ======================
+
+if(!rfo){
+
+for(let i=0;i<lines.length;i++){
+
+let lower = lines[i].toLowerCase();
+
+if(lower.includes("remak") || lower.includes("remark")){
+
+if(lines[i+1]){
+rfo = lines[i+1].trim();
+}
+
+break;
+
+}
+
+}
+
+}
+
+
+// ======================
+// FORMAT KEYWORD ACTION
+// ======================
+
+if(!action){
 
 const actionKeywords = [
 "joint",
@@ -128,34 +176,13 @@ const actionKeywords = [
 "sambung"
 ];
 
-
-// =================
-// KEYWORD RFO
-// =================
-
-const rfoKeywords = [
-"putus",
-"los",
-"redam",
-"ketarik",
-"ditarik",
-"rusak",
-"down",
-"alarm"
-];
-
-
-// =================
-// CARI ACTION
-// =================
-
 for(let line of lines){
 
-let lineLower = line.toLowerCase();
+let lower = line.toLowerCase();
 
 for(let key of actionKeywords){
 
-if(lineLower.includes(key)){
+if(lower.includes(key)){
 action = line.trim();
 break;
 }
@@ -166,51 +193,33 @@ if(action) break;
 
 }
 
-
-// =================
-// CARI RFO
-// =================
-
-for(let line of lines){
-
-let lineLower = line.toLowerCase();
-
-for(let key of rfoKeywords){
-
-if(lineLower.includes(key)){
-rfo = line.trim();
-break;
-}
-
-}
-
-if(rfo) break;
-
 }
 
 
-// =================
+// ======================
 // HITUNG SPLICING
-// =================
+// ======================
 
 let splacing = "";
 
 if(action){
 
-let actionLower = action.toLowerCase();
-
-let numMatch = actionLower.match(/\d+/);
+let numMatch = action.match(/\d+/);
 
 if(numMatch){
 
 splacing = numMatch[0];
 
-}
+}else{
 
-else if(actionLower.includes("satu")) splacing = "1";
-else if(actionLower.includes("dua")) splacing = "2";
-else if(actionLower.includes("tiga")) splacing = "3";
-else if(actionLower.includes("empat")) splacing = "4";
+let lower = action.toLowerCase();
+
+if(lower.includes("satu")) splacing="1";
+if(lower.includes("dua")) splacing="2";
+if(lower.includes("tiga")) splacing="3";
+if(lower.includes("empat")) splacing="4";
+
+}
 
 }
 
@@ -288,13 +297,12 @@ report:report
 processedData.push(result);
 
 
-// =================
-// TAMPILKAN TABLE
-// =================
+// tampilkan tabel
 
 const tr = document.createElement("tr");
 
 tr.innerHTML = `
+
 <td>${result.dispatch}</td>
 <td>${result.status}</td>
 <td>${result.wo}</td>
@@ -307,6 +315,7 @@ tr.innerHTML = `
 <td>${result.action}</td>
 <td>${result.precon}</td>
 <td style="max-width:600px;word-break:break-word;white-space:pre-line;">${result.report}</td>
+
 `;
 
 tbody.appendChild(tr);
