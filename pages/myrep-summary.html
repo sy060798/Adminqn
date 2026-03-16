@@ -5,10 +5,12 @@
 <title>MyRep Summary Generator</title>
 
 <link rel="stylesheet" href="../style.css">
+
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="../js/myrep-summary.js" defer></script>
 
 <style>
+
 body{
 font-family:Arial,sans-serif;
 background:#f4f6f9;
@@ -65,6 +67,7 @@ margin-top:12px;
 font-size:13px;
 color:#555;
 }
+
 </style>
 
 </head>
@@ -75,16 +78,24 @@ color:#555;
 
 <h2>MyRep Payment → Summary</h2>
 
-<input type="file" id="fileInput" accept=".xlsx,.xls">
+<p>Upload OSS File (Customer Name)</p>
+<input type="file" id="ossInput" accept=".xlsx,.xls" multiple>
+<br>
+<button onclick="loadOSS()">Load OSS Data</button>
 
+<hr>
+
+<p>Upload MyRep Payment File</p>
+<input type="file" id="fileInput" accept=".xlsx,.xls">
 <br>
 
-<button onclick="processFile()">Proses File</button>
+<button onclick="processFile()">Proses MyRep</button>
 <button onclick="downloadExcel()">Download Summary</button>
 
 <div id="progress"></div>
 
 <table id="resultTable">
+
 <thead>
 <tr>
 <th>CUSTOMER ID</th>
@@ -105,6 +116,7 @@ color:#555;
 </thead>
 
 <tbody></tbody>
+
 </table>
 
 </div>
