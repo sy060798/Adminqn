@@ -1,40 +1,15 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>BOQ Rekap LMS</title>
 
+<link rel="stylesheet" href="../style.css">
+
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-<style>
-body{
-    font-family: Arial, sans-serif;
-    padding: 30px;
-    background: #f5f5f5;
-}
-
-h2{
-    margin-bottom:20px;
-}
-
-input{
-    margin-bottom:15px;
-}
-
-button{
-    padding:8px 20px;
-    margin-right:10px;
-    cursor:pointer;
-}
-
-#status{
-    margin-top:20px;
-    font-weight:bold;
-    color:green;
-}
-</style>
 
 </head>
 
@@ -47,17 +22,17 @@ button{
 
 <br><br>
 
-<p>Upload File LMS</p>
+<p>Upload LMS Files</p>
 <input type="file" id="lmsFiles" multiple accept=".xlsx">
 
 <br><br>
 
 <button onclick="processFiles()">Proses</button>
-<button onclick="downloadBOQ()">Download Excel</button>
+<button onclick="downloadBOQ()">Download</button>
 
 <p id="status"></p>
 
-<script src="boq-lms.js"></script>
+<script src="../js/boq-lms.js"></script>
 
 </body>
 </html>
