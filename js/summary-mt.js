@@ -33,7 +33,7 @@ return result.join(", ");
 
 
 // =======================
-// AMBIL KOLOM
+// AMBIL KOLOM FLEKSIBEL
 // =======================
 
 function getColumn(row,name){
@@ -105,16 +105,21 @@ let text = report.toString();
 
 let lines = text.split(/\r?\n/);
 
+// bersihkan angka / simbol di awal baris
+lines = lines.map(line =>
+line.replace(/^[\s\*\-\[\]\(\)\d\.]+/g,"").trim()
+);
+
 
 // =======================
-// SISTEM 1
+// SISTEM 1 (FORMAT RESMI)
 // =======================
 
 // NEW ONT
 let newOntMatch = text.match(/SN\s*ONT\s*BARU\s*:?\s*(.*)/i);
 let newOnt = newOntMatch ? newOntMatch[1].trim() : "";
 
-// SPLICING dari Sleeve
+// SPLICING dari sleeve
 let splacingMatch = text.match(/Sleeve\s*Protec\w*\s*:?[\s]*(\d+)/i);
 let splacing = splacingMatch ? splacingMatch[1] : "";
 
@@ -122,7 +127,9 @@ let splacing = splacingMatch ? splacingMatch[1] : "";
 let rfo = "";
 for(let line of lines){
 
-if(line.trim().toLowerCase().startsWith("rfo")){
+let lower = line.toLowerCase();
+
+if(lower.startsWith("rfo")){
 rfo = line.replace(/rfo\s*:/i,"").trim();
 break;
 }
@@ -133,7 +140,9 @@ break;
 let action = "";
 for(let line of lines){
 
-if(line.trim().toLowerCase().startsWith("act")){
+let lower = line.toLowerCase();
+
+if(lower.startsWith("act")){
 action = line.replace(/act\s*:/i,"").trim();
 break;
 }
@@ -142,10 +151,9 @@ break;
 
 
 // =======================
-// SISTEM 2
+// SISTEM 2 (FORMAT TEKNISI)
 // =======================
 
-// ACTION teknisi
 if(!action){
 
 for(let line of lines){
@@ -158,7 +166,7 @@ lower.includes("joint") ||
 lower.includes("tarik")
 ){
 
-action = line.trim();
+action = line;
 
 let num = action.match(/\d+/);
 if(num) splacing = num[0];
@@ -182,7 +190,7 @@ let lower = lines[i].toLowerCase();
 if(lower.includes("remak")){
 
 if(lines[i+1]){
-rfo = lines[i+1].trim();
+rfo = lines[i+1];
 }
 
 break;
