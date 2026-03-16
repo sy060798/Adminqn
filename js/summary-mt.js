@@ -330,7 +330,7 @@ id:getColumn(row,"Cust ID Klien"),
 tanggal:getColumn(row,"Tanggal Kunjungan"),
 alamat:getColumn(row,"Alamat"),
 
-fat:fat,
+Cabang:Cabang,
 new_ont:parsed.newOnt,
 old_ont:parsed.oldOnt,
 splacing:parsed.splacing,
@@ -357,7 +357,7 @@ tr.innerHTML=`
 <td>${result.id}</td>
 <td>${result.tanggal}</td>
 <td>${result.alamat}</td>
-<td>${result.fat}</td>
+<td>${result.Cabang}</td>
 <td>${result.new_ont}</td>
 <td>${result.old_ont}</td>
 <td>${result.splacing}</td>
