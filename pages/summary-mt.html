@@ -1,14 +1,99 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
+
 <head>
-<title>Summary MT</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Summary IB</title>
+
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    padding:20px;
+    background:#f7f7f7;
+}
+
+h2{
+    margin-bottom:15px;
+}
+
+button{
+    padding:8px 14px;
+    margin-right:10px;
+    cursor:pointer;
+    background:#2c7be5;
+    color:white;
+    border:none;
+    border-radius:4px;
+}
+
+button:hover{
+    background:#1b5dc7;
+}
+
+table{
+    border-collapse: collapse;
+    width:100%;
+    margin-top:20px;
+    background:white;
+}
+
+th, td{
+    border:1px solid #ddd;
+    padding:8px;
+    font-size:13px;
+    vertical-align:top;
+}
+
+th{
+    background:#f0f0f0;
+    text-align:left;
+}
+</style>
+
 </head>
 
 <body>
 
-<h2>Summary MetaTrader</h2>
+<main>
 
-<div id="data-mt"></div>
+<h2>Summary maintenance (MT)</h2>
+
+<input type="file" id="excelFile" accept=".xlsx,.xls">
+
+<br><br>
+
+<button type="button" onclick="processExcel()">Proses Data</button>
+<button type="button" onclick="downloadExcel()">Download Hasil</button>
+
+<table id="resultTable">
+
+<thead>
+<tr>
+<th>STATUS BY DISPATCH WO</th>
+<th>Status</th>
+<th>No WO</th>
+<th>Cust ID Klien</th>
+<th>Tanggal</th>
+<th>Alamat</th>
+<th>ONT</th>
+<th>STB</th>
+<th>Router</th>
+<th>PRECON</th>
+<th>Report Installation</th>
+</tr>
+</thead>
+
+<tbody>
+</tbody>
+
+</table>
+
+</main>
 
 <script src="../js/summary-mt.js"></script>
 
