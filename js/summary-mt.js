@@ -94,7 +94,7 @@ return "";
 
 
 // =======================
-// AMBIL FAT (OLT / PON)
+// AMBIL FAT (OLT SAJA)
 // =======================
 
 function getFat(report){
@@ -106,33 +106,23 @@ let text = report.toString();
 let lines = text.split(/\r?\n/);
 
 let olt="";
-let pon="";
-let odp="";
-let dpfo="";
 
 for(let line of lines){
 
 let lower=line.toLowerCase();
 
 if(!olt && lower.includes("olt")){
-olt=line.replace(/.*olt\s*:?/i,"").trim();
-}
 
-if(!pon && lower.includes("pon")){
-pon=line.replace(/.*pon\s*:?/i,"").trim();
-}
+olt = line
+.replace(/.*olt\s*:?/i,"")
+.split(" ")[0]
+.trim();
 
-if(!odp && lower.includes("odp")){
-odp=line.replace(/.*odp\s*:?/i,"").trim();
-}
-
-if(!dpfo && lower.includes("dpfo")){
-dpfo=line.replace(/.*dpfo\s*:?/i,"").trim();
 }
 
 }
 
-return [olt,pon,odp,dpfo].filter(Boolean).join(" ");
+return olt;
 
 }
 
@@ -148,6 +138,7 @@ if(!report) return {newOnt:"",splacing:"",rfo:"",action:""};
 let text = report.toString();
 
 let lines = text.split(/\r?\n/);
+
 
 // bersihkan simbol dan angka depan
 lines = lines.map(line =>
