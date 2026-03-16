@@ -4,8 +4,8 @@ let boqData;
 function normalize(text){
 return String(text)
 .toLowerCase()
-replace(/[^a-z0-9]/g,"")
-trim();
+.replace(/[^a-z0-9]/g,"")
+.trim();
 }
 
 async function processFiles(){
@@ -78,7 +78,7 @@ let items={};
 
 rows.forEach((r,i)=>{
 
-if(i===0) return;
+if(i<1) return;
 
 let item=r[1];
 let qty=Number(r[4]);
@@ -105,16 +105,18 @@ reader.readAsArrayBuffer(file);
 
 function fillBOQ(lmsItems,index){
 
-let col=3+index;
+let col=5+index;
 
 boqData.forEach((r,i)=>{
 
-if(i===0){
+if(i===10){
 
 r[col]="LMS "+(index+1);
 return;
 
 }
+
+if(i<11) return;
 
 let item=r[1];
 
