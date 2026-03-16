@@ -1,6 +1,5 @@
 let processedData = [];
 
-
 function getPrecon(row){
 
 const preconMap = {
@@ -67,7 +66,7 @@ return "";
 }
 
 
-// ambil report
+// ambil report installation
 function getReportInstallation(row){
 
 for(let key in row){
@@ -84,6 +83,53 @@ return "";
 
 }
 
+
+// ======================
+// PARSE DATA DARI REPORT
+// ======================
+
+function parseReport(report){
+
+if(!report) return {newOnt:"",splacing:"",rfo:"",action:""};
+
+let text = report.toString();
+
+let lines = text.split(/\n|\r/);
+
+// NEW ONT
+let newOntMatch = text.match(/SN\s*ONT\s*BARU\s*:?\s*(.*)/i);
+let newOnt = newOntMatch ? newOntMatch[1].trim() : "";
+
+// SPLICING (Sleeve Protection)
+let splacingMatch = text.match(/Sleeve\s*Protec\w*\s*:?[\s]*(\d+)/i);
+let splacing = splacingMatch ? splacingMatch[1] : "";
+
+// RFO
+let rfo = "";
+for(let line of lines){
+if(line.trim().toLowerCase().startsWith("rfo")){
+rfo = line.trim();
+break;
+}
+}
+
+// ACTION
+let action = "";
+for(let line of lines){
+if(line.trim().toLowerCase().startsWith("act")){
+action = line.trim();
+break;
+}
+}
+
+return {newOnt,splacing,rfo,action};
+
+}
+
+
+// ======================
+// PROCESS EXCEL
+// ======================
 
 function processExcel(){
 
@@ -118,43 +164,55 @@ let dispatchStatus = getDispatchStatus(row);
 
 dispatchStatus = String(dispatchStatus).trim().toLowerCase();
 
-// hanya ambil DONE
-if(dispatchStatus !== "done"){
-return;
-}
+if(dispatchStatus !== "done") return;
+
+let report = getReportInstallation(row);
+
+let parsed = parseReport(report);
 
 const result = {
 
-dispatch: "Done",
-status: "Done",
-wo: getColumn(row,"No Wo Klien"),
-id: getColumn(row,"Cust ID Klien"),
-tanggal: getColumn(row,"Tanggal Kunjungan"),
-alamat: getColumn(row,"Alamat"),
-ont: getColumn(row,"ONT"),
-stb: getColumn(row,"STB"),
-router: getColumn(row,"Router"),
-precon: getPrecon(row),
-report: getReportInstallation(row)
+dispatch:"Done",
+status:"Done",
+wo:getColumn(row,"No Wo Klien"),
+id:getColumn(row,"Cust ID Klien"),
+tanggal:getColumn(row,"Tanggal Kunjungan"),
+alamat:getColumn(row,"Alamat"),
+
+new_ont:parsed.newOnt,
+splacing:parsed.splacing,
+rfo:parsed.rfo,
+action:parsed.action,
+
+precon:getPrecon(row),
+report:report
 
 };
 
 processedData.push(result);
 
+
+// ======================
+// TAMPILKAN KE TABLE
+// ======================
+
 const tr = document.createElement("tr");
 
 tr.innerHTML = `
+
 <td>${result.dispatch}</td>
 <td>${result.status}</td>
 <td>${result.wo}</td>
 <td>${result.id}</td>
 <td>${result.tanggal}</td>
 <td>${result.alamat}</td>
-<td>${result.ont}</td>
-<td>${result.stb}</td>
-<td>${result.router}</td>
+<td>${result.new_ont}</td>
+<td>${result.splacing}</td>
+<td>${result.rfo}</td>
+<td>${result.action}</td>
 <td>${result.precon}</td>
 <td style="max-width:600px;word-break:break-word;">${result.report || ""}</td>
+
 `;
 
 tbody.appendChild(tr);
@@ -167,6 +225,10 @@ reader.readAsArrayBuffer(file);
 
 }
 
+
+// ======================
+// DOWNLOAD EXCEL
+// ======================
 
 function downloadExcel(){
 
