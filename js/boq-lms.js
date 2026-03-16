@@ -1,15 +1,6 @@
 let boqWorkbook
 let boqData
 
-function normalize(text){
-
-return String(text)
-.toLowerCase()
-.replace(/[^a-z0-9]/g,"")
-trim()
-
-}
-
 async function processFiles(){
 
 const boqFile=document.getElementById("boqFile").files[0]
@@ -21,7 +12,7 @@ return
 }
 
 if(lmsFiles.length===0){
-alert("Upload file LMS")
+alert("Upload file LMS dulu")
 return
 }
 
@@ -80,28 +71,25 @@ const wb=XLSX.read(data,{type:'array'})
 const sheet=wb.Sheets["BoQ Aktual (Mitra)"]
 
 if(!sheet){
-resolve({})
+resolve([])
 return
 }
 
 const rows=XLSX.utils.sheet_to_json(sheet,{header:1})
 
-let items={}
+let qtyList=[]
 
 rows.forEach(r=>{
 
-let item=r[1]
 let qty=Number(r[4])
 
-if(item && qty){
-
-items[normalize(item)]=qty
-
+if(qty){
+qtyList.push(qty)
 }
 
 })
 
-resolve(items)
+resolve(qtyList)
 
 }
 
@@ -111,34 +99,45 @@ reader.readAsArrayBuffer(file)
 
 }
 
-function fillBOQ(lmsItems,fileName,index){
-
-let col=index+1
+function fillBOQ(lmsRows,fileName,index){
 
 let header=fileName.replace(".xlsx","")
 
-boqData.forEach((r,i)=>{
+// cari kolom LMS pertama
+let startCol=0
 
-if(i===0){
+for(let c=0;c<boqData[0].length;c++){
 
-r[col]=header
-return
+if(String(boqData[0][c]).toLowerCase().includes("lms")){
+startCol=c
+break
+}
 
 }
 
-let item=r[0]
+// karena ada Qty & Total
+let col=startCol+(index*2)
 
-if(!item) return
+// isi judul
+boqData[1][col]=header
 
-let key=normalize(item)
+let lmsIndex=0
 
-if(lmsItems[key]){
+for(let i=3;i<boqData.length;i++){
 
-r[col]=lmsItems[key]
+if(!boqData[i][1]) continue
+
+let qty=lmsRows[lmsIndex]
+
+if(qty){
+
+boqData[i][col]=qty
 
 }
 
-})
+lmsIndex++
+
+}
 
 const newSheet=XLSX.utils.aoa_to_sheet(boqData)
 
@@ -148,6 +147,6 @@ boqWorkbook.Sheets[boqWorkbook.SheetNames[0]]=newSheet
 
 function downloadBOQ(){
 
-XLSX.writeFile(boqWorkbook,"BOQ_REKAP.xlsx")
+XLSX.writeFile(boqWorkbook,"BOQ_REKAP_LMS.xlsx")
 
 }
