@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+
+<meta charset="UTF-8">
+<title>BOQ Auto Rekap</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
@@ -8,13 +12,28 @@
 
 body{
 font-family:Arial;
-padding:20px;
+padding:40px;
+background:#f5f5f5;
+}
+
+.container{
+background:white;
+padding:25px;
+border-radius:10px;
+max-width:500px;
+box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+button{
+padding:10px 20px;
+margin-top:10px;
+cursor:pointer;
 }
 
 .progress{
 width:100%;
 background:#eee;
-margin-top:10px;
+margin-top:20px;
 }
 
 .progress-bar{
@@ -30,15 +49,17 @@ text-align:center;
 
 <body>
 
-<h2>Upload BOQ dan LMS</h2>
+<div class="container">
+
+<h2>BOQ Auto Rekap LMS</h2>
 
 <p>Upload BOQ</p>
-<input type="file" id="boqFile" accept=".xlsx,.xls">
+<input type="file" id="boqFile" accept=".xlsx">
 
 <br><br>
 
-<p>Upload File LMS (bisa banyak)</p>
-<input type="file" id="lmsFiles" accept=".xlsx,.xls" multiple>
+<p>Upload LMS (bisa banyak)</p>
+<input type="file" id="lmsFiles" multiple accept=".xlsx">
 
 <br><br>
 
@@ -46,13 +67,13 @@ text-align:center;
 
 <button onclick="downloadBOQ()">Download BOQ</button>
 
-<br><br>
-
 <div class="progress">
 <div id="progressBar" class="progress-bar">0%</div>
 </div>
 
-<p id="status">Menunggu upload...</p>
+<p id="status">Menunggu file...</p>
+
+</div>
 
 <script src="script.js"></script>
 
