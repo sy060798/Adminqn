@@ -1,20 +1,8 @@
 let boqWorkbook;
 let boqData;
 
-let itemTotals={};
-
-function setStatus(t){
-document.getElementById("status").innerText=t;
-}
-
-function setProgress(p){
-const bar=document.getElementById("progressBar");
-bar.style.width=p+"%";
-bar.innerText=p+"%";
-}
-
 function normalize(text){
-return text
+return String(text)
 .toLowerCase()
 .replace(/[^a-z0-9]/g,"")
 .trim();
@@ -30,37 +18,17 @@ alert("Upload BOQ dulu");
 return;
 }
 
-if(lmsFiles.length===0){
-alert("Upload file LMS");
-return;
-}
-
-itemTotals={};
-
-setStatus("Membaca BOQ...");
-setProgress(10);
-
 await readBOQ(boqFile);
-
-setStatus("Membaca file LMS...");
-setProgress(20);
 
 for(let i=0;i<lmsFiles.length;i++){
 
-await readLMS(lmsFiles[i],i);
+let lmsData=await readLMS(lmsFiles[i]);
 
-let percent=20+Math.round((i+1)/lmsFiles.length*50);
-setProgress(percent);
+updateBOQ(lmsData,i);
 
 }
 
-setStatus("Mencocokkan item...");
-setProgress(80);
-
-updateBOQ();
-
-setProgress(100);
-setStatus("Selesai ✔ Silakan download BOQ");
+alert("Selesai, silakan download");
 
 }
 
@@ -90,7 +58,7 @@ reader.readAsArrayBuffer(file);
 
 }
 
-function readLMS(file,index){
+function readLMS(file){
 
 return new Promise(resolve=>{
 
@@ -102,45 +70,30 @@ const data=new Uint8Array(e.target.result);
 
 const wb=XLSX.read(data,{type:'array'});
 
-const sheetName="BoQ Aktual (Mitra)";
-
-if(!wb.Sheets[sheetName]){
-console.log("Sheet tidak ditemukan di",file.name);
-resolve();
-return;
-}
-
-const sheet=wb.Sheets[sheetName];
+const sheet=wb.Sheets["BoQ Aktual (Mitra)"];
 
 const rows=XLSX.utils.sheet_to_json(sheet,{header:1});
+
+let items={};
 
 rows.forEach((r,i)=>{
 
 if(i===0) return;
 
 let item=r[1];
-let qty=r[4];
+let qty=Number(r[4]);
 
-if(item && typeof qty==="number" && qty>0){
+if(item && qty){
 
 let key=normalize(item);
 
-if(!itemTotals[key]) itemTotals[key]=0;
-
-itemTotals[key]+=qty;
+items[key]=qty;
 
 }
 
 });
 
-const newSheet=XLSX.utils.aoa_to_sheet(rows);
-
-const newName="LMS_"+(index+1);
-
-boqWorkbook.SheetNames.push(newName);
-boqWorkbook.Sheets[newName]=newSheet;
-
-resolve();
+resolve(items);
 
 };
 
@@ -150,9 +103,18 @@ reader.readAsArrayBuffer(file);
 
 }
 
-function updateBOQ(){
+function updateBOQ(lmsItems,index){
 
-boqData.forEach(r=>{
+let columnIndex=3+index; 
+
+boqData.forEach((r,i)=>{
+
+if(i===0){
+
+r[columnIndex]="LMS "+(index+1);
+return;
+
+}
 
 let item=r[1];
 
@@ -160,13 +122,9 @@ if(!item) return;
 
 let key=normalize(item);
 
-for(let lmsItem in itemTotals){
+if(lmsItems[key]){
 
-if(lmsItem.includes(key) || key.includes(lmsItem)){
-
-r[3]=itemTotals[lmsItem];
-
-}
+r[columnIndex]=lmsItems[key];
 
 }
 
