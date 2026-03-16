@@ -1,10 +1,5 @@
 let processedData = [];
 
-
-// ==========================
-// PRECON
-// ==========================
-
 function getPrecon(row){
 
 const preconMap = {
@@ -37,9 +32,9 @@ return result.join(", ");
 }
 
 
-// ==========================
-// AMBIL KOLOM FLEKSIBEL
-// ==========================
+// =======================
+// AMBIL KOLOM
+// =======================
 
 function getColumn(row,name){
 
@@ -56,9 +51,9 @@ return "";
 }
 
 
-// ==========================
+// =======================
 // STATUS DISPATCH
-// ==========================
+// =======================
 
 function getDispatchStatus(row){
 
@@ -77,9 +72,9 @@ return "";
 }
 
 
-// ==========================
+// =======================
 // AMBIL REPORT
-// ==========================
+// =======================
 
 function getReportInstallation(row){
 
@@ -98,9 +93,9 @@ return "";
 }
 
 
-// ==========================
-// PARSE REPORT TEKNISI
-// ==========================
+// =======================
+// PARSE REPORT
+// =======================
 
 function parseReport(report){
 
@@ -108,42 +103,83 @@ if(!report) return {newOnt:"",splacing:"",rfo:"",action:""};
 
 let text = report.toString();
 
-
-// bersihkan simbol aneh
-text = text.replace(/[\*\[\]\(\)#]/g,"");
-
 let lines = text.split(/\r?\n/);
 
-let action = "";
+
+// =======================
+// SISTEM 1
+// =======================
+
+// NEW ONT
+let newOntMatch = text.match(/SN\s*ONT\s*BARU\s*:?\s*(.*)/i);
+let newOnt = newOntMatch ? newOntMatch[1].trim() : "";
+
+// SPLICING dari Sleeve
+let splacingMatch = text.match(/Sleeve\s*Protec\w*\s*:?[\s]*(\d+)/i);
+let splacing = splacingMatch ? splacingMatch[1] : "";
+
+// RFO
 let rfo = "";
+for(let line of lines){
 
-
-// ======================
-// FORMAT RFO / ACT
-// ======================
-
-let rfoMatch = text.match(/rfo\s*[:\-]\s*(.*)/i);
-if(rfoMatch){
-rfo = rfoMatch[1].trim();
+if(line.trim().toLowerCase().startsWith("rfo")){
+rfo = line.replace(/rfo\s*:/i,"").trim();
+break;
 }
 
-let actMatch = text.match(/act\s*[:\-]\s*(.*)/i);
-if(actMatch){
-action = actMatch[1].trim();
+}
+
+// ACTION
+let action = "";
+for(let line of lines){
+
+if(line.trim().toLowerCase().startsWith("act")){
+action = line.replace(/act\s*:/i,"").trim();
+break;
+}
+
 }
 
 
-// ======================
-// FORMAT REMARK
-// ======================
+// =======================
+// SISTEM 2
+// =======================
 
+// ACTION teknisi
+if(!action){
+
+for(let line of lines){
+
+let lower = line.toLowerCase();
+
+if(
+lower.includes("join") ||
+lower.includes("joint") ||
+lower.includes("tarik")
+){
+
+action = line.trim();
+
+let num = action.match(/\d+/);
+if(num) splacing = num[0];
+
+break;
+
+}
+
+}
+
+}
+
+
+// RFO dari REMAKS
 if(!rfo){
 
 for(let i=0;i<lines.length;i++){
 
 let lower = lines[i].toLowerCase();
 
-if(lower.includes("remak") || lower.includes("remark")){
+if(lower.includes("remak")){
 
 if(lines[i+1]){
 rfo = lines[i+1].trim();
@@ -158,83 +194,41 @@ break;
 }
 
 
-// ======================
-// FORMAT KEYWORD ACTION
-// ======================
+// =======================
+// TAMBAHAN SPLICE DARI RFO
+// =======================
 
-if(!action){
+if(!splacing && rfo){
 
-const actionKeywords = [
-"joint",
-"join",
-"splice",
-"splicing",
-"tarik",
-"ganti",
-"repair",
-"perbaikan",
-"sambung"
-];
+let lower = rfo.toLowerCase();
 
-for(let line of lines){
+if(
+lower.includes("join") ||
+lower.includes("joint") ||
+lower.includes("sambung")
+){
 
-let lower = line.toLowerCase();
+let num = rfo.match(/\d+/);
 
-for(let key of actionKeywords){
-
-if(lower.includes(key)){
-action = line.trim();
-break;
-}
-
-}
-
-if(action) break;
-
-}
-
-}
-
-
-// ======================
-// HITUNG SPLICING
-// ======================
-
-let splacing = "";
-
-if(action){
-
-let numMatch = action.match(/\d+/);
-
-if(numMatch){
-
-splacing = numMatch[0];
-
+if(num){
+splacing = num[0];
 }else{
-
-let lower = action.toLowerCase();
-
-if(lower.includes("satu")) splacing="1";
-if(lower.includes("dua")) splacing="2";
-if(lower.includes("tiga")) splacing="3";
-if(lower.includes("empat")) splacing="4";
+splacing = "1";
+}
 
 }
 
 }
 
-
-// NEW ONT DIKOSONGKAN
-let newOnt = "";
 
 return {newOnt,splacing,rfo,action};
 
 }
 
 
-// ==========================
+// =======================
 // PROCESS EXCEL
-// ==========================
+// =======================
 
 function processExcel(){
 
@@ -297,7 +291,7 @@ report:report
 processedData.push(result);
 
 
-// tampilkan tabel
+// tampilkan ke tabel
 
 const tr = document.createElement("tr");
 
@@ -329,9 +323,9 @@ reader.readAsArrayBuffer(file);
 }
 
 
-// ==========================
+// =======================
 // DOWNLOAD EXCEL
-// ==========================
+// =======================
 
 function downloadExcel(){
 
