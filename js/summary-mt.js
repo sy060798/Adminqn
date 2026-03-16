@@ -106,9 +106,7 @@ function parseReport(report){
 
 if(!report) return {newOnt:"",splacing:"",rfo:"",action:""};
 
-let text = report.toLowerCase();
-
-let lines = text.split(/\r?\n/);
+let lines = report.split(/\r?\n/);
 
 let action = "";
 let rfo = "";
@@ -125,7 +123,9 @@ const actionKeywords = [
 "splicing",
 "tarik",
 "ganti",
-"repair"
+"repair",
+"perbaikan",
+"sambung"
 ];
 
 
@@ -151,9 +151,11 @@ const rfoKeywords = [
 
 for(let line of lines){
 
+let lineLower = line.toLowerCase();
+
 for(let key of actionKeywords){
 
-if(line.includes(key)){
+if(lineLower.includes(key)){
 action = line.trim();
 break;
 }
@@ -171,9 +173,11 @@ if(action) break;
 
 for(let line of lines){
 
+let lineLower = line.toLowerCase();
+
 for(let key of rfoKeywords){
 
-if(line.includes(key)){
+if(lineLower.includes(key)){
 rfo = line.trim();
 break;
 }
@@ -193,7 +197,9 @@ let splacing = "";
 
 if(action){
 
-let numMatch = action.match(/\d+/);
+let actionLower = action.toLowerCase();
+
+let numMatch = actionLower.match(/\d+/);
 
 if(numMatch){
 
@@ -201,15 +207,15 @@ splacing = numMatch[0];
 
 }
 
-else if(action.includes("satu")) splacing = "1";
-else if(action.includes("dua")) splacing = "2";
-else if(action.includes("tiga")) splacing = "3";
-else if(action.includes("empat")) splacing = "4";
+else if(actionLower.includes("satu")) splacing = "1";
+else if(actionLower.includes("dua")) splacing = "2";
+else if(actionLower.includes("tiga")) splacing = "3";
+else if(actionLower.includes("empat")) splacing = "4";
 
 }
 
 
-// new ont dikosongkan
+// NEW ONT DIKOSONGKAN
 let newOnt = "";
 
 return {newOnt,splacing,rfo,action};
@@ -289,7 +295,6 @@ processedData.push(result);
 const tr = document.createElement("tr");
 
 tr.innerHTML = `
-
 <td>${result.dispatch}</td>
 <td>${result.status}</td>
 <td>${result.wo}</td>
@@ -302,7 +307,6 @@ tr.innerHTML = `
 <td>${result.action}</td>
 <td>${result.precon}</td>
 <td style="max-width:600px;word-break:break-word;white-space:pre-line;">${result.report}</td>
-
 `;
 
 tbody.appendChild(tr);
