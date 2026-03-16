@@ -107,7 +107,10 @@ let lines = text.split(/\r?\n/);
 
 // hapus angka / simbol di depan kalimat
 lines = lines.map(line =>
-line.replace(/^[\s\*\-\[\]\(\)\d\.]+/g,"").trim()
+line
+.replace(/^\s*[\*\-\[\]\(\)]*/g,"")        // hapus simbol
+.replace(/^\s*\d+\s*[\.\)]\s*/g,"")        // hapus angka + titik
+.trim()
 );
 
 
