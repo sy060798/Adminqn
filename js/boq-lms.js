@@ -6,20 +6,7 @@ function normalize(text){
 return String(text)
 .toLowerCase()
 .replace(/[^a-z0-9]/g,"")
-.trim()
-
-}
-
-function setStatus(t){
-document.getElementById("status").innerText=t
-}
-
-function setProgress(p){
-
-const bar=document.getElementById("progressBar")
-
-bar.style.width=p+"%"
-bar.innerText=p+"%"
+trim()
 
 }
 
@@ -29,36 +16,26 @@ const boqFile=document.getElementById("boqFile").files[0]
 const lmsFiles=document.getElementById("lmsFiles").files
 
 if(!boqFile){
-alert("Upload BOQ dulu")
+alert("Upload BOQ Template dulu")
 return
 }
 
 if(lmsFiles.length===0){
-alert("Upload LMS")
+alert("Upload file LMS")
 return
 }
-
-setStatus("Membaca BOQ...")
-setProgress(10)
 
 await readBOQ(boqFile)
 
 for(let i=0;i<lmsFiles.length;i++){
 
-setStatus("Membaca "+lmsFiles[i].name)
+let lmsData=await readLMS(lmsFiles[i])
 
-let lmsItems=await readLMS(lmsFiles[i])
-
-fillBOQ(lmsItems,i,lmsFiles[i].name)
-
-let percent=10+Math.round((i+1)/lmsFiles.length*70)
-
-setProgress(percent)
+fillBOQ(lmsData,lmsFiles[i].name,i)
 
 }
 
-setStatus("Selesai ✔")
-setProgress(100)
+document.getElementById("status").innerText="Selesai ✔"
 
 }
 
@@ -111,18 +88,14 @@ const rows=XLSX.utils.sheet_to_json(sheet,{header:1})
 
 let items={}
 
-rows.forEach((r,i)=>{
-
-if(i===0) return
+rows.forEach(r=>{
 
 let item=r[1]
 let qty=Number(r[4])
 
 if(item && qty){
 
-let key=normalize(item)
-
-items[key]=qty
+items[normalize(item)]=qty
 
 }
 
@@ -138,24 +111,22 @@ reader.readAsArrayBuffer(file)
 
 }
 
-function fillBOQ(lmsItems,index,fileName){
+function fillBOQ(lmsItems,fileName,index){
 
-let col=5+index
+let col=index+1
 
 let header=fileName.replace(".xlsx","")
 
 boqData.forEach((r,i)=>{
 
-if(i===10){
+if(i===0){
 
 r[col]=header
 return
 
 }
 
-if(i<11) return
-
-let item=r[1]
+let item=r[0]
 
 if(!item) return
 
@@ -177,11 +148,6 @@ boqWorkbook.Sheets[boqWorkbook.SheetNames[0]]=newSheet
 
 function downloadBOQ(){
 
-if(!boqWorkbook){
-alert("Belum ada data")
-return
-}
-
-XLSX.writeFile(boqWorkbook,"BOQ_UPDATED.xlsx")
+XLSX.writeFile(boqWorkbook,"BOQ_REKAP.xlsx")
 
 }
