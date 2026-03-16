@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>BOQ Auto Rekap LMS</title>
+<title>BOQ Rekap LMS</title>
 
 <link rel="stylesheet" href="../style.css">
 
@@ -16,32 +16,22 @@
 
 <body>
 
-<div class="container">
+<h2>BOQ Rekap LMS</h2>
 
-<h2>BOQ Auto Rekap LMS</h2>
-
-<label>Upload BOQ</label><br>
-<input type="file" id="boqFile" accept=".xlsx,.xls">
+<p>Upload BOQ Template</p>
+<input type="file" id="boqFile" accept=".xlsx">
 
 <br><br>
 
-<label>Upload File LMS (bisa banyak)</label><br>
-<input type="file" id="lmsFiles" multiple accept=".xlsx,.xls">
+<p>Upload LMS Files</p>
+<input type="file" id="lmsFiles" multiple accept=".xlsx">
 
 <br><br>
 
-<button onclick="processFiles()">Proses Data</button>
-<button onclick="downloadBOQ()">Download BOQ</button>
+<button onclick="processFiles()">Proses</button>
+<button onclick="downloadBOQ()">Download</button>
 
-<div class="progress">
-<div id="progressBar" class="progress-bar">0%</div>
-</div>
-
-<p id="status">Menunggu upload file...</p>
-
-</div>
-
-<!-- JS harus naik folder -->
+<p id="status"></p>
 
 <script src="../js/boq-lms.js"></script>
 
