@@ -9,6 +9,8 @@ alert("Upload file Excel dulu");
 return;
 }
 
+document.getElementById("progress").innerText = "Membaca file...";
+
 const reader = new FileReader();
 
 reader.onload = function(e){
@@ -29,42 +31,42 @@ reader.readAsArrayBuffer(file);
 
 }
 
-
-
 function generateSummary(data){
 
 const tbody = document.querySelector("#resultTable tbody");
 
 tbody.innerHTML="";
 
-summaryData = [];
+summaryData=[];
+
+document.getElementById("progress").innerText="Memproses "+data.length+" data...";
 
 data.forEach(row=>{
 
-const item = {
+const item={
 
-"CUSTOMER ID": row.subscription_id || "",
-"CUSTOMER NAME": "",
-"WO ID": row.work_order_number || "",
-"WO DATE SCHEDULING": row.service_activation_date || "",
-"BAST ID": row.work_order_number || "",
-"BAST DATE": row.service_activation_date || "",
-"SERIAL NUMBER": row.ont_serial_number || "",
-"MAC ADDRESS": row.ont_mac_address || "",
-"Status": row.service_status || "",
-"Ket": row.workorder_status || "",
-"AREA": row.area || ""
+"CUSTOMER ID":row.subscription_id || "",
+"CUSTOMER NAME":"",
+"WO ID":row.work_order_number || "",
+"WO DATE SCHEDULING":row.service_activation_date || "",
+"BAST ID":row.work_order_number || "",
+"BAST DATE":row.service_activation_date || "",
+"SERIAL NUMBER":row.ont_serial_number || "",
+"MAC ADDRESS":row.ont_mac_address || "",
+"Status":row.service_status || "",
+"Ket":row.workorder_status || "",
+"AREA":row.area || ""
 
 };
 
 summaryData.push(item);
 
-const tr = document.createElement("tr");
+const tr=document.createElement("tr");
 
 Object.values(item).forEach(val=>{
 
-const td = document.createElement("td");
-td.textContent = val;
+const td=document.createElement("td");
+td.textContent=val;
 tr.appendChild(td);
 
 });
@@ -73,20 +75,20 @@ tbody.appendChild(tr);
 
 });
 
+document.getElementById("progress").innerText="Selesai. Total "+summaryData.length+" data.";
+
 }
-
-
 
 function downloadExcel(){
 
-if(summaryData.length === 0){
+if(summaryData.length===0){
 alert("Belum ada data");
 return;
 }
 
-const worksheet = XLSX.utils.json_to_sheet(summaryData);
+const worksheet=XLSX.utils.json_to_sheet(summaryData);
 
-const workbook = XLSX.utils.book_new();
+const workbook=XLSX.utils.book_new();
 
 XLSX.utils.book_append_sheet(workbook,worksheet,"Summary");
 
