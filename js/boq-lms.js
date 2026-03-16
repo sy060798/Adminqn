@@ -4,8 +4,8 @@ let boqData;
 function normalize(text){
 return String(text)
 .toLowerCase()
-.replace(/[^a-z0-9]/g,"")
-.trim();
+replace(/[^a-z0-9]/g,"")
+trim();
 }
 
 async function processFiles(){
@@ -22,13 +22,13 @@ await readBOQ(boqFile);
 
 for(let i=0;i<lmsFiles.length;i++){
 
-let lmsData=await readLMS(lmsFiles[i]);
+let lmsItems=await readLMS(lmsFiles[i]);
 
-updateBOQ(lmsData,i);
+fillBOQ(lmsItems,i);
 
 }
 
-alert("Selesai, silakan download");
+alert("Selesai ✔");
 
 }
 
@@ -103,15 +103,15 @@ reader.readAsArrayBuffer(file);
 
 }
 
-function updateBOQ(lmsItems,index){
+function fillBOQ(lmsItems,index){
 
-let columnIndex=3+index; 
+let col=3+index;
 
 boqData.forEach((r,i)=>{
 
 if(i===0){
 
-r[columnIndex]="LMS "+(index+1);
+r[col]="LMS "+(index+1);
 return;
 
 }
@@ -124,7 +124,7 @@ let key=normalize(item);
 
 if(lmsItems[key]){
 
-r[columnIndex]=lmsItems[key];
+r[col]=lmsItems[key];
 
 }
 
@@ -137,11 +137,6 @@ boqWorkbook.Sheets[boqWorkbook.SheetNames[0]]=newSheet;
 }
 
 function downloadBOQ(){
-
-if(!boqWorkbook){
-alert("Belum ada data");
-return;
-}
 
 XLSX.writeFile(boqWorkbook,"BOQ_UPDATED.xlsx");
 
