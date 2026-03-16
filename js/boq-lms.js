@@ -8,21 +8,16 @@ document.getElementById("status").innerText=t;
 }
 
 function setProgress(p){
-
 const bar=document.getElementById("progressBar");
-
 bar.style.width=p+"%";
 bar.innerText=p+"%";
-
 }
 
 function normalize(text){
-
 return text
 .toLowerCase()
 .replace(/[^a-z0-9]/g,"")
 .trim();
-
 }
 
 async function processFiles(){
@@ -52,10 +47,9 @@ setProgress(20);
 
 for(let i=0;i<lmsFiles.length;i++){
 
-await readLMS(lmsFiles[i]);
+await readLMS(lmsFiles[i],i);
 
 let percent=20+Math.round((i+1)/lmsFiles.length*50);
-
 setProgress(percent);
 
 }
@@ -66,7 +60,6 @@ setProgress(80);
 updateBOQ();
 
 setProgress(100);
-
 setStatus("Selesai ✔ Silakan download BOQ");
 
 }
@@ -97,7 +90,7 @@ reader.readAsArrayBuffer(file);
 
 }
 
-function readLMS(file){
+function readLMS(file,index){
 
 return new Promise(resolve=>{
 
@@ -109,11 +102,21 @@ const data=new Uint8Array(e.target.result);
 
 const wb=XLSX.read(data,{type:'array'});
 
-const sheet=wb.Sheets[wb.SheetNames[0]];
+const sheetName="BoQ Aktual (Mitra)";
+
+if(!wb.Sheets[sheetName]){
+console.log("Sheet tidak ditemukan di",file.name);
+resolve();
+return;
+}
+
+const sheet=wb.Sheets[sheetName];
 
 const rows=XLSX.utils.sheet_to_json(sheet,{header:1});
 
-rows.forEach(r=>{
+rows.forEach((r,i)=>{
+
+if(i===0) return;
 
 let item=r[1];
 let qty=r[4];
@@ -129,6 +132,13 @@ itemTotals[key]+=qty;
 }
 
 });
+
+const newSheet=XLSX.utils.aoa_to_sheet(rows);
+
+const newName="LMS_"+(index+1);
+
+boqWorkbook.SheetNames.push(newName);
+boqWorkbook.Sheets[newName]=newSheet;
 
 resolve();
 
@@ -171,11 +181,8 @@ boqWorkbook.Sheets[boqWorkbook.SheetNames[0]]=newSheet;
 function downloadBOQ(){
 
 if(!boqWorkbook){
-
 alert("Belum ada data");
-
 return;
-
 }
 
 XLSX.writeFile(boqWorkbook,"BOQ_UPDATED.xlsx");
