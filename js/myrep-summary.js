@@ -1,5 +1,8 @@
 let summaryData = [];
+let ossMap = {};
 
+
+/* FORMAT TANGGAL */
 function formatDate(value){
 
 if(!value) return "";
@@ -32,12 +35,56 @@ return `${day}-${month}-${year}`;
 
 
 
+/* LOAD OSS (BISA BANYAK FILE) */
+
+async function loadOSS(){
+
+const files=document.getElementById("ossInput").files;
+
+if(files.length===0){
+alert("Upload file OSS dulu");
+return;
+}
+
+ossMap={};
+
+for(const file of files){
+
+const data=await file.arrayBuffer();
+
+const workbook=XLSX.read(data);
+
+const sheet=workbook.Sheets[workbook.SheetNames[0]];
+
+const json=XLSX.utils.sheet_to_json(sheet);
+
+json.forEach(row=>{
+
+const id=row["Cust ID Klien"];
+const name=row["Customer Name"];
+
+if(id){
+ossMap[id]=name || "";
+}
+
+});
+
+}
+
+alert("OSS data loaded : "+Object.keys(ossMap).length+" customer");
+
+}
+
+
+
+/* PROSES MYREP */
+
 function processFile(){
 
 const file=document.getElementById("fileInput").files[0];
 
 if(!file){
-alert("Upload file Excel dulu");
+alert("Upload file MyRep dulu");
 return;
 }
 
@@ -65,6 +112,8 @@ reader.readAsArrayBuffer(file);
 
 
 
+/* GENERATE SUMMARY */
+
 function generateSummary(data){
 
 const tbody=document.querySelector("#resultTable tbody");
@@ -73,7 +122,8 @@ tbody.innerHTML="";
 
 summaryData=[];
 
-document.getElementById("progress").innerText="Memproses "+data.length+" data...";
+document.getElementById("progress").innerText=
+"Memproses "+data.length+" data...";
 
 data.forEach(row=>{
 
@@ -81,7 +131,7 @@ const item={
 
 "CUSTOMER ID":row.subscription_id || "",
 
-"CUSTOMER NAME":"",
+"CUSTOMER NAME":ossMap[row.subscription_id] || "",
 
 "CUSTOMER ADDRESS":row.address || "",
 
@@ -125,11 +175,14 @@ tbody.appendChild(tr);
 
 });
 
-document.getElementById("progress").innerText="Selesai. Total "+summaryData.length+" data.";
+document.getElementById("progress").innerText=
+"Selesai. Total "+summaryData.length+" data.";
 
 }
 
 
+
+/* DOWNLOAD EXCEL */
 
 function downloadExcel(){
 
