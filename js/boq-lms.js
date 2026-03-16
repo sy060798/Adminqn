@@ -77,38 +77,46 @@ const data=new Uint8Array(e.target.result)
 
 const wb=XLSX.read(data,{type:'array'})
 
-const sheet=wb.Sheets["BoQ Aktual (Mitra)"]
+let sheet=wb.Sheets["BoQ Aktual (Mitra)"]
 
 if(!sheet){
-resolve({})
-return
+sheet=wb.Sheets[wb.SheetNames[0]]
 }
 
 const rows=XLSX.utils.sheet_to_json(sheet,{header:1})
 
 let items={}
 
-let itemCol=1
+let itemCol=-1
 let qtyCol=-1
+let headerRow=0
 
-// cari kolom "BoQ Aktual"
-for(let c=0;c<rows[0].length;c++){
+// cari header
+for(let r=0;r<10;r++){
 
-let header=String(rows[0][c]).toLowerCase()
+for(let c=0;c<rows[r].length;c++){
 
-if(header.includes("boq aktual")){
-qtyCol=c
+let text=String(rows[r][c]).toLowerCase()
+
+if(text.includes("item")) itemCol=c
+if(text.includes("boq aktual")) qtyCol=c
+
+}
+
+if(itemCol!=-1 && qtyCol!=-1){
+headerRow=r
+break
 }
 
 }
 
-if(qtyCol===-1){
+if(itemCol==-1 || qtyCol==-1){
 resolve({})
 return
 }
 
 // ambil data
-for(let i=1;i<rows.length;i++){
+for(let i=headerRow+1;i<rows.length;i++){
 
 let item=rows[i][itemCol]
 let qty=Number(rows[i][qtyCol])
@@ -147,10 +155,9 @@ break
 
 }
 
-// tiap LMS punya Qty + Total
 let col=startCol+(index*2)
 
-// isi judul LMS
+// isi nama file
 boqData[1][col]=header
 
 for(let i=5;i<boqData.length;i++){
