@@ -8,9 +8,6 @@ return String(text)
 .trim()
 }
 
-document.getElementById("btnProses").addEventListener("click",processFiles)
-document.getElementById("btnDownload").addEventListener("click",downloadBOQ)
-
 async function processFiles(){
 
 const boqFile=document.getElementById("boqFile").files[0]
@@ -25,6 +22,8 @@ if(lmsFiles.length===0){
 alert("Upload file LMS dulu")
 return
 }
+
+document.getElementById("status").innerText="Memproses..."
 
 await readBOQ(boqFile)
 
@@ -89,10 +88,30 @@ const rows=XLSX.utils.sheet_to_json(sheet,{header:1})
 
 let items={}
 
+let itemCol=1
+let qtyCol=-1
+
+// cari kolom "BoQ Aktual"
+for(let c=0;c<rows[0].length;c++){
+
+let header=String(rows[0][c]).toLowerCase()
+
+if(header.includes("boq aktual")){
+qtyCol=c
+}
+
+}
+
+if(qtyCol===-1){
+resolve({})
+return
+}
+
+// ambil data
 for(let i=1;i<rows.length;i++){
 
-let item=rows[i][1]
-let qty=Number(rows[i][3])
+let item=rows[i][itemCol]
+let qty=Number(rows[i][qtyCol])
 
 if(item && qty){
 
@@ -116,6 +135,7 @@ function fillBOQ(lmsItems,fileName,index){
 
 let header=fileName.replace(".xlsx","")
 
+// cari kolom LMS
 let startCol=0
 
 for(let c=0;c<boqData[0].length;c++){
@@ -127,8 +147,10 @@ break
 
 }
 
+// tiap LMS punya Qty + Total
 let col=startCol+(index*2)
 
+// isi judul LMS
 boqData[1][col]=header
 
 for(let i=5;i<boqData.length;i++){
