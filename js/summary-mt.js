@@ -1,5 +1,6 @@
 let processedData = [];
 
+
 function getPrecon(row){
 
 const preconMap = {
@@ -21,7 +22,7 @@ let result = [];
 
 for(let key in preconMap){
 
-if(row[key] == 1){
+if(row[key] == 1 || row[key] == "1"){
 result.push(preconMap[key]);
 }
 
@@ -48,7 +49,7 @@ return "";
 }
 
 
-// ambil kolom STATUS BY DISPATCH
+// ambil status dispatch
 function getDispatchStatus(row){
 
 for(let key in row){
@@ -115,10 +116,9 @@ jsonData.forEach(row=>{
 
 let dispatchStatus = getDispatchStatus(row);
 
-// NORMALISASI TEXT
 dispatchStatus = String(dispatchStatus).trim().toLowerCase();
 
-// FILTER DONE SAJA
+// hanya ambil DONE
 if(dispatchStatus !== "done"){
 return;
 }
@@ -128,7 +128,7 @@ const result = {
 dispatch: "Done",
 status: "Done",
 wo: getColumn(row,"No Wo Klien"),
-ID: getColumn(row,"Cust ID Klien"),
+id: getColumn(row,"Cust ID Klien"),
 tanggal: getColumn(row,"Tanggal Kunjungan"),
 alamat: getColumn(row,"Alamat"),
 ont: getColumn(row,"ONT"),
@@ -144,21 +144,17 @@ processedData.push(result);
 const tr = document.createElement("tr");
 
 tr.innerHTML = `
-
 <td>${result.dispatch}</td>
 <td>${result.status}</td>
 <td>${result.wo}</td>
-<td>${result.ID}</td>
+<td>${result.id}</td>
 <td>${result.tanggal}</td>
 <td>${result.alamat}</td>
 <td>${result.ont}</td>
 <td>${result.stb}</td>
 <td>${result.router}</td>
 <td>${result.precon}</td>
-<td style="max-width:600px;word-break:break-word;">
-${result.report || ""}
-</td>
-
+<td style="max-width:600px;word-break:break-word;">${result.report || ""}</td>
 `;
 
 tbody.appendChild(tr);
@@ -174,8 +170,8 @@ reader.readAsArrayBuffer(file);
 
 function downloadExcel(){
 
-if(processedData.length == 0){
-alert("Belum ada data");
+if(processedData.length === 0){
+alert("Belum ada data untuk didownload");
 return;
 }
 
