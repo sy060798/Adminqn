@@ -10,6 +10,35 @@
 <link rel="stylesheet" href="../style.css">
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<style>
+body{
+font-family:Arial;
+padding:30px;
+background:#f4f6f8;
+}
+
+h2{
+margin-bottom:20px;
+}
+
+input{
+margin-bottom:15px;
+}
+
+button{
+padding:8px 20px;
+margin-right:10px;
+cursor:pointer;
+}
+
+#status{
+margin-top:20px;
+font-weight:bold;
+color:green;
+}
+</style>
+
 </head>
 
 <body>
@@ -19,15 +48,15 @@
 <p>Upload BOQ Template</p>
 <input type="file" id="boqFile" accept=".xlsx">
 
-<br><br>
+<br>
 
-<p>Upload LMS Files</p>
+<p>Upload File LMS</p>
 <input type="file" id="lmsFiles" multiple accept=".xlsx">
 
 <br><br>
 
 <button onclick="processFiles()">Proses</button>
-<button onclick="downloadBOQ()">Download</button>
+<button onclick="downloadBOQ()">Download BOQ</button>
 
 <p id="status"></p>
 
