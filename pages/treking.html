@@ -8,49 +8,15 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
-body{
-    font-family: Arial;
-    background:#f4f6f9;
-    padding:20px;
-}
-h1{
-    text-align:center;
-}
-.container{
-    background:white;
-    padding:20px;
-    border-radius:10px;
-    max-width:1000px;
-    margin:auto;
-}
-select, button, input{
-    padding:8px;
-    margin:5px;
-}
-select{
-    min-width:200px;
-}
-table{
-    width:100%;
-    border-collapse:collapse;
-    margin-top:20px;
-}
-th, td{
-    border:1px solid #ddd;
-    padding:8px;
-    text-align:left;
-}
-th{
-    background:#333;
-    color:white;
-}
-.total{
-    margin-top:10px;
-    font-weight:bold;
-}
-button{
-    cursor:pointer;
-}
+body{font-family:Arial;background:#f4f6f9;padding:20px;}
+h1{text-align:center;}
+.container{background:white;padding:20px;border-radius:10px;max-width:1000px;margin:auto;}
+input,select,button{padding:8px;margin:5px;}
+table{width:100%;border-collapse:collapse;margin-top:20px;}
+th,td{border:1px solid #ddd;padding:8px;}
+th{background:#333;color:white;}
+.status{margin-top:10px;font-weight:bold;color:blue;}
+.total{margin-top:10px;font-weight:bold;}
 </style>
 </head>
 
@@ -60,28 +26,27 @@ button{
 
 <div class="container">
 
-<!-- Upload -->
-<input type="file" id="upload" accept=".xlsx,.xls" />
+<input type="file" id="upload" accept=".xlsx,.xls">
 
 <br>
 
-<!-- Filter -->
 <select id="sheetSelect">
 <option value="">-- PILIH SHEET --</option>
 </select>
 
-<select id="kotaSelect" multiple size="5"></select>
+<br>
 
-<select id="periodeSelect" multiple size="5"></select>
+<input type="text" id="kotaInput" placeholder="Ketik Kota (contoh: Bali)">
+<input type="text" id="periodeInput" placeholder="Ketik Periode (contoh: OKTOBER)">
 
 <br>
 
-<button id="btnFilter">🔍 TAMPILKAN DATA</button>
-<button id="btnExport">⬇ Export Excel</button>
+<button id="btnScan">🔄 SCAN DATA</button>
+<button id="btnExport">⬇ DOWNLOAD EXCEL</button>
 
+<div class="status" id="status">Belum ada file</div>
 <div class="total" id="total"></div>
 
-<!-- Table -->
 <table>
 <thead>
 <tr>
@@ -92,22 +57,12 @@ button{
 </tr>
 </thead>
 <tbody id="result">
-<tr>
-<td colspan="4" style="text-align:center;">Belum ada data</td>
-</tr>
+<tr><td colspan="4" align="center">Belum ada data</td></tr>
 </tbody>
 </table>
 
 </div>
 
-<!-- JS -->
 <script src="../js/treking.js"></script>
-
-<script>
-// pastikan tombol aman (hindari silang onclick)
-document.getElementById("btnFilter").addEventListener("click", applyFilter);
-document.getElementById("btnExport").addEventListener("click", exportExcel);
-</script>
-
 </body>
 </html>
