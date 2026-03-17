@@ -1,9 +1,6 @@
 let boqWorkbook;
 let boqData;
 
-// ==========================
-// NORMALIZE
-// ==========================
 function normalize(text){
 return String(text)
 .toLowerCase()
@@ -11,9 +8,6 @@ return String(text)
 .trim()
 }
 
-// ==========================
-// MAIN
-// ==========================
 async function processFiles(){
 
 const boqFile=document.getElementById("boqFile").files[0]
@@ -44,9 +38,6 @@ fillBOQ(lmsItems,lmsFiles[i].name,i)
 document.getElementById("status").innerText="✅ Selesai ✔"
 }
 
-// ==========================
-// READ BOQ
-// ==========================
 function readBOQ(file){
 
 return new Promise(resolve=>{
@@ -73,9 +64,6 @@ reader.readAsArrayBuffer(file)
 
 }
 
-// ==========================
-// READ LMS
-// ==========================
 function readLMS(file){
 
 return new Promise(resolve=>{
@@ -124,7 +112,6 @@ resolve({})
 return
 }
 
-// ambil data
 for(let i=headerRow+1;i<rows.length;i++){
 
 let item=rows[i][itemCol]
@@ -146,14 +133,10 @@ reader.readAsArrayBuffer(file)
 
 }
 
-// ==========================
-// FILL + TOTAL + FORMAT
-// ==========================
 function fillBOQ(lmsItems,fileName,index){
 
 let header=fileName.replace(".xlsx","")
 
-// cari kolom LMS
 let startCol=0
 
 for(let c=0;c<boqData[0].length;c++){
@@ -163,15 +146,12 @@ break
 }
 }
 
-// kolom qty & total
 let col=startCol+(index*2)
 let totalCol=col+1
 
-// header
 boqData[1][col]=header
 boqData[1][totalCol]="TOTAL"
 
-// isi data
 for(let i=5;i<boqData.length;i++){
 
 let item=boqData[i][1]
@@ -193,7 +173,6 @@ boqData[i][totalCol]=total
 
 }
 
-// GRAND TOTAL
 let grandTotal=0
 
 for(let i=5;i<boqData.length;i++){
@@ -206,10 +185,8 @@ boqData[lastRow]=[]
 boqData[lastRow][1]="GRAND TOTAL"
 boqData[lastRow][totalCol]=grandTotal
 
-// buat sheet
 const newSheet=XLSX.utils.aoa_to_sheet(boqData)
 
-// format rupiah
 for(let i=5;i<=lastRow;i++){
 
 let cell=XLSX.utils.encode_cell({r:i,c:totalCol})
@@ -224,9 +201,6 @@ boqWorkbook.Sheets[boqWorkbook.SheetNames[0]]=newSheet
 
 }
 
-// ==========================
-// DOWNLOAD
-// ==========================
 function downloadBOQ(){
 
 if(!boqWorkbook){
