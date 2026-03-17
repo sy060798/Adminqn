@@ -1,10 +1,19 @@
 let allData = [];
+let lastFiltered = [];
 
 document.getElementById('upload').addEventListener('change', handleFile);
+document.getElementById('btnScan').addEventListener('click', applyFilter);
+document.getElementById('btnExport').addEventListener('click', exportExcel);
+
+function setStatus(msg){
+    document.getElementById('status').innerText = msg;
+}
 
 function handleFile(e){
     const file = e.target.files[0];
     if(!file) return;
+
+    setStatus("⏳ Membaca file...");
 
     const reader = new FileReader();
 
@@ -13,13 +22,15 @@ function handleFile(e){
         const workbook = XLSX.read(data, {type:'array'});
 
         processWorkbook(workbook);
-        populateFilters();
+        populateSheets();
+
+        setStatus("✅ File loaded. Silakan scan data.");
     };
 
     reader.readAsArrayBuffer(file);
 }
 
-// ambil value fleksibel
+// fleksibel ambil kolom
 function getValue(row, names){
     for(let n of names){
         if(row[n] !== undefined) return row[n];
@@ -39,7 +50,7 @@ function processWorkbook(workbook){
         json.forEach(row => {
             allData.push({
                 sheet: sheetName,
-                kota: getValue(row, ["KOTA","Kota","LOKASI","CITY"]),
+                kota: getValue(row, ["KOTA","Kota","LOKASI"]),
                 periode: getValue(row, ["PERIODE","Periode","BULAN"]),
                 invoice: getValue(row, ["NOMOR INVOICE","NO INV","NO INVOICE"]),
                 dpp: parseFloat(getValue(row, ["DPP","TOTAL","JUMLAH"])) || 0
@@ -47,65 +58,55 @@ function processWorkbook(workbook){
         });
 
     });
-
-    alert("Excel berhasil dimuat: " + allData.length + " data");
 }
 
-// isi dropdown
-function populateFilters(){
-
+// isi dropdown sheet
+function populateSheets(){
     const sheetSet = [...new Set(allData.map(d => d.sheet))];
-    const sheetSelect = document.getElementById('sheetSelect');
-    sheetSelect.innerHTML = '<option value="">-- PILIH SHEET --</option>';
+    const el = document.getElementById('sheetSelect');
+    el.innerHTML = '<option value="">-- PILIH SHEET --</option>';
 
-    sheetSet.forEach(s => {
-        sheetSelect.innerHTML += `<option value="${s}">${s}</option>`;
-    });
-
-    const kotaSet = [...new Set(allData.map(d => d.kota).filter(Boolean))];
-    const kotaSelect = document.getElementById('kotaSelect');
-    kotaSelect.innerHTML = "";
-
-    kotaSet.forEach(k => {
-        kotaSelect.innerHTML += `<option value="${k}">${k}</option>`;
-    });
-
-    const periodeSet = [...new Set(allData.map(d => d.periode).filter(Boolean))];
-    const periodeSelect = document.getElementById('periodeSelect');
-    periodeSelect.innerHTML = "";
-
-    periodeSet.forEach(p => {
-        periodeSelect.innerHTML += `<option value="${p}">${p}</option>`;
+    sheetSet.forEach(s=>{
+        el.innerHTML += `<option value="${s}">${s}</option>`;
     });
 }
 
-// filter data
+// filter keyword
 function applyFilter(){
 
+    setStatus("🔍 Scanning data...");
+
     const sheet = document.getElementById('sheetSelect').value;
-
-    const kota = Array.from(document.getElementById('kotaSelect').selectedOptions).map(o => o.value);
-
-    const periode = Array.from(document.getElementById('periodeSelect').selectedOptions).map(o => o.value);
+    const kotaKey = document.getElementById('kotaInput').value.toLowerCase();
+    const periodeKey = document.getElementById('periodeInput').value.toLowerCase();
 
     const filtered = allData.filter(d => {
-        return (
-            (!sheet || d.sheet === sheet) &&
-            (kota.length === 0 || kota.includes(d.kota)) &&
-            (periode.length === 0 || periode.includes(d.periode))
-        );
+
+        const matchSheet = !sheet || d.sheet === sheet;
+
+        const matchKota = !kotaKey || 
+            (d.kota && d.kota.toLowerCase().includes(kotaKey));
+
+        const matchPeriode = !periodeKey || 
+            (d.periode && d.periode.toLowerCase().includes(periodeKey));
+
+        return matchSheet && matchKota && matchPeriode;
     });
 
+    lastFiltered = filtered;
+
     renderTable(filtered);
+
+    setStatus(`✅ Selesai. Ditemukan ${filtered.length} data`);
 }
 
-// render tabel
+// render
 function renderTable(data){
 
     let html = "";
     let total = 0;
 
-    data.forEach(d => {
+    data.forEach(d=>{
         total += d.dpp;
 
         html += `
@@ -114,38 +115,25 @@ function renderTable(data){
             <td>${d.periode}</td>
             <td>${d.invoice}</td>
             <td>${d.dpp.toLocaleString()}</td>
-        </tr>
-        `;
+        </tr>`;
     });
 
-    document.getElementById('result').innerHTML = html;
+    document.getElementById('result').innerHTML = html || 
+        `<tr><td colspan="4" align="center">Tidak ada data</td></tr>`;
+
     document.getElementById('total').innerText =
-        "Total DPP: " + total.toLocaleString() + " | Jumlah Data: " + data.length;
+        "Total DPP: " + total.toLocaleString();
 }
 
-// export excel
+// export
 function exportExcel(){
 
-    const sheet = document.getElementById('sheetSelect').value;
-
-    const kota = Array.from(document.getElementById('kotaSelect').selectedOptions).map(o => o.value);
-
-    const periode = Array.from(document.getElementById('periodeSelect').selectedOptions).map(o => o.value);
-
-    const filtered = allData.filter(d => {
-        return (
-            (!sheet || d.sheet === sheet) &&
-            (kota.length === 0 || kota.includes(d.kota)) &&
-            (periode.length === 0 || periode.includes(d.periode))
-        );
-    });
-
-    if(filtered.length === 0){
+    if(lastFiltered.length === 0){
         alert("Tidak ada data untuk di export");
         return;
     }
 
-    const exportData = filtered.map(d => ({
+    const exportData = lastFiltered.map(d => ({
         KOTA: d.kota,
         PERIODE: d.periode,
         "NOMOR INVOICE": d.invoice,
