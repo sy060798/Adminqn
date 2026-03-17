@@ -1,17 +1,29 @@
 let allData = [];
 let lastFiltered = [];
+let currentWorkbook = null;
 
+// ==========================
+// INIT EVENT
+// ==========================
 document.getElementById('upload').addEventListener('change', handleFile);
 document.getElementById('btnScan').addEventListener('click', applyFilter);
 document.getElementById('btnExport').addEventListener('click', exportExcel);
 
+// ==========================
+// STATUS
+// ==========================
 function setStatus(msg){
     document.getElementById('status').innerText = msg;
 }
 
+// ==========================
+// HANDLE FILE UPLOAD
+// ==========================
 function handleFile(e){
     const file = e.target.files[0];
     if(!file) return;
+
+    setStatus("⏳ Membaca file...");
 
     const reader = new FileReader();
 
@@ -19,7 +31,15 @@ function handleFile(e){
         const data = new Uint8Array(evt.target.result);
         const workbook = XLSX.read(data, {type:'array'});
 
-        processWorkbook(workbook);
+        currentWorkbook = workbook;
+
+        // 🔥 ISI DROPDOWN SHEET
+        const sheetSelect = document.getElementById('sheetSelect');
+        sheetSelect.innerHTML = '<option value="">-- PILIH SHEET --</option>';
+
+        workbook.SheetNames.forEach(name=>{
+            sheetSelect.innerHTML += `<option value="${name}">${name}</option>`;
+        });
 
         setStatus("✅ File siap di scan");
     };
@@ -27,21 +47,26 @@ function handleFile(e){
     reader.readAsArrayBuffer(file);
 }
 
-// 🔥 PARSE ANGKA AMAN
+// ==========================
+// PARSE ANGKA (AMAN)
+// ==========================
 function parseNumber(val){
     if(!val) return 0;
     return Number(String(val).replace(/[^0-9]/g,'')) || 0;
 }
 
-// 🔥 PROSES UTAMA (FIX SESUAI FILE KAMU)
-function processWorkbook(workbook){
+// ==========================
+// PROSES DATA (FIX SESUAI FILE)
+// ==========================
+function processWorkbook(workbook, selectedSheet){
 
     allData = [];
 
-    workbook.SheetNames.forEach(sheetName => {
+    const sheets = selectedSheet 
+        ? [selectedSheet] 
+        : workbook.SheetNames;
 
-        // hanya ambil sheet invoice
-        if(!sheetName.toLowerCase().includes("invoice")) return;
+    sheets.forEach(sheetName => {
 
         const sheet = workbook.Sheets[sheetName];
 
@@ -52,14 +77,17 @@ function processWorkbook(workbook){
 
         rows.forEach(row => {
 
-            // 🔥 ambil berdasarkan posisi kolom
+            // 🔥 POSISI KOLOM SESUAI FILE KAMU
             const kota = row[3];
             const periode = row[4];
             const invoice = row[6];
             const dpp = row[9];
 
-            // skip kalau bukan data
+            // skip baris tidak valid
             if(!kota || !periode || !invoice) return;
+
+            // skip header (yang tulisannya KOTA, PERIODE)
+            if(String(kota).toLowerCase() === "kota") return;
 
             allData.push({
                 sheet: sheetName,
@@ -73,13 +101,25 @@ function processWorkbook(workbook){
 
     });
 
-    console.log("DATA FIX:", allData);
-
-    renderTable(allData);
+    console.log("DATA FINAL:", allData);
 }
 
-// FILTER
+// ==========================
+// FILTER + SCAN
+// ==========================
 function applyFilter(){
+
+    const sheet = document.getElementById('sheetSelect').value;
+
+    if(!currentWorkbook){
+        alert("Upload file dulu!");
+        return;
+    }
+
+    setStatus("🔍 Scan data...");
+
+    // 🔥 ambil ulang data dari sheet
+    processWorkbook(currentWorkbook, sheet);
 
     const kotaKey = document.getElementById('kotaInput').value.toLowerCase();
     const periodeKey = document.getElementById('periodeInput').value.toLowerCase();
@@ -96,10 +136,12 @@ function applyFilter(){
 
     renderTable(filtered);
 
-    setStatus(`✅ ${filtered.length} data ditemukan`);
+    setStatus(`✅ Selesai. Ditemukan ${filtered.length} data`);
 }
 
-// RENDER
+// ==========================
+// RENDER TABLE
+// ==========================
 function renderTable(data){
 
     let html = "";
@@ -118,17 +160,19 @@ function renderTable(data){
     });
 
     document.getElementById('result').innerHTML =
-        html || `<tr><td colspan="4" align="center">Tidak ada data</td></tr>`;
+        html || `<tr><td colspan="4" style="text-align:center;">Tidak ada data</td></tr>`;
 
     document.getElementById('total').innerText =
         "Total DPP: " + total.toLocaleString();
 }
 
-// EXPORT
+// ==========================
+// EXPORT EXCEL
+// ==========================
 function exportExcel(){
 
     if(lastFiltered.length === 0){
-        alert("Tidak ada data");
+        alert("Tidak ada data untuk di export!");
         return;
     }
 
@@ -137,5 +181,5 @@ function exportExcel(){
 
     XLSX.utils.book_append_sheet(wb, ws, "HASIL");
 
-    XLSX.writeFile(wb, "hasil.xlsx");
+    XLSX.writeFile(wb, "hasil_treking.xlsx");
 }
