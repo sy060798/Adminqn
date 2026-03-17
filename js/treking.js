@@ -1,19 +1,22 @@
 let allData = [];
 let lastFiltered = [];
 
+// EVENT
 document.getElementById('upload').addEventListener('change', handleFile);
 document.getElementById('btnScan').addEventListener('click', applyFilter);
 document.getElementById('btnExport').addEventListener('click', exportExcel);
 
+// STATUS
 function setStatus(msg){
     document.getElementById('status').innerText = msg;
 }
 
+// HANDLE FILE
 function handleFile(e){
     const file = e.target.files[0];
     if(!file) return;
 
-    setStatus("⏳ Membaca file...");
+    setStatus("⏳ Membaca file Excel...");
 
     const reader = new FileReader();
 
@@ -24,21 +27,29 @@ function handleFile(e){
         processWorkbook(workbook);
         populateSheets();
 
-        setStatus("✅ File loaded. Silakan scan data.");
+        setStatus("✅ File berhasil dibaca. Silakan scan data.");
     };
 
     reader.readAsArrayBuffer(file);
 }
 
-// fleksibel ambil kolom
-function getValue(row, names){
-    for(let n of names){
-        if(row[n] !== undefined) return row[n];
+// AMBIL VALUE (ANTI SPASI & FLEXIBLE)
+function getValue(row, keywords){
+    for(let key in row){
+
+        // bersihkan spasi & lowercase
+        const cleanKey = key.trim().toLowerCase();
+
+        for(let k of keywords){
+            if(cleanKey === k.toLowerCase()){
+                return row[key];
+            }
+        }
     }
     return "";
 }
 
-// baca semua sheet
+// PROSES SEMUA SHEET
 function processWorkbook(workbook){
     allData = [];
 
@@ -48,22 +59,28 @@ function processWorkbook(workbook){
         const json = XLSX.utils.sheet_to_json(sheet);
 
         json.forEach(row => {
-            allData.push({
+
+            const dataObj = {
                 sheet: sheetName,
-                kota: getValue(row, ["KOTA","Kota","LOKASI"]),
-                periode: getValue(row, ["PERIODE","Periode","BULAN"]),
-                invoice: getValue(row, ["NOMOR INVOICE","NO INV","NO INVOICE"]),
-                dpp: parseFloat(getValue(row, ["DPP","TOTAL","JUMLAH"])) || 0
-            });
+                kota: getValue(row, ["kota"]),
+                periode: getValue(row, ["periode"]),
+                invoice: getValue(row, ["nomor invoice"]),
+                dpp: parseFloat(getValue(row, ["dpp"])) || 0
+            };
+
+            allData.push(dataObj);
         });
 
     });
+
+    console.log("ALL DATA:", allData); // debug
 }
 
-// isi dropdown sheet
+// ISI DROPDOWN SHEET
 function populateSheets(){
     const sheetSet = [...new Set(allData.map(d => d.sheet))];
     const el = document.getElementById('sheetSelect');
+
     el.innerHTML = '<option value="">-- PILIH SHEET --</option>';
 
     sheetSet.forEach(s=>{
@@ -71,7 +88,7 @@ function populateSheets(){
     });
 }
 
-// filter keyword
+// FILTER DATA
 function applyFilter(){
 
     setStatus("🔍 Scanning data...");
@@ -100,7 +117,7 @@ function applyFilter(){
     setStatus(`✅ Selesai. Ditemukan ${filtered.length} data`);
 }
 
-// render
+// RENDER TABLE
 function renderTable(data){
 
     let html = "";
@@ -119,13 +136,13 @@ function renderTable(data){
     });
 
     document.getElementById('result').innerHTML = html || 
-        `<tr><td colspan="4" align="center">Tidak ada data</td></tr>`;
+        `<tr><td colspan="4" style="text-align:center;">Tidak ada data</td></tr>`;
 
     document.getElementById('total').innerText =
         "Total DPP: " + total.toLocaleString();
 }
 
-// export
+// EXPORT EXCEL
 function exportExcel(){
 
     if(lastFiltered.length === 0){
