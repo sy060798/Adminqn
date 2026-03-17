@@ -11,6 +11,30 @@ function setStatus(msg){
     document.getElementById('status').innerText = msg;
 }
 
+// NORMALIZE TEXT (hapus spasi & simbol)
+function normalize(str){
+    return String(str || "")
+        .toLowerCase()
+        .replace(/\s+/g,'')
+        .replace(/[^a-z0-9]/g,'');
+}
+
+// AUTO DETECT KOLOM
+function detectColumn(row, targets){
+    const keys = Object.keys(row);
+
+    for(let key of keys){
+        const cleanKey = normalize(key);
+
+        for(let t of targets){
+            if(cleanKey.includes(normalize(t))){
+                return key;
+            }
+        }
+    }
+    return null;
+}
+
 // HANDLE FILE
 function handleFile(e){
     const file = e.target.files[0];
@@ -33,23 +57,7 @@ function handleFile(e){
     reader.readAsArrayBuffer(file);
 }
 
-// AMBIL VALUE (ANTI SPASI & FLEXIBLE)
-function getValue(row, keywords){
-    for(let key in row){
-
-        // bersihkan spasi & lowercase
-        const cleanKey = key.trim().toLowerCase();
-
-        for(let k of keywords){
-            if(cleanKey === k.toLowerCase()){
-                return row[key];
-            }
-        }
-    }
-    return "";
-}
-
-// PROSES SEMUA SHEET
+// PROSES SEMUA SHEET (AUTO DETECT)
 function processWorkbook(workbook){
     allData = [];
 
@@ -58,22 +66,39 @@ function processWorkbook(workbook){
         const sheet = workbook.Sheets[sheetName];
         const json = XLSX.utils.sheet_to_json(sheet);
 
+        if(json.length === 0) return;
+
+        const sample = json[0];
+
+        // 🔥 AUTO DETECT HEADER
+        const colKota = detectColumn(sample, ["kota","area","regional"]);
+        const colPeriode = detectColumn(sample, ["periode","bulan","month"]);
+        const colInvoice = detectColumn(sample, ["invoice","inv"]);
+        const colDpp = detectColumn(sample, ["dpp","amount","total","nilai"]);
+
+        console.log("DETECT:", {
+            sheet: sheetName,
+            colKota,
+            colPeriode,
+            colInvoice,
+            colDpp
+        });
+
         json.forEach(row => {
 
-            const dataObj = {
+            allData.push({
                 sheet: sheetName,
-                kota: getValue(row, ["kota"]),
-                periode: getValue(row, ["periode"]),
-                invoice: getValue(row, ["nomor invoice"]),
-                dpp: parseFloat(getValue(row, ["dpp"])) || 0
-            };
+                kota: colKota ? row[colKota] : "",
+                periode: colPeriode ? row[colPeriode] : "",
+                invoice: colInvoice ? row[colInvoice] : "",
+                dpp: colDpp ? parseFloat(row[colDpp]) || 0 : 0
+            });
 
-            allData.push(dataObj);
         });
 
     });
 
-    console.log("ALL DATA:", allData); // debug
+    console.log("ALL DATA:", allData);
 }
 
 // ISI DROPDOWN SHEET
@@ -102,10 +127,10 @@ function applyFilter(){
         const matchSheet = !sheet || d.sheet === sheet;
 
         const matchKota = !kotaKey || 
-            (d.kota && d.kota.toLowerCase().includes(kotaKey));
+            (d.kota && String(d.kota).toLowerCase().includes(kotaKey));
 
         const matchPeriode = !periodeKey || 
-            (d.periode && d.periode.toLowerCase().includes(periodeKey));
+            (d.periode && String(d.periode).toLowerCase().includes(periodeKey));
 
         return matchSheet && matchKota && matchPeriode;
     });
@@ -128,9 +153,9 @@ function renderTable(data){
 
         html += `
         <tr>
-            <td>${d.kota}</td>
-            <td>${d.periode}</td>
-            <td>${d.invoice}</td>
+            <td>${d.kota || '-'}</td>
+            <td>${d.periode || '-'}</td>
+            <td>${d.invoice || '-'}</td>
             <td>${d.dpp.toLocaleString()}</td>
         </tr>`;
     });
