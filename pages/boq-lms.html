@@ -1,38 +1,40 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>BOQ Rekap LMS</title>
-
-<link rel="stylesheet" href="../style.css">
+<title>BOQ LMS PROCESSOR</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
+<style>
+body{font-family:Arial;background:#f4f6f9;padding:20px;}
+.container{background:white;padding:20px;border-radius:10px;max-width:900px;margin:auto;}
+button{padding:10px;margin:5px;cursor:pointer;}
+input{margin:5px;}
+#status{margin-top:10px;font-weight:bold;color:blue;}
+</style>
 </head>
 
 <body>
 
-<h2>BOQ Rekap LMS</h2>
+<div class="container">
 
-<p>Upload BOQ Template</p>
-<input type="file" id="boqFile" accept=".xlsx">
+<h2>BOQ LMS PROCESSOR</h2>
 
-<br><br>
+<label>Upload BOQ Template:</label><br>
+<input type="file" id="boqFile"><br>
 
-<p>Upload LMS Files</p>
-<input type="file" id="lmsFiles" multiple accept=".xlsx">
+<label>Upload File LMS (bisa banyak):</label><br>
+<input type="file" id="lmsFiles" multiple><br>
 
-<br><br>
+<button onclick="processFiles()">🔄 PROSES</button>
+<button onclick="downloadBOQ()">⬇ DOWNLOAD EXCEL</button>
 
-<button onclick="processFiles()">Proses</button>
-<button onclick="downloadBOQ()">Download</button>
+<div id="status">Belum ada proses</div>
 
-<p id="status"></p>
+</div>
 
-<script src="../js/boq-lms.js"></script>
+<script src="boq-lms.js"></script>
 
 </body>
 </html>
