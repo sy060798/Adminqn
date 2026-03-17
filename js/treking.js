@@ -11,12 +11,23 @@ function setStatus(msg){
     document.getElementById('status').innerText = msg;
 }
 
-// NORMALIZE TEXT (hapus spasi & simbol)
+// NORMALIZE
 function normalize(str){
     return String(str || "")
         .toLowerCase()
         .replace(/\s+/g,'')
         .replace(/[^a-z0-9]/g,'');
+}
+
+// PARSE ANGKA (FIX DPP 0)
+function parseNumber(val){
+    if(!val) return 0;
+
+    let str = String(val)
+        .replace(/[^0-9,-]/g,'') // hapus huruf
+        .replace(/,/g,'');       // hapus koma
+
+    return parseFloat(str) || 0;
 }
 
 // AUTO DETECT KOLOM
@@ -50,14 +61,15 @@ function handleFile(e){
 
         processWorkbook(workbook);
         populateSheets();
+        populateFilterDropdowns();
 
-        setStatus("✅ File berhasil dibaca. Silakan scan data.");
+        setStatus("✅ File siap. Silakan filter data.");
     };
 
     reader.readAsArrayBuffer(file);
 }
 
-// PROSES SEMUA SHEET (AUTO DETECT)
+// PROSES DATA
 function processWorkbook(workbook){
     allData = [];
 
@@ -70,30 +82,21 @@ function processWorkbook(workbook){
 
         const sample = json[0];
 
-        // 🔥 AUTO DETECT HEADER
         const colKota = detectColumn(sample, ["kota","area","regional"]);
-        const colPeriode = detectColumn(sample, ["periode","bulan","month"]);
+        const colPeriode = detectColumn(sample, ["periode","bulan"]);
         const colInvoice = detectColumn(sample, ["invoice","inv"]);
         const colDpp = detectColumn(sample, ["dpp","amount","total","nilai"]);
 
-        console.log("DETECT:", {
-            sheet: sheetName,
-            colKota,
-            colPeriode,
-            colInvoice,
-            colDpp
-        });
+        console.log("DETECT:", {sheetName, colKota, colPeriode, colInvoice, colDpp});
 
         json.forEach(row => {
-
             allData.push({
                 sheet: sheetName,
                 kota: colKota ? row[colKota] : "",
                 periode: colPeriode ? row[colPeriode] : "",
                 invoice: colInvoice ? row[colInvoice] : "",
-                dpp: colDpp ? parseFloat(row[colDpp]) || 0 : 0
+                dpp: colDpp ? parseNumber(row[colDpp]) : 0
             });
-
         });
 
     });
@@ -101,7 +104,7 @@ function processWorkbook(workbook){
     console.log("ALL DATA:", allData);
 }
 
-// ISI DROPDOWN SHEET
+// SHEET DROPDOWN
 function populateSheets(){
     const sheetSet = [...new Set(allData.map(d => d.sheet))];
     const el = document.getElementById('sheetSelect');
@@ -113,7 +116,38 @@ function populateSheets(){
     });
 }
 
-// FILTER DATA
+// 🔥 AUTO DROPDOWN KOTA & PERIODE
+function populateFilterDropdowns(){
+
+    const kotaSet = [...new Set(allData.map(d => d.kota).filter(Boolean))];
+    const periodeSet = [...new Set(allData.map(d => d.periode).filter(Boolean))];
+
+    const kotaInput = document.getElementById('kotaInput');
+    const periodeInput = document.getElementById('periodeInput');
+
+    // bikin datalist
+    let kotaList = document.getElementById('kotaList');
+    let periodeList = document.getElementById('periodeList');
+
+    if(!kotaList){
+        kotaList = document.createElement("datalist");
+        kotaList.id = "kotaList";
+        document.body.appendChild(kotaList);
+        kotaInput.setAttribute("list","kotaList");
+    }
+
+    if(!periodeList){
+        periodeList = document.createElement("datalist");
+        periodeList.id = "periodeList";
+        document.body.appendChild(periodeList);
+        periodeInput.setAttribute("list","periodeList");
+    }
+
+    kotaList.innerHTML = kotaSet.map(k => `<option value="${k}">`).join("");
+    periodeList.innerHTML = periodeSet.map(p => `<option value="${p}">`).join("");
+}
+
+// FILTER
 function applyFilter(){
 
     setStatus("🔍 Scanning data...");
@@ -126,11 +160,11 @@ function applyFilter(){
 
         const matchSheet = !sheet || d.sheet === sheet;
 
-        const matchKota = !kotaKey || 
-            (d.kota && String(d.kota).toLowerCase().includes(kotaKey));
+        const kotaVal = String(d.kota || "").toLowerCase();
+        const periodeVal = String(d.periode || "").toLowerCase();
 
-        const matchPeriode = !periodeKey || 
-            (d.periode && String(d.periode).toLowerCase().includes(periodeKey));
+        const matchKota = !kotaKey || kotaVal.includes(kotaKey);
+        const matchPeriode = !periodeKey || periodeVal.includes(periodeKey);
 
         return matchSheet && matchKota && matchPeriode;
     });
@@ -142,7 +176,7 @@ function applyFilter(){
     setStatus(`✅ Selesai. Ditemukan ${filtered.length} data`);
 }
 
-// RENDER TABLE
+// RENDER
 function renderTable(data){
 
     let html = "";
@@ -167,7 +201,7 @@ function renderTable(data){
         "Total DPP: " + total.toLocaleString();
 }
 
-// EXPORT EXCEL
+// EXPORT
 function exportExcel(){
 
     if(lastFiltered.length === 0){
