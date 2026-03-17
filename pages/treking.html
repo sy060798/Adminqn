@@ -8,6 +8,14 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
+body{
+    font-family: Arial;
+    background:#f4f6f9;
+    padding:20px;
+}
+h1{
+    text-align:center;
+}
 .container{
     background:white;
     padding:20px;
@@ -19,6 +27,9 @@ select, button, input{
     padding:8px;
     margin:5px;
 }
+select{
+    min-width:200px;
+}
 table{
     width:100%;
     border-collapse:collapse;
@@ -27,6 +38,7 @@ table{
 th, td{
     border:1px solid #ddd;
     padding:8px;
+    text-align:left;
 }
 th{
     background:#333;
@@ -36,20 +48,27 @@ th{
     margin-top:10px;
     font-weight:bold;
 }
+button{
+    cursor:pointer;
+}
 </style>
 </head>
 
 <body>
 
-<h1 style="text-align:center;">TREKING</h1>
+<h1>TREKING</h1>
 
 <div class="container">
 
-<input type="file" id="upload" />
+<!-- Upload -->
+<input type="file" id="upload" accept=".xlsx,.xls" />
 
 <br>
 
-<select id="sheetSelect"></select>
+<!-- Filter -->
+<select id="sheetSelect">
+<option value="">-- PILIH SHEET --</option>
+</select>
 
 <select id="kotaSelect" multiple size="5"></select>
 
@@ -57,11 +76,12 @@ th{
 
 <br>
 
-<button onclick="applyFilter()">🔍 TAMPILKAN DATA</button>
-<button onclick="exportExcel()">⬇ Export Excel</button>
+<button id="btnFilter">🔍 TAMPILKAN DATA</button>
+<button id="btnExport">⬇ Export Excel</button>
 
 <div class="total" id="total"></div>
 
+<!-- Table -->
 <table>
 <thead>
 <tr>
@@ -71,12 +91,23 @@ th{
 <th>DPP</th>
 </tr>
 </thead>
-<tbody id="result"></tbody>
+<tbody id="result">
+<tr>
+<td colspan="4" style="text-align:center;">Belum ada data</td>
+</tr>
+</tbody>
 </table>
 
 </div>
 
+<!-- JS -->
 <script src="../js/treking.js"></script>
+
+<script>
+// pastikan tombol aman (hindari silang onclick)
+document.getElementById("btnFilter").addEventListener("click", applyFilter);
+document.getElementById("btnExport").addEventListener("click", exportExcel);
+</script>
 
 </body>
 </html>
