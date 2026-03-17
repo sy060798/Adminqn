@@ -3,29 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BOQ LMS PROCESSOR</title>
+<title>BOQ LMS Processor</title>
 
-<!-- XLSX LIB -->
+<!-- XLSX -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
+<link rel="stylesheet" href="../style.css">
+
 <style>
-body{
-    font-family:Arial, sans-serif;
-    background:#f4f6f9;
-    padding:20px;
-}
 .container{
     background:white;
     padding:20px;
     border-radius:10px;
     max-width:900px;
     margin:auto;
-}
-h2{
-    text-align:center;
-}
-input{
-    margin:5px 0;
 }
 button{
     padding:10px;
@@ -48,10 +39,10 @@ button{
 <h2>BOQ LMS PROCESSOR</h2>
 
 <label>Upload BOQ Template:</label><br>
-<input type="file" id="boqFile" accept=".xlsx,.xls"><br>
+<input type="file" id="boqFile"><br>
 
 <label>Upload File LMS (bisa banyak):</label><br>
-<input type="file" id="lmsFiles" multiple accept=".xlsx,.xls"><br>
+<input type="file" id="lmsFiles" multiple><br>
 
 <button onclick="processFiles()">🔄 PROSES</button>
 <button onclick="downloadBOQ()">⬇ DOWNLOAD EXCEL</button>
@@ -60,8 +51,8 @@ button{
 
 </div>
 
-<!-- 🔥 PENTING: PATH HARUS BENAR -->
-<script src="boq-lms.js" defer></script>
+<!-- 🔥 PATH PENTING -->
+<script src="../js/boq-lms.js" defer></script>
 
 </body>
 </html>
