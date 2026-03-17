@@ -1,58 +1,3 @@
-let allData = [];
-let lastFiltered = [];
-
-// EVENT
-document.getElementById('upload').addEventListener('change', handleFile);
-document.getElementById('btnScan').addEventListener('click', applyFilter);
-document.getElementById('btnExport').addEventListener('click', exportExcel);
-
-// STATUS
-function setStatus(msg){
-    document.getElementById('status').innerText = msg;
-}
-
-// HANDLE FILE
-function handleFile(e){
-    const file = e.target.files[0];
-    if(!file) return;
-
-    setStatus("⏳ Membaca file...");
-
-    const reader = new FileReader();
-
-    reader.onload = function(evt){
-        const data = new Uint8Array(evt.target.result);
-        const workbook = XLSX.read(data, {type:'array'});
-
-        processWorkbook(workbook);
-
-        setStatus("✅ File terbaca. Klik SCAN DATA");
-    };
-
-    reader.readAsArrayBuffer(file);
-}
-
-// NORMALIZE
-function clean(str){
-    return String(str || "")
-        .toLowerCase()
-        .replace(/\s+/g,'')
-        .replace(/[^a-z0-9]/g,'');
-}
-
-// PARSE ANGKA (SUPER AMAN)
-function parseNumber(val){
-    if(!val) return 0;
-
-    let str = String(val);
-
-    // hapus semua kecuali angka
-    str = str.replace(/[^0-9]/g,'');
-
-    return parseInt(str) || 0;
-}
-
-// PROSES WORKBOOK (PAKSA AMBIL DATA)
 function processWorkbook(workbook){
 
     allData = [];
@@ -61,116 +6,72 @@ function processWorkbook(workbook){
 
         const sheet = workbook.Sheets[sheetName];
 
-        // 🔥 PAKSA BACA RAW
-        const json = XLSX.utils.sheet_to_json(sheet, {defval:""});
-
-        if(json.length === 0) return;
-
-        console.log("SAMPLE ROW:", json[0]);
-
-        const keys = Object.keys(json[0]);
-
-        // 🔥 DETECT MANUAL
-        let colKota = null;
-        let colPeriode = null;
-        let colInvoice = null;
-        let colDpp = null;
-
-        keys.forEach(k=>{
-            const c = clean(k);
-
-            if(c.includes("kota")) colKota = k;
-            if(c.includes("periode")) colPeriode = k;
-            if(c.includes("invoice")) colInvoice = k;
-            if(c === "dpp") colDpp = k;
+        // 🔥 AMBIL SEMUA DALAM BENTUK ARRAY (BUKAN JSON)
+        const rows = XLSX.utils.sheet_to_json(sheet, {
+            header: 1,
+            defval: ""
         });
 
-        console.log("DETECTED:", {colKota, colPeriode, colInvoice, colDpp});
+        if(rows.length < 3) return;
 
-        json.forEach(row => {
+        console.log("RAW ROWS:", rows.slice(0,5));
+
+        // 🔥 CARI BARIS HEADER OTOMATIS
+        let headerRowIndex = -1;
+
+        for(let i=0; i<rows.length; i++){
+            const row = rows[i].join(" ").toLowerCase();
+
+            if(
+                row.includes("kota") &&
+                row.includes("periode") &&
+                row.includes("invoice")
+            ){
+                headerRowIndex = i;
+                break;
+            }
+        }
+
+        if(headerRowIndex === -1){
+            console.log("❌ Header tidak ditemukan di sheet:", sheetName);
+            return;
+        }
+
+        console.log("✅ HEADER DI BARIS:", headerRowIndex);
+
+        const headers = rows[headerRowIndex].map(h => clean(h));
+
+        const colIndex = {
+            kota: headers.findIndex(h => h.includes("kota")),
+            periode: headers.findIndex(h => h.includes("periode")),
+            invoice: headers.findIndex(h => h.includes("invoice")),
+            dpp: headers.findIndex(h => h === "dpp")
+        };
+
+        console.log("COLUMN INDEX:", colIndex);
+
+        // 🔥 AMBIL DATA SETELAH HEADER
+        for(let i = headerRowIndex + 1; i < rows.length; i++){
+
+            const row = rows[i];
+
+            // skip kosong
+            if(row.join("").trim() === "") continue;
 
             const data = {
                 sheet: sheetName,
-                kota: row[colKota] || "",
-                periode: row[colPeriode] || "",
-                invoice: row[colInvoice] || "",
-                dpp: parseNumber(row[colDpp])
+                kota: row[colIndex.kota] || "",
+                periode: row[colIndex.periode] || "",
+                invoice: row[colIndex.invoice] || "",
+                dpp: parseNumber(row[colIndex.dpp])
             };
 
             allData.push(data);
-        });
+        }
 
     });
 
-    console.log("ALL DATA FINAL:", allData);
+    console.log("FINAL DATA:", allData);
 
-    // 🔥 LANGSUNG TAMPILKAN TANPA FILTER
     renderTable(allData);
-}
-
-// FILTER (sementara sederhana)
-function applyFilter(){
-
-    setStatus("🔍 Scan...");
-
-    const kotaKey = document.getElementById('kotaInput').value.toLowerCase();
-    const periodeKey = document.getElementById('periodeInput').value.toLowerCase();
-
-    const filtered = allData.filter(d => {
-
-        const kotaVal = String(d.kota).toLowerCase();
-        const periodeVal = String(d.periode).toLowerCase();
-
-        return (
-            (!kotaKey || kotaVal.includes(kotaKey)) &&
-            (!periodeKey || periodeVal.includes(periodeKey))
-        );
-    });
-
-    lastFiltered = filtered;
-
-    renderTable(filtered);
-
-    setStatus(`✅ ${filtered.length} data ditemukan`);
-}
-
-// RENDER
-function renderTable(data){
-
-    let html = "";
-    let total = 0;
-
-    data.forEach(d=>{
-        total += d.dpp;
-
-        html += `
-        <tr>
-            <td>${d.kota}</td>
-            <td>${d.periode}</td>
-            <td>${d.invoice}</td>
-            <td>${d.dpp.toLocaleString()}</td>
-        </tr>`;
-    });
-
-    document.getElementById('result').innerHTML =
-        html || `<tr><td colspan="4" style="text-align:center;">Tidak ada data</td></tr>`;
-
-    document.getElementById('total').innerText =
-        "Total DPP: " + total.toLocaleString();
-}
-
-// EXPORT
-function exportExcel(){
-
-    if(lastFiltered.length === 0){
-        alert("Tidak ada data");
-        return;
-    }
-
-    const ws = XLSX.utils.json_to_sheet(lastFiltered);
-    const wb = XLSX.utils.book_new();
-
-    XLSX.utils.book_append_sheet(wb, ws, "HASIL");
-
-    XLSX.writeFile(wb, "hasil.xlsx");
 }
