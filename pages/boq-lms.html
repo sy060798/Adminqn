@@ -8,9 +8,15 @@
 <!-- XLSX -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
+<!-- CSS -->
 <link rel="stylesheet" href="../style.css">
 
 <style>
+body{
+    font-family: Arial, sans-serif;
+    background:#f4f6f9;
+    padding:20px;
+}
 .container{
     background:white;
     padding:20px;
@@ -29,7 +35,6 @@ button{
     color:blue;
 }
 </style>
-
 </head>
 
 <body>
@@ -38,10 +43,7 @@ button{
 
 <h2>BOQ LMS PROCESSOR</h2>
 
-<label>Upload BOQ Template:</label><br>
 <input type="file" id="boqFile"><br>
-
-<label>Upload File LMS (bisa banyak):</label><br>
 <input type="file" id="lmsFiles" multiple><br>
 
 <button onclick="processFiles()">🔄 PROSES</button>
@@ -51,8 +53,8 @@ button{
 
 </div>
 
-<!-- 🔥 PATH PENTING -->
-<script src="../js/boq-lms.js" defer></script>
+<!-- 🔥 PALING PENTING -->
+<script src="../js/boq-lms.js"></script>
 
 </body>
 </html>
