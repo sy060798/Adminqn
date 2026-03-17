@@ -2,9 +2,12 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TREKING</title>
 
 <link rel="stylesheet" href="../style.css">
+
+<!-- XLSX -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
@@ -17,6 +20,7 @@ th,td{border:1px solid #ddd;padding:8px;}
 th{background:#333;color:white;}
 .status{margin-top:10px;font-weight:bold;color:blue;}
 .total{margin-top:10px;font-weight:bold;}
+button{cursor:pointer;}
 </style>
 </head>
 
@@ -57,12 +61,21 @@ th{background:#333;color:white;}
 </tr>
 </thead>
 <tbody id="result">
-<tr><td colspan="4" align="center">Belum ada data</td></tr>
+<tr><td colspan="4" style="text-align:center;">Belum ada data</td></tr>
 </tbody>
 </table>
 
 </div>
 
-<script src="../js/treking.js"></script>
+<!-- JS UTAMA (pakai defer biar tidak silang) -->
+<script src="../js/treking.js" defer></script>
+
+<!-- fallback kalau JS gagal -->
+<script>
+if(!window.FileReader){
+    alert("Browser tidak support upload Excel");
+}
+</script>
+
 </body>
 </html>
