@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>TREKING</title>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<style>
+body{
+    font-family: Arial;
+    background:#f4f6f9;
+    padding:20px;
+}
+h1{
+    text-align:center;
+}
+.container{
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    max-width:1000px;
+    margin:auto;
+}
+select, button, input{
+    padding:8px;
+    margin:5px;
+}
+select{
+    min-width:200px;
+}
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+}
+th, td{
+    border:1px solid #ddd;
+    padding:8px;
+    text-align:left;
+}
+th{
+    background:#333;
+    color:white;
+}
+button{
+    cursor:pointer;
+}
+.total{
+    margin-top:10px;
+    font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<h1>TREKING</h1>
+
+<div class="container">
+
+<input type="file" id="upload" />
+
+<br>
+
+<select id="sheetSelect"></select>
+
+<select id="kotaSelect" multiple size="5"></select>
+
+<select id="periodeSelect" multiple size="5"></select>
+
+<br>
+
+<button onclick="applyFilter()">🔍 TAMPILKAN DATA</button>
+<button onclick="exportExcel()">⬇ Export Excel</button>
+
+<div class="total" id="total"></div>
+
+<table>
+<thead>
+<tr>
+<th>KOTA</th>
+<th>PERIODE</th>
+<th>NOMOR INVOICE</th>
+<th>DPP</th>
+</tr>
+</thead>
+<tbody id="result"></tbody>
+</table>
+
+</div>
+
+<script>
+let allData = [];
+
+document.getElementById('upload').addEventListener('change', handleFile);
+
+function handleFile(e){
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(evt){
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, {type:'array'});
+
+        processWorkbook(workbook);
+        populateFilters();
+    };
+
+    reader.readAsArrayBuffer(file);
+}
+
+// helper ambil value flexible
+function getValue(row, names){
+    for(let n of names){
+        if(row[n] !== undefined) return row[n];
+    }
+    return "";
+}
+
+// baca semua sheet
+function processWorkbook(workbook){
+    allData = [];
+
+    workbook.SheetNames.forEach(sheetName => {
+
+        const sheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(sheet);
+
+        json.forEach(row => {
+            allData.push({
+                sheet: sheetName,
+                kota: getValue(row, ["KOTA","Kota","LOKASI","CITY"]),
+                periode: getValue(row, ["PERIODE","Periode","BULAN"]),
+                invoice: getValue(row, ["NOMOR INVOICE","NO INV","NO INVOICE"]),
+                dpp: parseFloat(getValue(row, ["DPP","TOTAL","JUMLAH"])) || 0
+            });
+        });
+
+    });
+
+    alert("Excel berhasil dimuat: " + allData.length + " data");
+}
+
+// isi dropdown
+function populateFilters(){
+
+    const sheetSet = [...new Set(allData.map(d => d.sheet))];
+    const sheetSelect = document.getElementById('sheetSelect');
+    sheetSelect.innerHTML = '<option value="">-- PILIH SHEET --</option>';
+
+    sheetSet.forEach(s => {
+        sheetSelect.innerHTML += `<option value="${s}">${s}</option>`;
+    });
+
+    const kotaSet = [...new Set(allData.map(d => d.kota).filter(Boolean))];
+    const kotaSelect = document.getElementById('kotaSelect');
+    kotaSelect.innerHTML = "";
+
+    kotaSet.forEach(k => {
+        kotaSelect.innerHTML += `<option value="${k}">${k}</option>`;
+    });
+
+    const periodeSet = [...new Set(allData.map(d => d.periode).filter(Boolean))];
+    const periodeSelect = document.getElementById('periodeSelect');
+    periodeSelect.innerHTML = "";
+
+    periodeSet.forEach(p => {
+        periodeSelect.innerHTML += `<option value="${p}">${p}</option>`;
+    });
+}
+
+// filter data
+function applyFilter(){
+
+    const sheet = document.getElementById('sheetSelect').value;
+
+    const kota = Array.from(document.getElementById('kotaSelect').selectedOptions).map(o => o.value);
+
+    const periode = Array.from(document.getElementById('periodeSelect').selectedOptions).map(o => o.value);
+
+    const filtered = allData.filter(d => {
+        return (
+            (!sheet || d.sheet === sheet) &&
+            (kota.length === 0 || kota.includes(d.kota)) &&
+            (periode.length === 0 || periode.includes(d.periode))
+        );
+    });
+
+    renderTable(filtered);
+}
+
+// render tabel
+function renderTable(data){
+
+    let html = "";
+    let total = 0;
+
+    data.forEach(d => {
+        total += d.dpp;
+
+        html += `
+        <tr>
+            <td>${d.kota}</td>
+            <td>${d.periode}</td>
+            <td>${d.invoice}</td>
+            <td>${d.dpp.toLocaleString()}</td>
+        </tr>
+        `;
+    });
+
+    document.getElementById('result').innerHTML = html;
+    document.getElementById('total').innerText =
+        "Total DPP: " + total.toLocaleString() + " | Jumlah Data: " + data.length;
+}
+
+// export excel
+function exportExcel(){
+
+    const sheet = document.getElementById('sheetSelect').value;
+
+    const kota = Array.from(document.getElementById('kotaSelect').selectedOptions).map(o => o.value);
+
+    const periode = Array.from(document.getElementById('periodeSelect').selectedOptions).map(o => o.value);
+
+    const filtered = allData.filter(d => {
+        return (
+            (!sheet || d.sheet === sheet) &&
+            (kota.length === 0 || kota.includes(d.kota)) &&
+            (periode.length === 0 || periode.includes(d.periode))
+        );
+    });
+
+    if(filtered.length === 0){
+        alert("Tidak ada data untuk di export");
+        return;
+    }
+
+    const exportData = filtered.map(d => ({
+        KOTA: d.kota,
+        PERIODE: d.periode,
+        "NOMOR INVOICE": d.invoice,
+        DPP: d.dpp
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(wb, ws, "HASIL TREKING");
+
+    XLSX.writeFile(wb, "hasil_treking.xlsx");
+}
+</script>
+
+</body>
+</html>
