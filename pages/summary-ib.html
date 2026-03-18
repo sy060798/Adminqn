@@ -18,12 +18,15 @@ body{
     background:#f7f7f7;
 }
 
-/* 🔥 biar tidak pecah */
+/* 🔥 WRAPPER BIAR GAK PECAH */
 .table-wrapper{
     width:100%;
     overflow-x:auto;
+    border:1px solid #ddd;
+    background:white;
 }
 
+/* 🔥 BUTTON */
 button{
     padding:8px 14px;
     margin-right:10px;
@@ -38,12 +41,24 @@ button:hover{
     background:#1b5dc7;
 }
 
+/* 🔥 TABLE */
 table{
     border-collapse: collapse;
-    min-width:1200px; /* 🔥 penting */
-    background:white;
+    min-width:1300px;
+    width:100%;
 }
 
+/* 🔥 HEADER HITAM */
+th{
+    background:#000 !important;
+    color:#fff !important;
+    white-space:nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+/* 🔥 CELL */
 th, td{
     border:1px solid #ddd;
     padding:8px;
@@ -52,12 +67,12 @@ th, td{
     vertical-align:top;
 }
 
-th{
-    background:#000 !important;
-    color:#fff !important;
+/* 🔥 ZEBRA */
+tr:nth-child(even){
+    background:#fafafa;
 }
 
-/* 🔥 kolom panjang */
+/* 🔥 KOLOM PANJANG */
 td:nth-child(6){ /* alamat */
     max-width:250px;
     white-space:normal;
@@ -80,8 +95,11 @@ td:last-child{ /* report */
 
 <br><br>
 
-<button type="button" onclick="processExcel()">Proses Data</button>
-<button type="button" onclick="downloadExcel()">Download Hasil</button>
+<!-- ❌ HAPUS onclick -->
+<button type="button" id="btnProcess">Proses Data</button>
+<button type="button" id="btnDownload">Download Hasil</button>
+
+<br><br>
 
 <div class="table-wrapper">
 <table id="resultTable">
@@ -108,6 +126,37 @@ td:last-child{ /* report */
 </div>
 
 <script src="../js/summary-ib.js" defer></script>
+
+<!-- ✅ FIX BUTTON -->
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+    const btnProcess = document.getElementById("btnProcess");
+    const btnDownload = document.getElementById("btnDownload");
+
+    btnProcess.addEventListener("click", function(){
+        if(!document.getElementById("excelFile").files.length){
+            alert("Pilih file Excel dulu!");
+            return;
+        }
+
+        if(typeof processExcel === "function"){
+            processExcel();
+        } else {
+            alert("JS belum kebaca!");
+        }
+    });
+
+    btnDownload.addEventListener("click", function(){
+        if(typeof downloadExcel === "function"){
+            downloadExcel();
+        } else {
+            alert("JS belum kebaca!");
+        }
+    });
+
+});
+</script>
 
 </body>
 </html>
