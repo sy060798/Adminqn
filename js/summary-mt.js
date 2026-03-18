@@ -61,7 +61,7 @@ return result.join(", ");
 }
 
 // =======================
-// 🔥 PARSE REPORT FINAL
+// 🔥 PARSE REPORT FINAL FIX
 // =======================
 function parseReport(report){
 
@@ -70,57 +70,61 @@ if(!report) return {newOnt:"",oldOnt:"",splacing:"",rfo:"",action:""};
 let rawText = report.toString();
 
 // =======================
-// CLEAN TEXT
+// CLEAN TEXT (AMAN)
 // =======================
 let clean = rawText
 .replace(/\r/g,"\n")
 .replace(/[\*\-\•]/g,"")
 .replace(/\;/g,":")
-.replace(/\s+/g," ")
 .trim();
 
-let lines = clean.split("\n").map(l=>l.trim());
+let lines = clean
+.split("\n")
+.map(l => l.trim())
+.filter(l => l !== "");
 
 // =======================
-// KEYWORDS
-// =======================
-const rfoKeys = ["rfo","problem","gangguan","kendala","remak"];
-const actKeys = ["act","action","tindakan","solusi"];
-
-// =======================
-// GET RFO & ACTION
+// 🔥 RFO & ACTION (FIX UTAMA)
 // =======================
 let rfo = "";
 let action = "";
 
-lines.forEach((line,i)=>{
+for(let i=0; i<lines.length; i++){
 
-let l = line.toLowerCase();
+let l = lines[i].toLowerCase();
 
-// RFO
+// ===== RFO =====
+if(!rfo && /^(rfo|problem|gangguan|remak)\b/.test(l)){
+
+if(lines[i+1]){
+rfo = lines[i+1].trim();
+}
+
 if(!rfo){
-for(let key of rfoKeys){
-if(l.startsWith(key)){
-rfo = l.replace(key,"").replace(":","").trim();
-if(!rfo && lines[i+1]) rfo = lines[i+1];
-}
-}
+rfo = l.replace(/^(rfo|problem|gangguan|remak)\s*:?/,"").trim();
 }
 
-// ACTION
+continue;
+}
+
+// ===== ACTION =====
+if(!action && /^(act|action|tindakan)\b/.test(l)){
+
+if(lines[i+1]){
+action = lines[i+1].trim();
+}
+
 if(!action){
-for(let key of actKeys){
-if(l.startsWith(key)){
-action = l.replace(key,"").replace(":","").trim();
-if(!action && lines[i+1]) action = lines[i+1];
-}
-}
+action = l.replace(/^(act|action|tindakan)\s*:?/,"").trim();
 }
 
-});
+continue;
+}
+
+}
 
 // =======================
-// FALLBACK
+// 🔥 FALLBACK
 // =======================
 lines.forEach(line=>{
 
@@ -149,6 +153,25 @@ action = line;
 });
 
 // =======================
+// 🔥 AUTO FIX KETUKER
+// =======================
+if(rfo && action){
+
+let r = rfo.toLowerCase();
+let a = action.toLowerCase();
+
+if(
+r.includes("join") ||
+r.includes("sambung")
+){
+let temp = rfo;
+rfo = action;
+action = temp;
+}
+
+}
+
+// =======================
 // 🔥 SPLICING (ONLY ACTION)
 // =======================
 let splacing = 0;
@@ -157,41 +180,30 @@ if(action){
 
 let act = action.toLowerCase();
 
-const spliceKeywords = ["join","rejoin","splice","sambung"];
-
-// jika ada kata penghubung → 1 saja
-if(
-act.includes(" dan ") ||
-act.includes("&") ||
-act.includes("+")
-){
-for(let k of spliceKeywords){
-if(act.includes(k)){
-splacing = 1;
-break;
-}
-}
-}else{
-
-spliceKeywords.forEach(word=>{
-let regex = new RegExp(`(\\d+)?\\s*${word}`, "gi");
-let matches = act.matchAll(regex);
-
-for(let m of matches){
-if(m[1]){
-splacing += parseInt(m[1]);
-}else{
-splacing += 1;
-}
-}
-});
-
-}
-
-// detect "2 titik"
+// PRIORITAS titik
 let titik = act.match(/(\d+)\s*titik/);
 if(titik){
 splacing = parseInt(titik[1]);
+}else{
+
+// kalau ada "dan" → 1
+if(/ dan | & | \+ /.test(act)){
+if(/join|rejoin|splice|sambung/.test(act)){
+splacing = 1;
+}
+}else{
+
+let matches = act.match(/(\d+)?\s*(join|rejoin|splice|sambung)/gi);
+
+if(matches){
+matches.forEach(m=>{
+let num = m.match(/\d+/);
+splacing += num ? parseInt(num[0]) : 1;
+});
+}
+
+}
+
 }
 
 }
@@ -202,25 +214,27 @@ splacing = parseInt(titik[1]);
 let newOnt = "";
 let oldOnt = "";
 
-let allSN = [...clean.matchAll(/sn\s*[:\-]?\s*([a-z0-9]+)/gi)].map(m=>m[1]);
+for(let i=0;i<lines.length;i++){
 
-lines.forEach((line,i)=>{
+let l = lines[i].toLowerCase();
 
-let l = line.toLowerCase();
-
-if(l.includes("lama") && lines[i+1]){
-let sn = lines[i+1].match(/([a-z0-9]{6,})/i);
+if(l.includes("lama")){
+let next = lines[i+1] || "";
+let sn = next.match(/([a-z0-9]{8,})/i);
 if(sn) oldOnt = sn[1];
 }
 
-if(l.includes("baru") && lines[i+1]){
-let sn = lines[i+1].match(/([a-z0-9]{6,})/i);
+if(l.includes("baru")){
+let next = lines[i+1] || "";
+let sn = next.match(/([a-z0-9]{8,})/i);
 if(sn) newOnt = sn[1];
 }
 
-});
+}
 
-// fallback
+// fallback SN global
+let allSN = [...clean.matchAll(/sn\s*[:\-]?\s*([a-z0-9]+)/gi)].map(m=>m[1]);
+
 if(!oldOnt && allSN.length >= 2){
 oldOnt = allSN[0];
 newOnt = allSN[1];
