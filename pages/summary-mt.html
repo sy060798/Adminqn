@@ -8,13 +8,60 @@
 
 <title>Summary Maintenance (MT)</title>
 
-<!-- ✅ FIX: naik 1 level -->
+<!-- ✅ PATH BENAR (karena di /pages/) -->
 <link rel="stylesheet" href="../style.css">
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
-/* style kamu biarkan */
+body{
+    font-family: Arial, sans-serif;
+    padding:20px;
+    background:#f7f7f7;
+}
+
+button{
+    padding:8px 14px;
+    margin-right:10px;
+    cursor:pointer;
+    background:#2c7be5;
+    color:white;
+    border:none;
+    border-radius:4px;
+}
+
+button:hover{
+    background:#1b5dc7;
+}
+
+table{
+    border-collapse: collapse;
+    width:100%;
+    margin-top:20px;
+    background:white;
+}
+
+th, td{
+    border:1px solid #ddd;
+    padding:8px;
+    font-size:13px;
+    text-align:left;
+}
+
+th{
+    background:#f0f0f0;
+}
+
+td:nth-child(6){
+    max-width:300px;
+    white-space:normal;
+}
+
+td:last-child{
+    white-space:pre-line;
+    max-width:500px;
+    word-break:break-word;
+}
 </style>
 
 </head>
@@ -27,16 +74,17 @@
 
 <br><br>
 
-<!-- ✅ TAMBAH TYPE -->
 <button type="button" onclick="processExcel()">Proses Data</button>
 <button type="button" onclick="downloadExcel()">Download Hasil</button>
 
 <table id="resultTable">
+
 <thead>
 <tr>
 <th>Dispatch</th>
 <th>Status</th>
-<th>No WO<br><small>Customer Name</small></th>
+<th>No WO</th>
+<th>Customer Name</th>
 <th>ID</th>
 <th>Tanggal</th>
 <th>Alamat</th>
@@ -50,10 +98,12 @@
 <th>Report</th>
 </tr>
 </thead>
+
 <tbody></tbody>
+
 </table>
 
-<!-- ✅ JS BENAR -->
+<!-- ✅ JS -->
 <script src="../js/summary-mt.js" defer></script>
 
 </body>
