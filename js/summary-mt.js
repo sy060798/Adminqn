@@ -28,12 +28,16 @@ return result.join(", ");
 }
 
 // =======================
-// AMBIL KOLOM
+// AMBIL KOLOM FLEXIBLE
 // =======================
-function getColumn(row,name){
+function getColumn(row, keywords){
 for(let key in row){
-if(key.toLowerCase().trim()===name.toLowerCase()){
+let col = key.toLowerCase();
+
+for(let word of keywords){
+if(col.includes(word.toLowerCase())){
 return row[key];
+}
 }
 }
 return "";
@@ -141,7 +145,7 @@ return {newOnt,oldOnt,splacing,rfo,action};
 }
 
 // =======================
-// PROCESS
+// PROCESS EXCEL
 // =======================
 function processExcel(){
 
@@ -168,6 +172,9 @@ processedData=[];
 
 jsonData.forEach(row=>{
 
+// DEBUG (boleh dihapus nanti)
+// console.log(Object.keys(row));
+
 let dispatchStatus=getDispatchStatus(row);
 dispatchStatus=String(dispatchStatus).trim().toLowerCase();
 
@@ -177,17 +184,17 @@ let report=getReportInstallation(row);
 let parsed=parseReport(report);
 
 const result={
+
 dispatch:"Done",
 status:"Done",
 
-// ✅ sesuai request (ID di bawah status)
-id:getColumn(row,"Cust ID Klien"),
-wo:getColumn(row,"No Wo Klien"),
-customer:getColumn(row,"Customer Name"),
+id:getColumn(row,["cust id","id"]),
+wo:getColumn(row,["wo","order"]),
+customer:getColumn(row,["customer","nama"]),
 
-tanggal:getColumn(row,"Tanggal Kunjungan"),
-alamat:getColumn(row,"Alamat"),
-cabang:getColumn(row,"Cabang"),
+tanggal:getColumn(row,["tanggal","date"]),
+alamat:getColumn(row,["alamat","address"]),
+cabang:getColumn(row,["cabang","branch"]),
 
 new_ont:parsed.newOnt,
 old_ont:parsed.oldOnt,
@@ -202,7 +209,7 @@ report:report
 processedData.push(result);
 
 // =======================
-// FIX TAMPILAN
+// TAMPILKAN KE TABEL (URUTAN SUDAH FIX)
 // =======================
 const tr=document.createElement("tr");
 
@@ -210,10 +217,8 @@ tr.innerHTML = `
 <td>${result.dispatch}</td>
 <td>${result.status}</td>
 <td>${result.id}</td>
-<td>
-${result.wo}<br>
-<small>${result.customer || ""}</small>
-</td>
+<td>${result.wo}</td>
+<td>${result.customer}</td>
 <td>${result.tanggal}</td>
 <td>${result.alamat}</td>
 <td>${result.cabang}</td>
@@ -238,7 +243,7 @@ reader.readAsArrayBuffer(file);
 }
 
 // =======================
-// DOWNLOAD
+// DOWNLOAD EXCEL
 // =======================
 function downloadExcel(){
 
