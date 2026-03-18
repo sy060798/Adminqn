@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Summary Maintenance (MT)</title>
 
-<!-- ✅ CSS ROOT -->
-<link rel="stylesheet" href="../style.css">
+<!-- ✅ CSS ROOT (PASTI ADA DI ROOT) -->
+<link rel="stylesheet" href="/style.css">
 
 <!-- ✅ XLSX -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -20,7 +19,6 @@ body{
     background:#f7f7f7;
 }
 
-/* 🔥 WRAPPER BIAR GAK SILANG */
 .table-wrapper{
     width:100%;
     overflow-x:auto;
@@ -28,7 +26,6 @@ body{
     background:white;
 }
 
-/* 🔥 BUTTON */
 button{
     padding:8px 14px;
     margin-right:10px;
@@ -43,14 +40,12 @@ button:hover{
     background:#1b5dc7;
 }
 
-/* 🔥 TABLE */
 table{
     border-collapse: collapse;
-    min-width:1500px; /* penting */
+    min-width:1500px;
     width:100%;
 }
 
-/* 🔥 HEADER HITAM */
 th{
     background:#1f2937 !important;
     color:#fff !important;
@@ -60,7 +55,6 @@ th{
     z-index: 2;
 }
 
-/* 🔥 CELL */
 th, td{
     border:1px solid #ddd;
     padding:8px;
@@ -69,18 +63,18 @@ th, td{
     vertical-align:top;
 }
 
-/* 🔥 ZEBRA */
 tr:nth-child(even){
     background:#fafafa;
 }
 
-/* 🔥 KOLOM PANJANG */
-td:nth-child(7){ /* alamat */
+/* alamat */
+td:nth-child(7){
     max-width:250px;
     white-space:normal;
 }
 
-td:last-child{ /* report */
+/* report */
+td:last-child{
     max-width:400px;
     white-space:pre-line;
     word-break:break-word;
@@ -97,8 +91,8 @@ td:last-child{ /* report */
 
 <br><br>
 
-<button type="button" id="btnProcess">Proses Data</button>
-<button type="button" id="btnDownload">Download Hasil</button>
+<button id="btnProcess">Proses Data</button>
+<button id="btnDownload">Download Hasil</button>
 
 <br><br>
 
@@ -130,36 +124,27 @@ td:last-child{ /* report */
 </table>
 </div>
 
-<!-- ✅ JS -->
-<script src="../js/summary-mt.js" defer></script>
+<!-- ✅ JS (PASTI AMAN DI GITHUB) -->
+<script src="/js/summary-mt.js"></script>
 
-<!-- ✅ FIX BUTTON -->
 <script>
 document.addEventListener("DOMContentLoaded", function(){
 
-    const btnProcess = document.getElementById("btnProcess");
-    const btnDownload = document.getElementById("btnDownload");
+document.getElementById("btnProcess").onclick = function(){
 
-    btnProcess.addEventListener("click", function(){
-        if(!document.getElementById("excelFile").files.length){
-            alert("Pilih file Excel dulu!");
-            return;
-        }
+const file = document.getElementById("excelFile").files[0];
 
-        if(typeof processExcel === "function"){
-            processExcel();
-        } else {
-            alert("JS belum kebaca!");
-        }
-    });
+if(!file){
+alert("Pilih file Excel dulu!");
+return;
+}
 
-    btnDownload.addEventListener("click", function(){
-        if(typeof downloadExcel === "function"){
-            downloadExcel();
-        } else {
-            alert("JS belum kebaca!");
-        }
-    });
+processExcel();
+};
+
+document.getElementById("btnDownload").onclick = function(){
+downloadExcel();
+};
 
 });
 </script>
