@@ -7,8 +7,11 @@
 
 <title>Summary IB</title>
 
-<link rel="stylesheet" href="../css/style.css">
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<!-- ✅ Gunakan path relatif yang aman -->
+<link rel="stylesheet" href="css/style.css">
+
+<!-- ✅ XLSX CDN stabil -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
 body{
@@ -76,7 +79,7 @@ th{
 <tr>
 <th>STATUS BY DISPATCH WO</th>
 <th>Status</th>
-<th>No WO / Customer Name</th>
+<th>No WO<br><small>Customer Name</small></th>
 <th>Tanggal</th>
 <th>Alamat</th>
 <th>ONT</th>
@@ -94,7 +97,8 @@ th{
 
 </main>
 
-<script src="../js/summary-ib.js"></script>
+<!-- ✅ JS taruh di bawah & path diperbaiki -->
+<script src="js/summary-ib.js"></script>
 
 </body>
 </html>
