@@ -129,6 +129,7 @@ const result = {
 dispatch: "Done",
 status: "Done",
 wo: getColumn(row,"No Wo Klien"),
+customer: getColumn(row,"Customer Name"), // 👈 tambahin ini
 tanggal: getColumn(row,"Tanggal Kunjungan"),
 alamat: getColumn(row,"Alamat"),
 ont: getColumn(row,"ONT"),
@@ -144,10 +145,12 @@ processedData.push(result);
 const tr = document.createElement("tr");
 
 tr.innerHTML = `
-
 <td>${result.dispatch}</td>
 <td>${result.status}</td>
-<td>${result.wo}</td>
+<td>
+${result.wo}<br>
+<small>${result.customer || ""}</small>
+</td>
 <td>${result.tanggal}</td>
 <td>${result.alamat}</td>
 <td>${result.ont}</td>
@@ -157,7 +160,6 @@ tr.innerHTML = `
 <td style="max-width:600px;word-break:break-word;">
 ${result.report || ""}
 </td>
-
 `;
 
 tbody.appendChild(tr);
