@@ -7,9 +7,9 @@
 
 <title>Summary IB</title>
 
-<link rel="stylesheet" href="css/style.css">
+<!-- ✅ karena di /pages/ -->
+<link rel="stylesheet" href="../style.css">
 
-<!-- ✅ XLSX WAJIB sebelum JS kamu -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
@@ -17,10 +17,6 @@ body{
     font-family: Arial, sans-serif;
     padding:20px;
     background:#f7f7f7;
-}
-
-h2{
-    margin-bottom:15px;
 }
 
 button{
@@ -48,7 +44,6 @@ th, td{
     border:1px solid #ddd;
     padding:8px;
     font-size:13px;
-    vertical-align:top;
     text-align:left;
 }
 
@@ -56,24 +51,16 @@ th{
     background:#f0f0f0;
 }
 
-/* 🔥 BIAR RAPI */
-td{
-    white-space:nowrap;
-}
-
-td:nth-child(5){ /* alamat */
-    white-space:normal;
+/* RAPII */
+td:nth-child(6){
     max-width:300px;
+    white-space:normal;
 }
 
-td:last-child{ /* report */
+td:last-child{
     white-space:pre-line;
     max-width:500px;
     word-break:break-word;
-}
-
-small{
-    color:gray;
 }
 </style>
 
@@ -81,15 +68,12 @@ small{
 
 <body>
 
-<main>
-
 <h2>Summary Installation Baru (IB)</h2>
 
 <input type="file" id="excelFile" accept=".xlsx,.xls">
 
 <br><br>
 
-<!-- ✅ PAKAI TYPE BUTTON -->
 <button type="button" onclick="processExcel()">Proses Data</button>
 <button type="button" onclick="downloadExcel()">Download Hasil</button>
 
@@ -99,7 +83,8 @@ small{
 <tr>
 <th>Dispatch</th>
 <th>Status</th>
-<th>No WO<br><small>Customer Name</small></th>
+<th>No WO</th>
+<th>Customer Name</th>
 <th>Tanggal</th>
 <th>Alamat</th>
 <th>ONT</th>
@@ -114,10 +99,8 @@ small{
 
 </table>
 
-</main>
-
-<!-- ✅ PENTING: pakai defer biar pasti kebaca -->
-<link rel="stylesheet" href="../style.css">
+<!-- ✅ JS -->
 <script src="../js/summary-ib.js" defer></script>
+
 </body>
 </html>
