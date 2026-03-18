@@ -8,7 +8,8 @@
 
 <title>Summary Maintenance (MT)</title>
 
-<link rel="stylesheet" href="../style.css">
+<!-- ✅ FIX PATH GITHUB -->
+<link rel="stylesheet" href="css/style.css">
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
@@ -50,11 +51,11 @@ border:1px solid #ddd;
 padding:8px;
 font-size:13px;
 vertical-align:top;
+text-align:left;
 }
 
 th{
 background:#f0f0f0;
-text-align:left;
 color:#000;
 font-weight:bold;
 }
@@ -63,10 +64,24 @@ tr:nth-child(even){
 background:#fafafa;
 }
 
-.report{
-max-width:600px;
-word-break:break-word;
+/* 🔥 BIAR RAPI */
+td{
+white-space:nowrap;
+}
+
+td.alamat{
+white-space:normal;
+max-width:300px;
+}
+
+td.report{
 white-space:pre-line;
+max-width:500px;
+word-break:break-word;
+}
+
+small{
+color:gray;
 }
 
 </style>
@@ -91,9 +106,8 @@ white-space:pre-line;
 <tr>
 <th>Dispatch</th>
 <th>Status</th>
-<th>WO</th>
-<th>ID</th>
 <th>No WO<br><small>Customer Name</small></th>
+<th>ID</th>
 <th>Tanggal</th>
 <th>Alamat</th>
 <th>Cabang</th>
@@ -112,7 +126,8 @@ white-space:pre-line;
 
 </table>
 
-<script src="../js/summary-mt.js"></script>
+<!-- ✅ FIX PATH -->
+<script src="js/summary-mt.js"></script>
 
 </body>
 </html>
