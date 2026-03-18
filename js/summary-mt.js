@@ -1,150 +1,172 @@
 let processedData = [];
 
-// NORMALIZE
-function normalize(text){
-    return String(text).toLowerCase().trim();
-}
-
+// =======================
 // PRECON
+// =======================
 function getPrecon(row){
-    const preconMap = {
-        "kabel precon 35 old": "PRECON - 35 M",
-        "kabel precon 50 old": "PRECON - 50 M",
-        "kabel precon 75 old": "PRECON - 75 M",
-        "kabel precon 80 old": "PRECON - 80 M",
-        "kabel precon 100 old": "PRECON - 100 M",
-        "kabel precon 125 old": "PRECON - 125 M",
-        "kabel precon 150 old": "PRECON - 150 M",
-        "kabel precon 175 old": "PRECON - 175 M",
-        "kabel precon 200 old": "PRECON - 200 M",
-        "kabel precon 225 old": "PRECON - 225 M",
-        "kabel precon 250 old": "PRECON - 250 M"
-    };
+const preconMap = {
+"Kabel Precon 35 Old": "PRECON - 35 M",
+"Kabel Precon 50 Old": "PRECON - 50 M",
+"Kabel Precon 75 Old": "PRECON - 75 M",
+"Kabel Precon 80 Old": "PRECON - 80 M",
+"Kabel Precon 100 Old": "PRECON - 100 M",
+"Kabel Precon 125 Old": "PRECON - 125 M",
+"Kabel Precon 150 Old": "PRECON - 150 M",
+"Kabel Precon 175 Old": "PRECON - 175 M",
+"Kabel Precon 200 Old": "PRECON - 200 M",
+"Kabel Precon 225 Old": "PRECON - 225 M",
+"Kabel Precon 250 Old": "PRECON - 250 M"
+};
 
-    let result = [];
+let result = [];
 
-    for(let key in row){
-        let k = normalize(key);
-        if(preconMap[k] && (row[key] == 1 || row[key] == "1")){
-            result.push(preconMap[k]);
-        }
-    }
-
-    return result.join(", ");
+for(let key in preconMap){
+if(row[key] == 1 || row[key] == "1"){
+result.push(preconMap[key]);
+}
 }
 
-// AMBIL KOLOM FLEXIBLE
-function getColumn(row, keyword){
-    keyword = normalize(keyword);
-    for(let key in row){
-        if(normalize(key).includes(keyword)){
-            return row[key];
-        }
-    }
-    return "";
+return result.join(", ");
 }
 
+// =======================
+// AMBIL KOLOM
+// =======================
+function getColumn(row,name){
+for(let key in row){
+if(key.toLowerCase().trim() === name.toLowerCase()){
+return row[key];
+}
+}
+return "";
+}
+
+// =======================
+// DISPATCH
+// =======================
+function getDispatchStatus(row){
+for(let key in row){
+if(key.toLowerCase().includes("dispatch")){
+return row[key];
+}
+}
+return "";
+}
+
+// =======================
+// REPORT
+// =======================
+function getReport(row){
+for(let key in row){
+if(key.toLowerCase().includes("report")){
+return row[key];
+}
+}
+return "";
+}
+
+// =======================
 // PROCESS
+// =======================
 function processExcel(){
 
-    const file = document.getElementById("excelFile").files[0];
+console.log("MT JS LOADED");
 
-    if(!file){
-        alert("Upload Excel dulu!");
-        return;
-    }
+const file = document.getElementById("excelFile").files[0];
 
-    const reader = new FileReader();
-
-    reader.onload = function(e){
-
-        const data = new Uint8Array(e.target.result);
-        const wb = XLSX.read(data,{type:"array"});
-        const sheet = wb.Sheets[wb.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json(sheet,{defval:""});
-
-        const tbody = document.querySelector("#resultTable tbody");
-
-        tbody.innerHTML = "";
-        processedData = [];
-
-        json.forEach(row=>{
-
-            let dispatch = normalize(getColumn(row,"dispatch"));
-            if(dispatch !== "done") return;
-
-            const result = {
-
-                dispatch:"Done",
-                status:"Done",
-
-                id:getColumn(row,"id"),
-                wo:getColumn(row,"wo"),
-                customer:getColumn(row,"customer"),
-
-                tanggal:getColumn(row,"tanggal"),
-                alamat:getColumn(row,"alamat"),
-                cabang:getColumn(row,"cabang"),
-
-                new_ont:getColumn(row,"ont baru"),
-                old_ont:getColumn(row,"ont lama"),
-                splicing:getColumn(row,"splicing"),
-                rfo:getColumn(row,"rfo"),
-                action:getColumn(row,"action"),
-
-                precon:getPrecon(row),
-                report:getColumn(row,"report")
-            };
-
-            processedData.push(result);
-
-            const tr = document.createElement("tr");
-
-            tr.innerHTML = `
-            <td>${result.dispatch}</td>
-            <td style="color:green;font-weight:bold">${result.status}</td>
-            <td>${result.id}</td>
-            <td>${result.wo}</td>
-            <td>${result.customer}</td>
-            <td>${result.tanggal}</td>
-            <td>${result.alamat}</td>
-            <td>${result.cabang}</td>
-            <td>${result.new_ont}</td>
-            <td>${result.old_ont}</td>
-            <td>${result.splicing}</td>
-            <td>${result.rfo}</td>
-            <td>${result.action}</td>
-            <td>${result.precon}</td>
-            <td>${result.report}</td>
-            `;
-
-            tbody.appendChild(tr);
-
-        });
-
-    };
-
-    reader.readAsArrayBuffer(file);
+if(!file){
+alert("Upload Excel dulu!");
+return;
 }
 
+const reader = new FileReader();
+
+reader.onload = function(e){
+
+const data = new Uint8Array(e.target.result);
+const workbook = XLSX.read(data,{type:"array"});
+const sheet = workbook.Sheets[workbook.SheetNames[0]];
+const json = XLSX.utils.sheet_to_json(sheet,{defval:""});
+
+const tbody = document.querySelector("#resultTable tbody");
+
+tbody.innerHTML = "";
+processedData = [];
+
+json.forEach(row=>{
+
+let dispatch = String(getDispatchStatus(row)).toLowerCase().trim();
+
+if(dispatch !== "done") return;
+
+const result = {
+
+dispatch:"Done",
+status:"Done",
+id:getColumn(row,"Cust ID Klien"),
+wo:getColumn(row,"No Wo Klien"),
+customer:getColumn(row,"Customer Name"),
+tanggal:getColumn(row,"Tanggal Kunjungan"),
+alamat:getColumn(row,"Alamat"),
+cabang:getColumn(row,"Cabang"),
+
+new_ont:getColumn(row,"SN ONT Baru"),
+old_ont:getColumn(row,"SN ONT Lama"),
+splicing:getColumn(row,"Splicing"),
+rfo:getColumn(row,"RFO"),
+action:getColumn(row,"Action"),
+
+precon:getPrecon(row),
+report:getReport(row)
+
+};
+
+processedData.push(result);
+
+// ✅ FIX DI SINI (PAKAI BACKTICK)
+const tr = document.createElement("tr");
+
+tr.innerHTML = `
+<td>${result.dispatch}</td>
+<td>${result.status}</td>
+<td>${result.id}</td>
+<td>${result.wo}</td>
+<td>${result.customer}</td>
+<td>${result.tanggal}</td>
+<td>${result.alamat}</td>
+<td>${result.cabang}</td>
+<td>${result.new_ont}</td>
+<td>${result.old_ont}</td>
+<td>${result.splicing}</td>
+<td>${result.rfo}</td>
+<td>${result.action}</td>
+<td>${result.precon}</td>
+<td>${result.report}</td>
+`;
+
+tbody.appendChild(tr);
+
+});
+
+};
+
+reader.readAsArrayBuffer(file);
+}
+
+// =======================
 // DOWNLOAD
+// =======================
 function downloadExcel(){
 
-    if(processedData.length === 0){
-        alert("Belum ada data!");
-        return;
-    }
+if(processedData.length === 0){
+alert("Belum ada data!");
+return;
+}
 
-    const ws = XLSX.utils.json_to_sheet(processedData,{
-        header:[
-            "dispatch","status","id","wo","customer","tanggal",
-            "alamat","cabang","new_ont","old_ont",
-            "splicing","rfo","action","precon","report"
-        ]
-    });
+const ws = XLSX.utils.json_to_sheet(processedData);
+const wb = XLSX.utils.book_new();
 
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb,ws,"Summary MT");
+XLSX.utils.book_append_sheet(wb,ws,"Summary MT");
 
-    XLSX.writeFile(wb,"summary_mt_done.xlsx");
+XLSX.writeFile(wb,"summary_mt_done.xlsx");
 }
