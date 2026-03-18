@@ -2,16 +2,15 @@
 <html lang="id">
 
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Summary Maintenance (MT)</title>
 
-<!-- ✅ PATH SESUAI STRUKTUR -->
+<!-- ✅ CSS ROOT -->
 <link rel="stylesheet" href="../style.css">
 
-<!-- ✅ XLSX HARUS DI ATAS -->
+<!-- ✅ XLSX -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
@@ -21,11 +20,15 @@ body{
     background:#f7f7f7;
 }
 
+/* 🔥 WRAPPER BIAR GAK SILANG */
 .table-wrapper{
     width:100%;
     overflow-x:auto;
+    border:1px solid #ddd;
+    background:white;
 }
 
+/* 🔥 BUTTON */
 button{
     padding:8px 14px;
     margin-right:10px;
@@ -40,12 +43,24 @@ button:hover{
     background:#1b5dc7;
 }
 
+/* 🔥 TABLE */
 table{
     border-collapse: collapse;
-    min-width:1400px;
-    background:white;
+    min-width:1500px; /* penting */
+    width:100%;
 }
 
+/* 🔥 HEADER HITAM */
+th{
+    background:#1f2937 !important;
+    color:#fff !important;
+    white-space:nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+/* 🔥 CELL */
 th, td{
     border:1px solid #ddd;
     padding:8px;
@@ -54,17 +69,18 @@ th, td{
     vertical-align:top;
 }
 
-th{
-    background:#000 !important;
-    color:#fff !important;
+/* 🔥 ZEBRA */
+tr:nth-child(even){
+    background:#fafafa;
 }
 
-td:nth-child(7){
+/* 🔥 KOLOM PANJANG */
+td:nth-child(7){ /* alamat */
     max-width:250px;
     white-space:normal;
 }
 
-td:last-child{
+td:last-child{ /* report */
     max-width:400px;
     white-space:pre-line;
     word-break:break-word;
@@ -81,9 +97,10 @@ td:last-child{
 
 <br><br>
 
-<!-- ❌ HAPUS onclick -->
 <button type="button" id="btnProcess">Proses Data</button>
 <button type="button" id="btnDownload">Download Hasil</button>
+
+<br><br>
 
 <div class="table-wrapper">
 <table id="resultTable">
@@ -116,11 +133,19 @@ td:last-child{
 <!-- ✅ JS -->
 <script src="../js/summary-mt.js" defer></script>
 
-<!-- ✅ FIX: PASTIKAN BUTTON KEHUBUNG -->
+<!-- ✅ FIX BUTTON -->
 <script>
 document.addEventListener("DOMContentLoaded", function(){
 
-    document.getElementById("btnProcess").addEventListener("click", function(){
+    const btnProcess = document.getElementById("btnProcess");
+    const btnDownload = document.getElementById("btnDownload");
+
+    btnProcess.addEventListener("click", function(){
+        if(!document.getElementById("excelFile").files.length){
+            alert("Pilih file Excel dulu!");
+            return;
+        }
+
         if(typeof processExcel === "function"){
             processExcel();
         } else {
@@ -128,7 +153,7 @@ document.addEventListener("DOMContentLoaded", function(){
         }
     });
 
-    document.getElementById("btnDownload").addEventListener("click", function(){
+    btnDownload.addEventListener("click", function(){
         if(typeof downloadExcel === "function"){
             downloadExcel();
         } else {
