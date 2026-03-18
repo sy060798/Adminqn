@@ -17,14 +17,10 @@ return "";
 }
 
 // =======================
-// DISPATCH
-// =======================
 function getDispatchStatus(row){
 return getColumn(row, ["dispatch"]);
 }
 
-// =======================
-// REPORT
 // =======================
 function getReportInstallation(row){
 return getColumn(row, ["report"]);
@@ -65,7 +61,7 @@ return result.join(", ");
 }
 
 // =======================
-// 🔥 PARSE REPORT (SUPER FLEX)
+// 🔥 PARSE REPORT FINAL
 // =======================
 function parseReport(report){
 
@@ -74,30 +70,16 @@ if(!report) return {newOnt:"",oldOnt:"",splacing:"",rfo:"",action:""};
 let rawText = report.toString();
 
 // =======================
-// NORMALIZE TEXT
+// CLEAN TEXT
 // =======================
-let text = rawText
-.toLowerCase()
+let clean = rawText
 .replace(/\r/g,"\n")
-.replace(/;/g,":")
-.replace(/\*/g,"")
+.replace(/[\*\-\•]/g,"")
+.replace(/\;/g,":")
 .replace(/\s+/g," ")
 .trim();
 
-let lines = rawText.split(/\r?\n/).map(line =>
-line.replace(/^\s*[\*\-\[\]\(\)]*/g,"")
-.replace(/^\s*\d+\s*[\.\)]\s*/g,"")
-.trim()
-);
-
-// =======================
-// ONT
-// =======================
-let newOntMatch = rawText.match(/SN\s*(ONT|PERANGKAT)\s*BARU\s*:?\s*([A-Z0-9]+)/i);
-let newOnt = newOntMatch ? newOntMatch[2] : "";
-
-let oldOntMatch = rawText.match(/SN\s*(ONT|PERANGKAT)\s*LAMA\s*:?\s*([A-Z0-9]+)/i);
-let oldOnt = oldOntMatch ? oldOntMatch[2] : "";
+let lines = clean.split("\n").map(l=>l.trim());
 
 // =======================
 // KEYWORDS
@@ -106,7 +88,7 @@ const rfoKeys = ["rfo","problem","gangguan","kendala","remak"];
 const actKeys = ["act","action","tindakan","solusi"];
 
 // =======================
-// AMBIL RFO & ACTION
+// GET RFO & ACTION
 // =======================
 let rfo = "";
 let action = "";
@@ -138,18 +120,18 @@ if(!action && lines[i+1]) action = lines[i+1];
 });
 
 // =======================
-// FALLBACK CERDAS
+// FALLBACK
 // =======================
 lines.forEach(line=>{
 
 let l = line.toLowerCase();
 
 if(!rfo && (
+l.includes("loss") ||
 l.includes("cut") ||
 l.includes("putus") ||
 l.includes("gigit") ||
-l.includes("tikus") ||
-l.includes("loss")
+l.includes("tikus")
 )){
 rfo = line;
 }
@@ -158,7 +140,8 @@ if(!action && (
 l.includes("join") ||
 l.includes("splice") ||
 l.includes("sambung") ||
-l.includes("tarik")
+l.includes("ganti") ||
+l.includes("pergantian")
 )){
 action = line;
 }
@@ -166,16 +149,33 @@ action = line;
 });
 
 // =======================
-// 🔥 SPLICING SMART
+// 🔥 SPLICING (ONLY ACTION)
 // =======================
 let splacing = 0;
 
-const spliceKeywords = ["join","splice","sambung","rejoin"];
+if(action){
+
+let act = action.toLowerCase();
+
+const spliceKeywords = ["join","rejoin","splice","sambung"];
+
+// jika ada kata penghubung → 1 saja
+if(
+act.includes(" dan ") ||
+act.includes("&") ||
+act.includes("+")
+){
+for(let k of spliceKeywords){
+if(act.includes(k)){
+splacing = 1;
+break;
+}
+}
+}else{
 
 spliceKeywords.forEach(word=>{
-
 let regex = new RegExp(`(\\d+)?\\s*${word}`, "gi");
-let matches = text.matchAll(regex);
+let matches = act.matchAll(regex);
 
 for(let m of matches){
 if(m[1]){
@@ -184,21 +184,53 @@ splacing += parseInt(m[1]);
 splacing += 1;
 }
 }
+});
+
+}
+
+// detect "2 titik"
+let titik = act.match(/(\d+)\s*titik/);
+if(titik){
+splacing = parseInt(titik[1]);
+}
+
+}
+
+// =======================
+// 🔥 ONT FLEX
+// =======================
+let newOnt = "";
+let oldOnt = "";
+
+let allSN = [...clean.matchAll(/sn\s*[:\-]?\s*([a-z0-9]+)/gi)].map(m=>m[1]);
+
+lines.forEach((line,i)=>{
+
+let l = line.toLowerCase();
+
+if(l.includes("lama") && lines[i+1]){
+let sn = lines[i+1].match(/([a-z0-9]{6,})/i);
+if(sn) oldOnt = sn[1];
+}
+
+if(l.includes("baru") && lines[i+1]){
+let sn = lines[i+1].match(/([a-z0-9]{6,})/i);
+if(sn) newOnt = sn[1];
+}
 
 });
 
-// detect "2 titik"
-let titik = text.match(/(\d+)\s*titik/);
-if(titik){
-splacing += parseInt(titik[1]);
+// fallback
+if(!oldOnt && allSN.length >= 2){
+oldOnt = allSN[0];
+newOnt = allSN[1];
 }
 
-// fallback dari RFO
-if(splacing === 0 && rfo){
-let num = rfo.match(/\d+/);
-if(num) splacing = parseInt(num[0]);
+if(!newOnt && allSN.length === 1){
+newOnt = allSN[0];
 }
 
+// =======================
 return {
 newOnt,
 oldOnt,
@@ -238,7 +270,6 @@ processedData=[];
 json.forEach(row=>{
 
 let dispatch = getDispatchStatus(row).toLowerCase();
-
 if(dispatch !== "done") return;
 
 let report = getReportInstallation(row);
