@@ -34,6 +34,7 @@ return getColumn(row, ["report"]);
 // PRECON
 // =======================
 function getPrecon(row){
+
 const preconMap = {
 "kabel precon 35": "PRECON - 35 M",
 "kabel precon 50": "PRECON - 50 M",
@@ -64,17 +65,26 @@ return result.join(", ");
 }
 
 // =======================
-// PARSE REPORT (FULL FIX)
+// 🔥 PARSE REPORT (SUPER FLEX)
 // =======================
 function parseReport(report){
 
 if(!report) return {newOnt:"",oldOnt:"",splacing:"",rfo:"",action:""};
 
-let text = report.toString();
-let lines = text.split(/\r?\n/);
+let rawText = report.toString();
 
-// bersihin list
-lines = lines.map(line =>
+// =======================
+// NORMALIZE TEXT
+// =======================
+let text = rawText
+.toLowerCase()
+.replace(/\r/g,"\n")
+.replace(/;/g,":")
+.replace(/\*/g,"")
+.replace(/\s+/g," ")
+.trim();
+
+let lines = rawText.split(/\r?\n/).map(line =>
 line.replace(/^\s*[\*\-\[\]\(\)]*/g,"")
 .replace(/^\s*\d+\s*[\.\)]\s*/g,"")
 .trim()
@@ -83,80 +93,120 @@ line.replace(/^\s*[\*\-\[\]\(\)]*/g,"")
 // =======================
 // ONT
 // =======================
-let newOntMatch = text.match(/SN\s*(ONT|PERANGKAT)\s*BARU\s*:?\s*([A-Z0-9]+)/i);
+let newOntMatch = rawText.match(/SN\s*(ONT|PERANGKAT)\s*BARU\s*:?\s*([A-Z0-9]+)/i);
 let newOnt = newOntMatch ? newOntMatch[2] : "";
 
-let oldOntMatch = text.match(/SN\s*(ONT|PERANGKAT)\s*LAMA\s*:?\s*([A-Z0-9]+)/i);
+let oldOntMatch = rawText.match(/SN\s*(ONT|PERANGKAT)\s*LAMA\s*:?\s*([A-Z0-9]+)/i);
 let oldOnt = oldOntMatch ? oldOntMatch[2] : "";
 
 // =======================
-// SPLICING
+// KEYWORDS
 // =======================
-let splacingMatch = text.match(/Sleeve\s*Protec\w*\s*:?[\s]*(\d+)/i);
-let splacing = splacingMatch ? splacingMatch[1] : "";
+const rfoKeys = ["rfo","problem","gangguan","kendala","remak"];
+const actKeys = ["act","action","tindakan","solusi"];
 
 // =======================
-// RFO & ACTION
+// AMBIL RFO & ACTION
 // =======================
 let rfo = "";
 let action = "";
 
-for(let line of lines){
-let lower = line.toLowerCase();
+lines.forEach((line,i)=>{
 
-if(!rfo && (lower.startsWith("rfo") || lower.startsWith("problem"))){
-rfo = line.replace(/(rfo|problem)\s*:/i,"").trim();
-}
+let l = line.toLowerCase();
 
-if(!action && (lower.startsWith("act") || lower.startsWith("action"))){
-action = line.replace(/(act|action)\s*:/i,"").trim();
-}
-}
-
-// =======================
-// FALLBACK ACTION
-// =======================
-if(!action){
-for(let line of lines){
-let lower = line.toLowerCase();
-
-if(
-lower.includes("join") ||
-lower.includes("splice") ||
-lower.includes("sambung") ||
-lower.includes("tarik")
-){
-action = line;
-
-let num = line.match(/\d+/);
-if(num) splacing = num[0];
-
-break;
-}
-}
-}
-
-// =======================
-// 🔥 REMAK FIX
-// =======================
+// RFO
 if(!rfo){
-for(let i=0;i<lines.length;i++){
-if(lines[i].toLowerCase().includes("remak")){
-if(lines[i+1]) rfo = lines[i+1];
-break;
+for(let key of rfoKeys){
+if(l.startsWith(key)){
+rfo = l.replace(key,"").replace(":","").trim();
+if(!rfo && lines[i+1]) rfo = lines[i+1];
 }
 }
 }
 
+// ACTION
+if(!action){
+for(let key of actKeys){
+if(l.startsWith(key)){
+action = l.replace(key,"").replace(":","").trim();
+if(!action && lines[i+1]) action = lines[i+1];
+}
+}
+}
+
+});
+
 // =======================
-// 🔥 SPLICING DARI RFO
+// FALLBACK CERDAS
 // =======================
-if(!splacing && rfo){
+lines.forEach(line=>{
+
+let l = line.toLowerCase();
+
+if(!rfo && (
+l.includes("cut") ||
+l.includes("putus") ||
+l.includes("gigit") ||
+l.includes("tikus") ||
+l.includes("loss")
+)){
+rfo = line;
+}
+
+if(!action && (
+l.includes("join") ||
+l.includes("splice") ||
+l.includes("sambung") ||
+l.includes("tarik")
+)){
+action = line;
+}
+
+});
+
+// =======================
+// 🔥 SPLICING SMART
+// =======================
+let splacing = 0;
+
+const spliceKeywords = ["join","splice","sambung","rejoin"];
+
+spliceKeywords.forEach(word=>{
+
+let regex = new RegExp(`(\\d+)?\\s*${word}`, "gi");
+let matches = text.matchAll(regex);
+
+for(let m of matches){
+if(m[1]){
+splacing += parseInt(m[1]);
+}else{
+splacing += 1;
+}
+}
+
+});
+
+// detect "2 titik"
+let titik = text.match(/(\d+)\s*titik/);
+if(titik){
+splacing += parseInt(titik[1]);
+}
+
+// fallback dari RFO
+if(splacing === 0 && rfo){
 let num = rfo.match(/\d+/);
-if(num) splacing = num[0];
+if(num) splacing = parseInt(num[0]);
 }
 
-return {newOnt,oldOnt,splacing,rfo,action};
+return {
+newOnt,
+oldOnt,
+splacing: splacing || "",
+rfo,
+action
+};
+
 }
 
 // =======================
@@ -194,9 +244,6 @@ if(dispatch !== "done") return;
 let report = getReportInstallation(row);
 let parsed = parseReport(report);
 
-// =======================
-// 🔥 FIX ID & WO
-// =======================
 const result = {
 
 dispatch:"Done",
