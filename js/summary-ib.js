@@ -7,6 +7,7 @@ const preconMap = {
 "Kabel Precon 35 Old": "PRECON - 35 M",
 "Kabel Precon 50 Old": "PRECON - 50 M",
 "Kabel Precon 75 Old": "PRECON - 75 M",
+"Kabel Precon 80 Old": "PRECON - 80 M",
 "Kabel Precon 100 Old": "PRECON - 100 M",
 "Kabel Precon 125 Old": "PRECON - 125 M",
 "Kabel Precon 150 Old": "PRECON - 150 M",
