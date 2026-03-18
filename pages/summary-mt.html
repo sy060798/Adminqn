@@ -8,8 +8,10 @@
 
 <title>Summary Maintenance (MT)</title>
 
+<!-- ✅ PATH SESUAI STRUKTUR -->
 <link rel="stylesheet" href="../style.css">
 
+<!-- ✅ XLSX HARUS DI ATAS -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
@@ -19,7 +21,6 @@ body{
     background:#f7f7f7;
 }
 
-/* 🔥 container biar tabel gak hancur */
 .table-wrapper{
     width:100%;
     overflow-x:auto;
@@ -41,7 +42,7 @@ button:hover{
 
 table{
     border-collapse: collapse;
-    min-width:1400px; /* 🔥 penting biar kolom gak nabrak */
+    min-width:1400px;
     background:white;
 }
 
@@ -58,13 +59,12 @@ th{
     white-space:nowrap;
 }
 
-/* 🔥 khusus kolom panjang */
-td:nth-child(7){ /* alamat */
+td:nth-child(7){
     max-width:250px;
     white-space:normal;
 }
 
-td:last-child{ /* report */
+td:last-child{
     max-width:400px;
     white-space:pre-line;
     word-break:break-word;
@@ -81,8 +81,9 @@ td:last-child{ /* report */
 
 <br><br>
 
-<button type="button" onclick="processExcel()">Proses Data</button>
-<button type="button" onclick="downloadExcel()">Download Hasil</button>
+<!-- ❌ HAPUS onclick -->
+<button type="button" id="btnProcess">Proses Data</button>
+<button type="button" id="btnDownload">Download Hasil</button>
 
 <div class="table-wrapper">
 <table id="resultTable">
@@ -112,7 +113,31 @@ td:last-child{ /* report */
 </table>
 </div>
 
+<!-- ✅ JS -->
 <script src="../js/summary-mt.js" defer></script>
+
+<!-- ✅ FIX: PASTIKAN BUTTON KEHUBUNG -->
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+    document.getElementById("btnProcess").addEventListener("click", function(){
+        if(typeof processExcel === "function"){
+            processExcel();
+        } else {
+            alert("JS belum kebaca!");
+        }
+    });
+
+    document.getElementById("btnDownload").addEventListener("click", function(){
+        if(typeof downloadExcel === "function"){
+            downloadExcel();
+        } else {
+            alert("JS belum kebaca!");
+        }
+    });
+
+});
+</script>
 
 </body>
 </html>
