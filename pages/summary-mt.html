@@ -6,8 +6,8 @@
 
 <title>Summary Maintenance (MT)</title>
 
-<!-- ✅ CSS ROOT (PASTI ADA DI ROOT) -->
-<link rel="stylesheet" href="/style.css">
+<!-- ✅ FIX PATH -->
+<link rel="stylesheet" href="../style.css">
 
 <!-- ✅ XLSX -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -67,13 +67,11 @@ tr:nth-child(even){
     background:#fafafa;
 }
 
-/* alamat */
 td:nth-child(7){
     max-width:250px;
     white-space:normal;
 }
 
-/* report */
 td:last-child{
     max-width:400px;
     white-space:pre-line;
@@ -124,8 +122,8 @@ td:last-child{
 </table>
 </div>
 
-<!-- ✅ JS (PASTI AMAN DI GITHUB) -->
-<script src="/js/summary-mt.js"></script>
+<!-- ✅ FIX PATH -->
+<script src="../js/summary-mt.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function(){
@@ -139,10 +137,23 @@ alert("Pilih file Excel dulu!");
 return;
 }
 
+if(typeof processExcel !== "function"){
+alert("JS tidak terbaca!");
+console.error("processExcel undefined");
+return;
+}
+
 processExcel();
 };
 
 document.getElementById("btnDownload").onclick = function(){
+
+if(typeof downloadExcel !== "function"){
+alert("JS tidak terbaca!");
+console.error("downloadExcel undefined");
+return;
+}
+
 downloadExcel();
 };
 
