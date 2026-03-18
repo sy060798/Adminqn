@@ -17,10 +17,14 @@ return "";
 }
 
 // =======================
+// DISPATCH
+// =======================
 function getDispatchStatus(row){
 return getColumn(row, ["dispatch"]);
 }
 
+// =======================
+// REPORT
 // =======================
 function getReportInstallation(row){
 return getColumn(row, ["report"]);
@@ -61,183 +65,202 @@ return result.join(", ");
 }
 
 // =======================
-// 🔥 PARSE REPORT FINAL FIX
+// 🔥 CLEAN TEXT
+// =======================
+function cleanText(text){
+return text
+.replace(/\*/g,"")
+.replace(/[•]/g,"")
+.replace(/\t/g," ")
+.replace(/\r/g,"")
+.replace(/\s+/g," ")
+.trim();
+}
+
+// =======================
+// 🔥 HITUNG SPLICING CERDAS
+// =======================
+function countSplicing(text){
+
+let count = 0;
+
+// keyword utama
+const keywords = ["join","rejoin","splice","sambung","splicing"];
+
+// hitung keyword
+keywords.forEach(k=>{
+let match = text.match(new RegExp(k,"gi"));
+if(match) count += match.length;
+});
+
+// ambil angka kalau ada
+let num = text.match(/(\d+)/);
+if(num){
+count = parseInt(num[1]);
+}
+
+// NORMALISASI:
+// kalau ada "dan / & / +" tetap 1
+if(
+text.includes(" dan ") ||
+text.includes("&") ||
+text.includes("+")
+){
+count = Math.max(1,count);
+}
+
+return count || "";
+}
+
+// =======================
+// 🔥 PARSE REPORT SUPER
 // =======================
 function parseReport(report){
 
 if(!report) return {newOnt:"",oldOnt:"",splacing:"",rfo:"",action:""};
 
-let rawText = report.toString();
+let raw = report.toString();
+let clean = cleanText(raw);
+
+// pecah baris fleksibel
+let lines = raw.split(/\r?\n/).map(l=>cleanText(l)).filter(l=>l);
 
 // =======================
-// CLEAN TEXT (AMAN)
-// =======================
-let clean = rawText
-.replace(/\r/g,"\n")
-.replace(/[\*\-\•]/g,"")
-.replace(/\;/g,":")
-.trim();
-
-let lines = clean
-.split("\n")
-.map(l => l.trim())
-.filter(l => l !== "");
-
-// =======================
-// 🔥 RFO & ACTION (FIX UTAMA)
+// 🔥 RFO & ACTION FLEXIBLE
 // =======================
 let rfo = "";
 let action = "";
 
-for(let i=0; i<lines.length; i++){
+for(let i=0;i<lines.length;i++){
 
 let l = lines[i].toLowerCase();
 
-// ===== RFO =====
-if(!rfo && /^(rfo|problem|gangguan|remak)\b/.test(l)){
-
-if(lines[i+1]){
-rfo = lines[i+1].trim();
-}
-
-if(!rfo){
-rfo = l.replace(/^(rfo|problem|gangguan|remak)\s*:?/,"").trim();
-}
-
+// RFO
+if(!rfo && (l.startsWith("rfo") || l.includes("rfo"))){
+rfo = lines[i].replace(/rfo\s*[:;\-]?\s*/i,"");
 continue;
 }
 
-// ===== ACTION =====
-if(!action && /^(act|action|tindakan)\b/.test(l)){
-
-if(lines[i+1]){
-action = lines[i+1].trim();
+// ACTION
+if(!action && (l.startsWith("act") || l.includes("act") || l.includes("action"))){
+action = lines[i].replace(/(act|action)\s*[:;\-]?\s*/i,"");
+continue;
 }
 
+}
+
+// =======================
+// 🔥 FORMAT KHUSUS (RFO / ACT DI BARIS BERIKUTNYA)
+// =======================
+for(let i=0;i<lines.length;i++){
+
+let l = lines[i].toLowerCase();
+
+if(l === "rfo" && lines[i+1]){
+rfo = lines[i+1];
+}
+
+if((l === "act" || l === "action") && lines[i+1]){
+action = lines[i+1];
+}
+
+}
+
+// =======================
+// 🔥 FALLBACK ACTION
+// =======================
 if(!action){
-action = l.replace(/^(act|action|tindakan)\s*:?/,"").trim();
-}
-
-continue;
-}
-
-}
-
-// =======================
-// 🔥 FALLBACK
-// =======================
-lines.forEach(line=>{
-
-let l = line.toLowerCase();
-
-if(!rfo && (
-l.includes("loss") ||
-l.includes("cut") ||
-l.includes("putus") ||
-l.includes("gigit") ||
-l.includes("tikus")
-)){
-rfo = line;
-}
-
-if(!action && (
-l.includes("join") ||
-l.includes("splice") ||
-l.includes("sambung") ||
-l.includes("ganti") ||
-l.includes("pergantian")
-)){
-action = line;
-}
-
-});
-
-// =======================
-// 🔥 AUTO FIX KETUKER
-// =======================
-if(rfo && action){
-
-let r = rfo.toLowerCase();
-let a = action.toLowerCase();
+for(let line of lines){
+let lower = line.toLowerCase();
 
 if(
-r.includes("join") ||
-r.includes("sambung")
+lower.includes("join") ||
+lower.includes("splice") ||
+lower.includes("sambung") ||
+lower.includes("tarik") ||
+lower.includes("ganti")
 ){
-let temp = rfo;
-rfo = action;
-action = temp;
+action = line;
+break;
 }
-
 }
-
-// =======================
-// 🔥 SPLICING (ONLY ACTION)
-// =======================
-let splacing = 0;
-
-if(action){
-
-let act = action.toLowerCase();
-
-// PRIORITAS titik
-let titik = act.match(/(\d+)\s*titik/);
-if(titik){
-splacing = parseInt(titik[1]);
-}else{
-
-// kalau ada "dan" → 1
-if(/ dan | & | \+ /.test(act)){
-if(/join|rejoin|splice|sambung/.test(act)){
-splacing = 1;
-}
-}else{
-
-let matches = act.match(/(\d+)?\s*(join|rejoin|splice|sambung)/gi);
-
-if(matches){
-matches.forEach(m=>{
-let num = m.match(/\d+/);
-splacing += num ? parseInt(num[0]) : 1;
-});
-}
-
-}
-
-}
-
 }
 
 // =======================
-// 🔥 ONT FLEX
+// 🔥 REMAK FIX
+// =======================
+if(!rfo){
+for(let i=0;i<lines.length;i++){
+if(lines[i].toLowerCase().includes("remak")){
+if(lines[i+1]) rfo = lines[i+1];
+}
+}
+}
+
+// =======================
+// 🔥 SPLICING DARI ACTION
+// =======================
+let splacing = countSplicing(action);
+
+// =======================
+// 🔥 ONT SUPER STRICT
 // =======================
 let newOnt = "";
 let oldOnt = "";
 
+function isValidSN(sn){
+
+if(!sn) return false;
+
+sn = sn.toUpperCase().trim();
+
+// ZTE
+if(sn.startsWith("ZTE") && sn.length >= 10){
+return true;
+}
+
+// HUAWEI (16 char)
+if(/^[A-Z0-9]{16}$/.test(sn)){
+return true;
+}
+
+return false;
+}
+
+// ambil semua SN
+let allSN = [...clean.matchAll(/sn\s*[:\-]?\s*([a-z0-9]+)/gi)]
+.map(m => m[1].toUpperCase())
+.filter(sn => isValidSN(sn));
+
+// PRIORITAS LABEL
 for(let i=0;i<lines.length;i++){
 
 let l = lines[i].toLowerCase();
 
 if(l.includes("lama")){
 let next = lines[i+1] || "";
-let sn = next.match(/([a-z0-9]{8,})/i);
-if(sn) oldOnt = sn[1];
+let sn = next.match(/([a-z0-9]+)/i);
+if(sn && isValidSN(sn[1])){
+oldOnt = sn[1].toUpperCase();
+}
 }
 
 if(l.includes("baru")){
 let next = lines[i+1] || "";
-let sn = next.match(/([a-z0-9]{8,})/i);
-if(sn) newOnt = sn[1];
+let sn = next.match(/([a-z0-9]+)/i);
+if(sn && isValidSN(sn[1])){
+newOnt = sn[1].toUpperCase();
+}
 }
 
 }
 
-// fallback SN global
-let allSN = [...clean.matchAll(/sn\s*[:\-]?\s*([a-z0-9]+)/gi)].map(m=>m[1]);
-
-if(!oldOnt && allSN.length >= 2){
+// fallback
+if(!oldOnt && !newOnt){
+if(allSN.length >= 2){
 oldOnt = allSN[0];
 newOnt = allSN[1];
+}
 }
 
 if(!newOnt && allSN.length === 1){
@@ -245,13 +268,7 @@ newOnt = allSN[0];
 }
 
 // =======================
-return {
-newOnt,
-oldOnt,
-splacing: splacing || "",
-rfo,
-action
-};
+return {newOnt,oldOnt,splacing,rfo,action};
 
 }
 
@@ -284,6 +301,7 @@ processedData=[];
 json.forEach(row=>{
 
 let dispatch = getDispatchStatus(row).toLowerCase();
+
 if(dispatch !== "done") return;
 
 let report = getReportInstallation(row);
@@ -295,19 +313,19 @@ dispatch:"Done",
 status:"Done",
 
 id: getColumn(row, ["cust id klien"]) 
-    || getColumn(row, ["customer id"]) 
-    || getColumn(row, ["id"]),
+|| getColumn(row, ["customer id"]) 
+|| getColumn(row, ["id"]),
 
 wo: getColumn(row, ["no wo klien"]) 
-    || getColumn(row, ["wo number"]) 
-    || getColumn(row, ["wo"]),
+|| getColumn(row, ["wo number"]) 
+|| getColumn(row, ["wo"]),
 
 customer: getColumn(row, ["customer name"]) 
-          || getColumn(row, ["nama"]),
+|| getColumn(row, ["nama"]),
 
 tanggal: getColumn(row, ["tanggal kunjungan"]) 
-         || getColumn(row, ["tanggal"]) 
-         || getColumn(row, ["date"]),
+|| getColumn(row, ["tanggal"]) 
+|| getColumn(row, ["date"]),
 
 alamat: getColumn(row, ["alamat"]),
 cabang: getColumn(row, ["cabang"]),
@@ -324,9 +342,7 @@ report: report
 
 processedData.push(result);
 
-// =======================
-// RENDER TABLE
-// =======================
+// render
 const tr = document.createElement("tr");
 
 tr.innerHTML = `
