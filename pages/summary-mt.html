@@ -8,82 +8,13 @@
 
 <title>Summary Maintenance (MT)</title>
 
-<!-- ✅ FIX PATH GITHUB -->
-<link rel="stylesheet" href="css/style.css">
+<!-- ✅ FIX: naik 1 level -->
+<link rel="stylesheet" href="../style.css">
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
-
-body{
-font-family: Arial, sans-serif;
-padding:20px;
-background:#f7f7f7;
-}
-
-h2{
-margin-bottom:15px;
-}
-
-button{
-padding:8px 14px;
-margin-right:10px;
-cursor:pointer;
-background:#2c7be5;
-color:white;
-border:none;
-border-radius:4px;
-}
-
-button:hover{
-background:#1b5dc7;
-}
-
-table{
-border-collapse: collapse;
-width:100%;
-margin-top:20px;
-background:white;
-}
-
-th, td{
-border:1px solid #ddd;
-padding:8px;
-font-size:13px;
-vertical-align:top;
-text-align:left;
-}
-
-th{
-background:#f0f0f0;
-color:#000;
-font-weight:bold;
-}
-
-tr:nth-child(even){
-background:#fafafa;
-}
-
-/* 🔥 BIAR RAPI */
-td{
-white-space:nowrap;
-}
-
-td.alamat{
-white-space:normal;
-max-width:300px;
-}
-
-td.report{
-white-space:pre-line;
-max-width:500px;
-word-break:break-word;
-}
-
-small{
-color:gray;
-}
-
+/* style kamu biarkan */
 </style>
 
 </head>
@@ -96,13 +27,12 @@ color:gray;
 
 <br><br>
 
-<button onclick="processExcel()">Proses Data</button>
-<button onclick="downloadExcel()">Download Hasil</button>
+<!-- ✅ TAMBAH TYPE -->
+<button type="button" onclick="processExcel()">Proses Data</button>
+<button type="button" onclick="downloadExcel()">Download Hasil</button>
 
 <table id="resultTable">
-
 <thead>
-
 <tr>
 <th>Dispatch</th>
 <th>Status</th>
@@ -119,15 +49,11 @@ color:gray;
 <th>Precon</th>
 <th>Report</th>
 </tr>
-
 </thead>
-
 <tbody></tbody>
-
 </table>
 
-<!-- ✅ FIX PATH -->
-<link rel="stylesheet" href="../style.css">
+<!-- ✅ JS BENAR -->
 <script src="../js/summary-mt.js" defer></script>
 
 </body>
