@@ -7,7 +7,6 @@
 
 <title>Summary IB</title>
 
-<!-- ✅ karena di /pages/ -->
 <link rel="stylesheet" href="../style.css">
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -17,6 +16,12 @@ body{
     font-family: Arial, sans-serif;
     padding:20px;
     background:#f7f7f7;
+}
+
+/* 🔥 biar tidak pecah */
+.table-wrapper{
+    width:100%;
+    overflow-x:auto;
 }
 
 button{
@@ -35,8 +40,7 @@ button:hover{
 
 table{
     border-collapse: collapse;
-    width:100%;
-    margin-top:20px;
+    min-width:1200px; /* 🔥 penting */
     background:white;
 }
 
@@ -45,21 +49,23 @@ th, td{
     padding:8px;
     font-size:13px;
     text-align:left;
+    vertical-align:top;
 }
 
 th{
     background:#f0f0f0;
+    white-space:nowrap;
 }
 
-/* RAPII */
-td:nth-child(6){
-    max-width:300px;
+/* 🔥 kolom panjang */
+td:nth-child(6){ /* alamat */
+    max-width:250px;
     white-space:normal;
 }
 
-td:last-child{
+td:last-child{ /* report */
+    max-width:400px;
     white-space:pre-line;
-    max-width:500px;
     word-break:break-word;
 }
 </style>
@@ -77,6 +83,7 @@ td:last-child{
 <button type="button" onclick="processExcel()">Proses Data</button>
 <button type="button" onclick="downloadExcel()">Download Hasil</button>
 
+<div class="table-wrapper">
 <table id="resultTable">
 
 <thead>
@@ -98,8 +105,8 @@ td:last-child{
 <tbody></tbody>
 
 </table>
+</div>
 
-<!-- ✅ JS -->
 <script src="../js/summary-ib.js" defer></script>
 
 </body>
