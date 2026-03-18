@@ -1,7 +1,7 @@
 let processedData = [];
 
 // =======================
-// PRECON
+// PRECON MATERIAL
 // =======================
 function getPrecon(row){
 const preconMap = {
@@ -18,14 +18,12 @@ const preconMap = {
 "Kabel Precon 250 Old": "PRECON - 250 M"
 };
 
-let result = [];
-
+let result=[];
 for(let key in preconMap){
-if(row[key] == 1 || row[key] == "1"){
+if(row[key]==1 || row[key]=="1"){
 result.push(preconMap[key]);
 }
 }
-
 return result.join(", ");
 }
 
@@ -34,7 +32,7 @@ return result.join(", ");
 // =======================
 function getColumn(row,name){
 for(let key in row){
-if(key.toLowerCase().trim() === name.toLowerCase()){
+if(key.toLowerCase().trim()===name.toLowerCase()){
 return row[key];
 }
 }
@@ -46,7 +44,8 @@ return "";
 // =======================
 function getDispatchStatus(row){
 for(let key in row){
-if(key.toLowerCase().includes("dispatch")){
+let col=key.toLowerCase();
+if(col.includes("dispatch")){
 return row[key];
 }
 }
@@ -56,9 +55,10 @@ return "";
 // =======================
 // REPORT
 // =======================
-function getReport(row){
+function getReportInstallation(row){
 for(let key in row){
-if(key.toLowerCase().includes("report")){
+let col=key.toLowerCase();
+if(col.includes("report")){
 return row[key];
 }
 }
@@ -66,82 +66,166 @@ return "";
 }
 
 // =======================
+// PARSE REPORT
+// =======================
+function parseReport(report){
+
+if(!report) return {newOnt:"",oldOnt:"",splacing:"",rfo:"",action:""};
+
+let text=report.toString();
+let lines=text.split(/\r?\n/);
+
+lines=lines.map(line =>
+line.replace(/^\s*[\*\-\[\]\(\)]*/g,"")
+.replace(/^\s*\d+\s*[\.\)]\s*/g,"")
+.trim()
+);
+
+let newOntMatch=text.match(/SN\s*(ONT|PERANGKAT)\s*BARU\s*:?\s*([A-Z0-9]+)/i);
+let newOnt=newOntMatch?newOntMatch[2]:"";
+
+let oldOntMatch=text.match(/SN\s*(ONT|PERANGKAT)\s*LAMA\s*:?\s*([A-Z0-9]+)/i);
+let oldOnt=oldOntMatch?oldOntMatch[2]:"";
+
+let splacingMatch=text.match(/Sleeve\s*Protec\w*\s*:?[\s]*(\d+)/i);
+let splacing=splacingMatch?splacingMatch[1]:"";
+
+let rfo="";
+let action="";
+
+for(let line of lines){
+let lower=line.toLowerCase();
+
+if(!rfo && (lower.startsWith("rfo") || lower.startsWith("problem"))){
+rfo=line.replace(/(rfo|problem)\s*:/i,"").trim();
+}
+
+if(!action && (lower.startsWith("act") || lower.startsWith("action"))){
+action=line.replace(/(act|action)\s*:/i,"").trim();
+}
+}
+
+if(!action){
+for(let line of lines){
+let lower=line.toLowerCase();
+
+if(
+lower.includes("join") ||
+lower.includes("splice") ||
+lower.includes("sambung") ||
+lower.includes("tarik")
+){
+action=line;
+let num=line.match(/\d+/);
+if(num) splacing=num[0];
+break;
+}
+}
+}
+
+if(!rfo){
+for(let i=0;i<lines.length;i++){
+if(lines[i].toLowerCase().includes("remak")){
+if(lines[i+1]) rfo=lines[i+1];
+break;
+}
+}
+}
+
+if(!splacing && rfo){
+let num=rfo.match(/\d+/);
+if(num) splacing=num[0];
+}
+
+return {newOnt,oldOnt,splacing,rfo,action};
+}
+
+// =======================
 // PROCESS
 // =======================
 function processExcel(){
 
-console.log("MT JS LOADED");
-
-const file = document.getElementById("excelFile").files[0];
+const file=document.getElementById("excelFile").files[0];
 
 if(!file){
-alert("Upload Excel dulu!");
+alert("Upload Excel terlebih dahulu");
 return;
 }
 
-const reader = new FileReader();
+const reader=new FileReader();
 
-reader.onload = function(e){
+reader.onload=function(e){
 
-const data = new Uint8Array(e.target.result);
-const workbook = XLSX.read(data,{type:"array"});
-const sheet = workbook.Sheets[workbook.SheetNames[0]];
-const json = XLSX.utils.sheet_to_json(sheet,{defval:""});
+const data=new Uint8Array(e.target.result);
+const workbook=XLSX.read(data,{type:"array"});
+const sheet=workbook.Sheets[workbook.SheetNames[0]];
+const jsonData=XLSX.utils.sheet_to_json(sheet,{defval:""});
 
-const tbody = document.querySelector("#resultTable tbody");
+const tbody=document.querySelector("#resultTable tbody");
 
-tbody.innerHTML = "";
-processedData = [];
+tbody.innerHTML="";
+processedData=[];
 
-json.forEach(row=>{
+jsonData.forEach(row=>{
 
-let dispatch = String(getDispatchStatus(row)).toLowerCase().trim();
+let dispatchStatus=getDispatchStatus(row);
+dispatchStatus=String(dispatchStatus).trim().toLowerCase();
 
-if(dispatch !== "done") return;
+if(dispatchStatus!=="done") return;
 
-const result = {
+let report=getReportInstallation(row);
+let parsed=parseReport(report);
 
+const result={
 dispatch:"Done",
 status:"Done",
+
+// ✅ sesuai request (ID di bawah status)
 id:getColumn(row,"Cust ID Klien"),
 wo:getColumn(row,"No Wo Klien"),
 customer:getColumn(row,"Customer Name"),
+
 tanggal:getColumn(row,"Tanggal Kunjungan"),
 alamat:getColumn(row,"Alamat"),
 cabang:getColumn(row,"Cabang"),
 
-new_ont:getColumn(row,"SN ONT Baru"),
-old_ont:getColumn(row,"SN ONT Lama"),
-splicing:getColumn(row,"Splicing"),
-rfo:getColumn(row,"RFO"),
-action:getColumn(row,"Action"),
+new_ont:parsed.newOnt,
+old_ont:parsed.oldOnt,
+splacing:parsed.splacing,
+rfo:parsed.rfo,
+action:parsed.action,
 
 precon:getPrecon(row),
-report:getReport(row)
-
+report:report
 };
 
 processedData.push(result);
 
-// ✅ FIX DI SINI (PAKAI BACKTICK)
-const tr = document.createElement("tr");
+// =======================
+// FIX TAMPILAN
+// =======================
+const tr=document.createElement("tr");
 
 tr.innerHTML = `
 <td>${result.dispatch}</td>
 <td>${result.status}</td>
 <td>${result.id}</td>
-<td>${result.wo}</td>
-<td>${result.customer}</td>
+<td>
+${result.wo}<br>
+<small>${result.customer || ""}</small>
+</td>
 <td>${result.tanggal}</td>
 <td>${result.alamat}</td>
 <td>${result.cabang}</td>
 <td>${result.new_ont}</td>
 <td>${result.old_ont}</td>
-<td>${result.splicing}</td>
+<td>${result.splacing}</td>
 <td>${result.rfo}</td>
 <td>${result.action}</td>
 <td>${result.precon}</td>
-<td>${result.report}</td>
+<td style="max-width:600px;word-break:break-word;white-space:pre-line;">
+${result.report}
+</td>
 `;
 
 tbody.appendChild(tr);
@@ -158,15 +242,15 @@ reader.readAsArrayBuffer(file);
 // =======================
 function downloadExcel(){
 
-if(processedData.length === 0){
-alert("Belum ada data!");
+if(processedData.length===0){
+alert("Belum ada data untuk didownload");
 return;
 }
 
-const ws = XLSX.utils.json_to_sheet(processedData);
-const wb = XLSX.utils.book_new();
+const worksheet=XLSX.utils.json_to_sheet(processedData);
+const workbook=XLSX.utils.book_new();
 
-XLSX.utils.book_append_sheet(wb,ws,"Summary MT");
+XLSX.utils.book_append_sheet(workbook,worksheet,"Summary MT");
 
-XLSX.writeFile(wb,"summary_mt_done.xlsx");
+XLSX.writeFile(workbook,"summary_mt_done.xlsx");
 }
