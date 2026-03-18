@@ -1,14 +1,10 @@
 let processedData = [];
 
-
 // =======================
-// PRECON MATERIAL
+// PRECON
 // =======================
-
 function getPrecon(row){
-
 const preconMap = {
-
 "Kabel Precon 35 Old": "PRECON - 35 M",
 "Kabel Precon 50 Old": "PRECON - 50 M",
 "Kabel Precon 75 Old": "PRECON - 75 M",
@@ -20,344 +16,132 @@ const preconMap = {
 "Kabel Precon 200 Old": "PRECON - 200 M",
 "Kabel Precon 225 Old": "PRECON - 225 M",
 "Kabel Precon 250 Old": "PRECON - 250 M"
-
 };
 
-let result=[];
+let result = [];
 
 for(let key in preconMap){
-
-if(row[key]==1 || row[key]=="1"){
+if(row[key] == 1 || row[key] == "1"){
 result.push(preconMap[key]);
 }
-
 }
 
 return result.join(", ");
-
 }
 
-
 // =======================
-// AMBIL KOLOM FLEKSIBEL
+// AMBIL KOLOM
 // =======================
-
 function getColumn(row,name){
-
 for(let key in row){
-
-if(key.toLowerCase().trim()===name.toLowerCase()){
+if(key.toLowerCase().trim() === name.toLowerCase()){
 return row[key];
 }
-
 }
-
 return "";
-
 }
 
-
 // =======================
-// STATUS DISPATCH
+// DISPATCH
 // =======================
-
 function getDispatchStatus(row){
-
 for(let key in row){
-
-let col=key.toLowerCase();
-
-if(col.includes("dispatch")){
+if(key.toLowerCase().includes("dispatch")){
 return row[key];
 }
-
 }
-
 return "";
-
 }
 
-
 // =======================
-// AMBIL REPORT
+// REPORT
 // =======================
-
-function getReportInstallation(row){
-
+function getReport(row){
 for(let key in row){
-
-let col=key.toLowerCase();
-
-if(col.includes("report")){
+if(key.toLowerCase().includes("report")){
 return row[key];
 }
-
 }
-
 return "";
-
 }
 
-
 // =======================
-// PARSE REPORT
+// PROCESS
 // =======================
-
-function parseReport(report){
-
-if(!report) return {newOnt:"",oldOnt:"",splacing:"",rfo:"",action:""};
-
-let text=report.toString();
-
-let lines=text.split(/\r?\n/);
-
-
-// bersihkan simbol dan angka depan
-lines=lines.map(line =>
-line
-.replace(/^\s*[\*\-\[\]\(\)]*/g,"")
-.replace(/^\s*\d+\s*[\.\)]\s*/g,"")
-.trim()
-);
-
-
-// =======================
-// SN ONT BARU
-// =======================
-
-let newOntMatch=text.match(/SN\s*(ONT|PERANGKAT)\s*BARU\s*:?\s*([A-Z0-9]+)/i);
-let newOnt=newOntMatch?newOntMatch[2]:"";
-
-
-// =======================
-// SN ONT LAMA
-// =======================
-
-let oldOntMatch=text.match(/SN\s*(ONT|PERANGKAT)\s*LAMA\s*:?\s*([A-Z0-9]+)/i);
-let oldOnt=oldOntMatch?oldOntMatch[2]:"";
-
-
-// =======================
-// SPLICE
-// =======================
-
-let splacingMatch=text.match(/Sleeve\s*Protec\w*\s*:?[\s]*(\d+)/i);
-let splacing=splacingMatch?splacingMatch[1]:"";
-
-let rfo="";
-let action="";
-
-
-// =======================
-// FORMAT RFO ACT
-// =======================
-
-for(let line of lines){
-
-let lower=line.toLowerCase();
-
-if(!rfo && (lower.startsWith("rfo") || lower.startsWith("problem"))){
-rfo=line.replace(/(rfo|problem)\s*:/i,"").trim();
-}
-
-if(!action && (lower.startsWith("act") || lower.startsWith("action"))){
-action=line.replace(/(act|action)\s*:/i,"").trim();
-}
-
-}
-
-
-// =======================
-// FORMAT TEKNISI
-// =======================
-
-if(!action){
-
-for(let line of lines){
-
-let lower=line.toLowerCase();
-
-if(
-lower.includes("join") ||
-lower.includes("joint") ||
-lower.includes("rejoin") ||
-lower.includes("splice") ||
-lower.includes("splicing") ||
-lower.includes("sambung") ||
-lower.includes("tarik")
-){
-
-action=line;
-
-let num=line.match(/\d+/);
-
-if(num) splacing=num[0];
-
-break;
-
-}
-
-}
-
-}
-
-
-// =======================
-// RFO dari REMAKS
-// =======================
-
-if(!rfo){
-
-for(let i=0;i<lines.length;i++){
-
-let lower=lines[i].toLowerCase();
-
-if(lower.includes("remak")){
-
-if(lines[i+1]){
-rfo=lines[i+1];
-}
-
-break;
-
-}
-
-}
-
-}
-
-
-// =======================
-// SPLICE dari RFO
-// =======================
-
-if(!splacing && rfo){
-
-let lower=rfo.toLowerCase();
-
-if(
-lower.includes("join") ||
-lower.includes("joint") ||
-lower.includes("rejoin") ||
-lower.includes("splice") ||
-lower.includes("splicing") ||
-lower.includes("sambung")
-){
-
-let num=rfo.match(/\d+/);
-
-if(num){
-splacing=num[0];
-}else{
-splacing="1";
-}
-
-}
-
-}
-
-return {newOnt,oldOnt,splacing,rfo,action};
-
-}
-
-
-// =======================
-// PROCESS EXCEL
-// =======================
-
 function processExcel(){
 
-const file=document.getElementById("excelFile").files[0];
+console.log("MT JS LOADED");
+
+const file = document.getElementById("excelFile").files[0];
 
 if(!file){
-alert("Upload Excel terlebih dahulu");
+alert("Upload Excel dulu!");
 return;
 }
 
-const reader=new FileReader();
+const reader = new FileReader();
 
-reader.onload=function(e){
+reader.onload = function(e){
 
-const data=new Uint8Array(e.target.result);
+const data = new Uint8Array(e.target.result);
+const workbook = XLSX.read(data,{type:"array"});
+const sheet = workbook.Sheets[workbook.SheetNames[0]];
+const json = XLSX.utils.sheet_to_json(sheet,{defval:""});
 
-const workbook=XLSX.read(data,{type:"array"});
+const tbody = document.querySelector("#resultTable tbody");
 
-const sheet=workbook.Sheets[workbook.SheetNames[0]];
+tbody.innerHTML = "";
+processedData = [];
 
-const jsonData=XLSX.utils.sheet_to_json(sheet,{defval:""});
+json.forEach(row=>{
 
-const tbody=document.querySelector("#resultTable tbody");
+let dispatch = String(getDispatchStatus(row)).toLowerCase().trim();
 
-tbody.innerHTML="";
+if(dispatch !== "done") return;
 
-processedData=[];
-
-jsonData.forEach(row=>{
-
-let dispatchStatus=getDispatchStatus(row);
-
-dispatchStatus=String(dispatchStatus).trim().toLowerCase();
-
-if(dispatchStatus!=="done") return;
-
-let report=getReportInstallation(row);
-
-let parsed=parseReport(report);
-
-const result={
+const result = {
 
 dispatch:"Done",
 status:"Done",
 wo:getColumn(row,"No Wo Klien"),
-customer:getColumn(row,"Customer Name"), // 👈 TAMBAH INI
+customer:getColumn(row,"Customer Name"),
 id:getColumn(row,"Cust ID Klien"),
 tanggal:getColumn(row,"Tanggal Kunjungan"),
 alamat:getColumn(row,"Alamat"),
-
 cabang:getColumn(row,"Cabang"),
 
-new_ont:parsed.newOnt,
-old_ont:parsed.oldOnt,
-splacing:parsed.splacing,
-rfo:parsed.rfo,
-action:parsed.action,
+new_ont:getColumn(row,"SN ONT Baru"),
+old_ont:getColumn(row,"SN ONT Lama"),
+splicing:getColumn(row,"Splicing"),
+rfo:getColumn(row,"RFO"),
+action:getColumn(row,"Action"),
 
 precon:getPrecon(row),
-report:report
+report:getReport(row)
 
 };
 
 processedData.push(result);
 
+// tampilkan
+const tr = document.createElement("tr");
 
-// tampilkan tabel
-
-const tr=document.createElement("tr");
-
-tr.innerHTML=`
-
+tr.innerHTML = `
 <td>${result.dispatch}</td>
 <td>${result.status}</td>
-
-<td>
-${result.wo}<br>
-<small>${result.customer || ""}</small>
-</td>
-
+<td>${result.wo}</td>
+<td>${result.customer}</td>
 <td>${result.id}</td>
 <td>${result.tanggal}</td>
 <td>${result.alamat}</td>
 <td>${result.cabang}</td>
 <td>${result.new_ont}</td>
 <td>${result.old_ont}</td>
-<td>${result.splacing}</td>
+<td>${result.splicing}</td>
 <td>${result.rfo}</td>
 <td>${result.action}</td>
 <td>${result.precon}</td>
-<td style="max-width:600px;word-break:break-word;white-space:pre-line;">
-${result.report}
-</td>
-
+<td>${result.report}</td>
 `;
 
 tbody.appendChild(tr);
@@ -367,27 +151,23 @@ tbody.appendChild(tr);
 };
 
 reader.readAsArrayBuffer(file);
-
 }
 
-
 // =======================
-// DOWNLOAD EXCEL
+// DOWNLOAD
 // =======================
-
 function downloadExcel(){
 
-if(processedData.length===0){
-alert("Belum ada data untuk didownload");
+if(processedData.length === 0){
+alert("Belum ada data!");
 return;
 }
 
-const worksheet=XLSX.utils.json_to_sheet(processedData);
+const ws = XLSX.utils.json_to_sheet(processedData);
+const wb = XLSX.utils.book_new();
 
-const workbook=XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb,ws,"Summary MT");
 
-XLSX.utils.book_append_sheet(workbook,worksheet,"Summary MT");
-
-XLSX.writeFile(workbook,"summary_mt_done.xlsx");
+XLSX.writeFile(wb,"summary_mt_done.xlsx");
 
 }
