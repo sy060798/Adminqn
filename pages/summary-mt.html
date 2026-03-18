@@ -6,7 +6,7 @@
 
 <title>Summary Maintenance (MT)</title>
 
-<!-- ✅ FIX PATH -->
+<!-- ✅ FIX PATH (PENTING) -->
 <link rel="stylesheet" href="../style.css">
 
 <!-- ✅ XLSX -->
@@ -67,11 +67,13 @@ tr:nth-child(even){
     background:#fafafa;
 }
 
+/* alamat */
 td:nth-child(7){
     max-width:250px;
     white-space:normal;
 }
 
+/* report */
 td:last-child{
     max-width:400px;
     white-space:pre-line;
@@ -122,17 +124,22 @@ td:last-child{
 </table>
 </div>
 
-<!-- ✅ FIX PATH -->
+<!-- ✅ FIX PATH JS -->
 <script src="../js/summary-mt.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function(){
 
-document.getElementById("btnProcess").onclick = function(){
+const fileInput = document.getElementById("excelFile");
+const btnProcess = document.getElementById("btnProcess");
+const btnDownload = document.getElementById("btnDownload");
 
-const file = document.getElementById("excelFile").files[0];
+// =======================
+// PROCESS BUTTON
+// =======================
+btnProcess.onclick = function(){
 
-if(!file){
+if(!fileInput.files.length){
 alert("Pilih file Excel dulu!");
 return;
 }
@@ -146,7 +153,10 @@ return;
 processExcel();
 };
 
-document.getElementById("btnDownload").onclick = function(){
+// =======================
+// DOWNLOAD BUTTON
+// =======================
+btnDownload.onclick = function(){
 
 if(typeof downloadExcel !== "function"){
 alert("JS tidak terbaca!");
