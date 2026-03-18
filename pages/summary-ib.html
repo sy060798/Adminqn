@@ -7,10 +7,9 @@
 
 <title>Summary IB</title>
 
-<!-- ✅ Gunakan path relatif yang aman -->
 <link rel="stylesheet" href="css/style.css">
 
-<!-- ✅ XLSX CDN stabil -->
+<!-- ✅ XLSX WAJIB sebelum JS kamu -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
@@ -50,11 +49,31 @@ th, td{
     padding:8px;
     font-size:13px;
     vertical-align:top;
+    text-align:left;
 }
 
 th{
     background:#f0f0f0;
-    text-align:left;
+}
+
+/* 🔥 BIAR RAPI */
+td{
+    white-space:nowrap;
+}
+
+td:nth-child(5){ /* alamat */
+    white-space:normal;
+    max-width:300px;
+}
+
+td:last-child{ /* report */
+    white-space:pre-line;
+    max-width:500px;
+    word-break:break-word;
+}
+
+small{
+    color:gray;
 }
 </style>
 
@@ -70,6 +89,7 @@ th{
 
 <br><br>
 
+<!-- ✅ PAKAI TYPE BUTTON -->
 <button type="button" onclick="processExcel()">Proses Data</button>
 <button type="button" onclick="downloadExcel()">Download Hasil</button>
 
@@ -77,7 +97,7 @@ th{
 
 <thead>
 <tr>
-<th>STATUS BY DISPATCH WO</th>
+<th>Dispatch</th>
 <th>Status</th>
 <th>No WO<br><small>Customer Name</small></th>
 <th>Tanggal</th>
@@ -85,20 +105,19 @@ th{
 <th>ONT</th>
 <th>STB</th>
 <th>Router</th>
-<th>PRECON</th>
-<th>Report Installation</th>
+<th>Precon</th>
+<th>Report</th>
 </tr>
 </thead>
 
-<tbody>
-</tbody>
+<tbody></tbody>
 
 </table>
 
 </main>
 
-<!-- ✅ JS taruh di bawah & path diperbaiki -->
-<script src="js/summary-ib.js"></script>
+<!-- ✅ PENTING: pakai defer biar pasti kebaca -->
+<script src="js/summary-ib.js" defer></script>
 
 </body>
 </html>
