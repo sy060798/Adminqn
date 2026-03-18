@@ -338,11 +338,12 @@ tr.innerHTML=`
 
 <td>${result.dispatch}</td>
 <td>${result.status}</td>
-<td>${result.wo}</td>
+
 <td>
 ${result.wo}<br>
 <small>${result.customer || ""}</small>
 </td>
+
 <td>${result.id}</td>
 <td>${result.tanggal}</td>
 <td>${result.alamat}</td>
@@ -353,7 +354,9 @@ ${result.wo}<br>
 <td>${result.rfo}</td>
 <td>${result.action}</td>
 <td>${result.precon}</td>
-<td style="max-width:600px;word-break:break-word;white-space:pre-line;">${result.report}</td>
+<td style="max-width:600px;word-break:break-word;white-space:pre-line;">
+${result.report}
+</td>
 
 `;
 
