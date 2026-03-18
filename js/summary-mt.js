@@ -309,6 +309,7 @@ const result={
 dispatch:"Done",
 status:"Done",
 wo:getColumn(row,"No Wo Klien"),
+customer:getColumn(row,"Customer Name"), // 👈 TAMBAH INI
 id:getColumn(row,"Cust ID Klien"),
 tanggal:getColumn(row,"Tanggal Kunjungan"),
 alamat:getColumn(row,"Alamat"),
@@ -338,6 +339,10 @@ tr.innerHTML=`
 <td>${result.dispatch}</td>
 <td>${result.status}</td>
 <td>${result.wo}</td>
+<td>
+${result.wo}<br>
+<small>${result.customer || ""}</small>
+</td>
 <td>${result.id}</td>
 <td>${result.tanggal}</td>
 <td>${result.alamat}</td>
