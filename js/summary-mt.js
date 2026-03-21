@@ -6,7 +6,6 @@ let processedData = [];
 function getColumn(row, keywords){
 for(let key in row){
 let col = key.toLowerCase().trim();
-
 for(let word of keywords){
 if(col.includes(word.toLowerCase())){
 return row[key];
@@ -17,14 +16,10 @@ return "";
 }
 
 // =======================
-// DISPATCH
-// =======================
 function getDispatchStatus(row){
 return getColumn(row, ["dispatch"]);
 }
 
-// =======================
-// REPORT
 // =======================
 function getReportInstallation(row){
 return getColumn(row, ["report"]);
@@ -65,7 +60,7 @@ return result.join(", ");
 }
 
 // =======================
-// 🔥 CLEAN TEXT
+// CLEAN TEXT
 // =======================
 function cleanText(text){
 return text
@@ -78,42 +73,36 @@ return text
 }
 
 // =======================
-// 🔥 HITUNG SPLICING CERDAS
+// 🔥 SPLICING FIX FINAL
 // =======================
 function countSplicing(text){
 
-let count = 0;
+if(!text) return "";
 
-// keyword utama
+text = text.toLowerCase();
+
 const keywords = ["join","rejoin","splice","sambung","splicing"];
 
-// hitung keyword
-keywords.forEach(k=>{
-let match = text.match(new RegExp(k,"gi"));
-if(match) count += match.length;
-});
+let hasJoin = keywords.some(k => text.includes(k));
+if(!hasJoin) return "";
 
-// ambil angka kalau ada
-let num = text.match(/(\d+)/);
-if(num){
-count = parseInt(num[1]);
+// PRIORITAS ANGKA
+let numMatch = text.match(/(join|rejoin|splice|sambung)[^\d]*(\d+)/i);
+if(numMatch){
+return parseInt(numMatch[2]);
 }
 
-// NORMALISASI:
-// kalau ada "dan / & / +" tetap 1
-if(
-text.includes(" dan ") ||
-text.includes("&") ||
-text.includes("+")
-){
-count = Math.max(1,count);
+let numPrefix = text.match(/(\d+)\s*(x|kali)?\s*(join|rejoin|splice|sambung)/i);
+if(numPrefix){
+return parseInt(numPrefix[1]);
 }
 
-return count || "";
+// DEFAULT
+return 1;
 }
 
 // =======================
-// 🔥 PARSE REPORT SUPER
+// 🔥 PARSE REPORT SUPER FINAL
 // =======================
 function parseReport(report){
 
@@ -122,11 +111,11 @@ if(!report) return {newOnt:"",oldOnt:"",splacing:"",rfo:"",action:""};
 let raw = report.toString();
 let clean = cleanText(raw);
 
-// pecah baris fleksibel
+// split baris
 let lines = raw.split(/\r?\n/).map(l=>cleanText(l)).filter(l=>l);
 
 // =======================
-// 🔥 RFO & ACTION FLEXIBLE
+// 🔥 RFO & ACT SUPER FLEX
 // =======================
 let rfo = "";
 let action = "";
@@ -135,39 +124,33 @@ for(let i=0;i<lines.length;i++){
 
 let l = lines[i].toLowerCase();
 
-// RFO
-if(!rfo && (l.startsWith("rfo") || l.includes("rfo"))){
-rfo = lines[i].replace(/rfo\s*[:;\-]?\s*/i,"");
-continue;
-}
+// format: RFO: isi
+if(!rfo && l.includes("rfo")){
+let val = lines[i].replace(/rfo\s*[:;\-]?\s*/i,"").trim();
 
-// ACTION
-if(!action && (l.startsWith("act") || l.includes("act") || l.includes("action"))){
-action = lines[i].replace(/(act|action)\s*[:;\-]?\s*/i,"");
-continue;
-}
-
-}
-
-// =======================
-// 🔥 FORMAT KHUSUS (RFO / ACT DI BARIS BERIKUTNYA)
-// =======================
-for(let i=0;i<lines.length;i++){
-
-let l = lines[i].toLowerCase();
-
-if(l === "rfo" && lines[i+1]){
+// kalau kosong → ambil bawahnya
+if(!val && lines[i+1]){
 rfo = lines[i+1];
+}else{
+rfo = val;
+}
 }
 
-if((l === "act" || l === "action") && lines[i+1]){
+// format: ACT:
+if(!action && (l.includes("act") || l.includes("action"))){
+let val = lines[i].replace(/(act|action)\s*[:;\-]?\s*/i,"").trim();
+
+if(!val && lines[i+1]){
 action = lines[i+1];
+}else{
+action = val;
+}
 }
 
 }
 
 // =======================
-// 🔥 FALLBACK ACTION
+// 🔥 FALLBACK (kalau ACT kosong)
 // =======================
 if(!action){
 for(let line of lines){
@@ -177,8 +160,8 @@ if(
 lower.includes("join") ||
 lower.includes("splice") ||
 lower.includes("sambung") ||
-lower.includes("tarik") ||
-lower.includes("ganti")
+lower.includes("ganti") ||
+lower.includes("tarik")
 ){
 action = line;
 break;
@@ -198,7 +181,7 @@ if(lines[i+1]) rfo = lines[i+1];
 }
 
 // =======================
-// 🔥 SPLICING DARI ACTION
+// 🔥 SPLICING
 // =======================
 let splacing = countSplicing(action);
 
@@ -219,7 +202,7 @@ if(sn.startsWith("ZTE") && sn.length >= 10){
 return true;
 }
 
-// HUAWEI (16 char)
+// Huawei 16 char
 if(/^[A-Z0-9]{16}$/.test(sn)){
 return true;
 }
@@ -232,7 +215,7 @@ let allSN = [...clean.matchAll(/sn\s*[:\-]?\s*([a-z0-9]+)/gi)]
 .map(m => m[1].toUpperCase())
 .filter(sn => isValidSN(sn));
 
-// PRIORITAS LABEL
+// prioritas label
 for(let i=0;i<lines.length;i++){
 
 let l = lines[i].toLowerCase();
@@ -301,7 +284,6 @@ processedData=[];
 json.forEach(row=>{
 
 let dispatch = getDispatchStatus(row).toLowerCase();
-
 if(dispatch !== "done") return;
 
 let report = getReportInstallation(row);
