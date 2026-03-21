@@ -73,7 +73,27 @@ return text
 }
 
 // =======================
-// 🔥 SPLICING FIX FINAL
+// 🔥 AMBIL ACTION UTAMA
+// =======================
+function extractMainAction(action){
+
+if(!action) return "";
+
+let text = action.toLowerCase();
+
+// ambil sebelum "dan / & / +"
+text = text.split(/ dan | & | \+ /)[0];
+
+if(text.includes("rejoin")) return "REJOIN";
+if(text.includes("join")) return "JOIN";
+if(text.includes("sambung")) return "SAMBUNG";
+if(text.includes("splice")) return "SPLICE";
+
+return action.toUpperCase();
+}
+
+// =======================
+// 🔥 SPLICING FIX
 // =======================
 function countSplicing(text){
 
@@ -81,7 +101,7 @@ if(!text) return "";
 
 text = text.toLowerCase();
 
-const keywords = ["join","rejoin","splice","sambung","splicing"];
+const keywords = ["join","rejoin","splice","sambung"];
 
 let hasJoin = keywords.some(k => text.includes(k));
 if(!hasJoin) return "";
@@ -102,7 +122,7 @@ return 1;
 }
 
 // =======================
-// 🔥 PARSE REPORT SUPER FINAL
+// 🔥 PARSE REPORT FINAL
 // =======================
 function parseReport(report){
 
@@ -115,7 +135,7 @@ let clean = cleanText(raw);
 let lines = raw.split(/\r?\n/).map(l=>cleanText(l)).filter(l=>l);
 
 // =======================
-// 🔥 RFO & ACT SUPER FLEX
+// 🔥 RFO & ACT FLEX
 // =======================
 let rfo = "";
 let action = "";
@@ -124,11 +144,10 @@ for(let i=0;i<lines.length;i++){
 
 let l = lines[i].toLowerCase();
 
-// format: RFO: isi
+// RFO
 if(!rfo && l.includes("rfo")){
 let val = lines[i].replace(/rfo\s*[:;\-]?\s*/i,"").trim();
 
-// kalau kosong → ambil bawahnya
 if(!val && lines[i+1]){
 rfo = lines[i+1];
 }else{
@@ -136,7 +155,7 @@ rfo = val;
 }
 }
 
-// format: ACT:
+// ACT
 if(!action && (l.includes("act") || l.includes("action"))){
 let val = lines[i].replace(/(act|action)\s*[:;\-]?\s*/i,"").trim();
 
@@ -150,7 +169,7 @@ action = val;
 }
 
 // =======================
-// 🔥 FALLBACK (kalau ACT kosong)
+// FALLBACK ACTION
 // =======================
 if(!action){
 for(let line of lines){
@@ -160,8 +179,7 @@ if(
 lower.includes("join") ||
 lower.includes("splice") ||
 lower.includes("sambung") ||
-lower.includes("ganti") ||
-lower.includes("tarik")
+lower.includes("ganti")
 ){
 action = line;
 break;
@@ -170,7 +188,7 @@ break;
 }
 
 // =======================
-// 🔥 REMAK FIX
+// REMAK FIX
 // =======================
 if(!rfo){
 for(let i=0;i<lines.length;i++){
@@ -179,6 +197,11 @@ if(lines[i+1]) rfo = lines[i+1];
 }
 }
 }
+
+// =======================
+// 🔥 ACTION CLEAN
+// =======================
+action = extractMainAction(action);
 
 // =======================
 // 🔥 SPLICING
