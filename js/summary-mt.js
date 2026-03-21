@@ -81,7 +81,7 @@ if(!action) return "";
 
 let text = action.toLowerCase();
 
-// ambil sebelum "dan / & / +"
+// potong sebelum "dan / & / +"
 text = text.split(/ dan | & | \+ /)[0];
 
 if(text.includes("rejoin")) return "REJOIN";
@@ -89,11 +89,11 @@ if(text.includes("join")) return "JOIN";
 if(text.includes("sambung")) return "SAMBUNG";
 if(text.includes("splice")) return "SPLICE";
 
-return action.toUpperCase();
+return text.toUpperCase();
 }
 
 // =======================
-// 🔥 SPLICING FIX
+// 🔥 SPLICING FINAL (ANTI 100M)
 // =======================
 function countSplicing(text){
 
@@ -106,18 +106,19 @@ const keywords = ["join","rejoin","splice","sambung"];
 let hasJoin = keywords.some(k => text.includes(k));
 if(!hasJoin) return "";
 
-// PRIORITAS ANGKA
-let numMatch = text.match(/(join|rejoin|splice|sambung)[^\d]*(\d+)/i);
-if(numMatch){
-return parseInt(numMatch[2]);
+// hanya angka dekat keyword
+let validNumber = text.match(/(join|rejoin|splice|sambung)\s*(\d+)/i);
+if(validNumber){
+return parseInt(validNumber[2]);
 }
 
-let numPrefix = text.match(/(\d+)\s*(x|kali)?\s*(join|rejoin|splice|sambung)/i);
-if(numPrefix){
-return parseInt(numPrefix[1]);
+// contoh: 2x join
+let validPrefix = text.match(/(\d+)\s*(x|kali)?\s*(join|rejoin|splice|sambung)/i);
+if(validPrefix){
+return parseInt(validPrefix[1]);
 }
 
-// DEFAULT
+// default
 return 1;
 }
 
@@ -131,11 +132,10 @@ if(!report) return {newOnt:"",oldOnt:"",splacing:"",rfo:"",action:""};
 let raw = report.toString();
 let clean = cleanText(raw);
 
-// split baris
 let lines = raw.split(/\r?\n/).map(l=>cleanText(l)).filter(l=>l);
 
 // =======================
-// 🔥 RFO & ACT FLEX
+// RFO & ACT
 // =======================
 let rfo = "";
 let action = "";
@@ -147,23 +147,13 @@ let l = lines[i].toLowerCase();
 // RFO
 if(!rfo && l.includes("rfo")){
 let val = lines[i].replace(/rfo\s*[:;\-]?\s*/i,"").trim();
-
-if(!val && lines[i+1]){
-rfo = lines[i+1];
-}else{
-rfo = val;
-}
+rfo = val || (lines[i+1] || "");
 }
 
 // ACT
 if(!action && (l.includes("act") || l.includes("action"))){
 let val = lines[i].replace(/(act|action)\s*[:;\-]?\s*/i,"").trim();
-
-if(!val && lines[i+1]){
-action = lines[i+1];
-}else{
-action = val;
-}
+action = val || (lines[i+1] || "");
 }
 
 }
@@ -193,7 +183,7 @@ break;
 if(!rfo){
 for(let i=0;i<lines.length;i++){
 if(lines[i].toLowerCase().includes("remak")){
-if(lines[i+1]) rfo = lines[i+1];
+rfo = lines[i+1] || "";
 }
 }
 }
@@ -220,15 +210,8 @@ if(!sn) return false;
 
 sn = sn.toUpperCase().trim();
 
-// ZTE
-if(sn.startsWith("ZTE") && sn.length >= 10){
-return true;
-}
-
-// Huawei 16 char
-if(/^[A-Z0-9]{16}$/.test(sn)){
-return true;
-}
+if(sn.startsWith("ZTE") && sn.length >= 10) return true;
+if(/^[A-Z0-9]{16}$/.test(sn)) return true;
 
 return false;
 }
