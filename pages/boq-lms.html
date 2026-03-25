@@ -5,11 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BOQ LMS Processor</title>
 
-<!-- XLSX -->
+<!-- XLSX (WAJIB) -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-<!-- CSS -->
-<link rel="stylesheet" href="../style.css">
 
 <style>
 body{
@@ -23,18 +20,33 @@ body{
     border-radius:10px;
     max-width:900px;
     margin:auto;
+    box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+h2{
+    margin-bottom:20px;
+}
+input{
+    margin:10px 0;
 }
 button{
-    padding:10px;
+    padding:10px 15px;
     margin:5px;
     cursor:pointer;
+    border:none;
+    border-radius:6px;
+    background:#007bff;
+    color:white;
+}
+button:hover{
+    background:#0056b3;
 }
 #status{
-    margin-top:10px;
+    margin-top:15px;
     font-weight:bold;
-    color:blue;
+    color:#007bff;
 }
 </style>
+
 </head>
 
 <body>
@@ -43,18 +55,25 @@ button{
 
 <h2>BOQ LMS PROCESSOR</h2>
 
-<input type="file" id="boqFile"><br>
-<input type="file" id="lmsFiles" multiple><br>
+<!-- BOQ -->
+<label>Upload Template BOQ:</label><br>
+<input type="file" id="boqFile" accept=".xlsx,.xls"><br>
 
-<button onclick="processFiles()">🔄 PROSES</button>
-<button onclick="downloadBOQ()">⬇ DOWNLOAD EXCEL</button>
+<!-- LMS -->
+<label>Upload File LMS (boleh banyak):</label><br>
+<input type="file" id="lmsFiles" multiple accept=".xlsx,.xls"><br>
 
+<!-- BUTTON -->
+<button onclick="processFiles()">🔄 PROSES DATA</button>
+<button onclick="downloadBOQ()">⬇ DOWNLOAD HASIL</button>
+
+<!-- STATUS -->
 <div id="status">Belum ada proses</div>
 
 </div>
 
-<!-- 🔥 PALING PENTING -->
-<script src="../js/boq-lms.js"></script>
+<!-- 🔥 PENTING: LOAD JS DI PALING BAWAH -->
+<script src="js/boq-lms.js"></script>
 
 </body>
 </html>
