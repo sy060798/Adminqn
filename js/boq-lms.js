@@ -10,27 +10,70 @@ return String(text)
 .trim()
 }
 
-// ================= MATCH FLEXIBLE =================
+// ================= SIMILARITY (FUZZY MATCH) =================
+function similarity(a, b){
+
+a = normalize(a)
+b = normalize(b)
+
+let longer = a.length > b.length ? a : b
+let shorter = a.length > b.length ? b : a
+
+let longerLength = longer.length
+if(longerLength === 0) return 1.0
+
+return (longerLength - editDistance(longer, shorter)) / longerLength
+}
+
+function editDistance(a, b){
+
+let matrix = []
+
+for(let i=0;i<=b.length;i++){
+matrix[i] = [i]
+}
+
+for(let j=0;j<=a.length;j++){
+matrix[0][j] = j
+}
+
+for(let i=1;i<=b.length;i++){
+for(let j=1;j<=a.length;j++){
+
+if(b.charAt(i-1) === a.charAt(j-1)){
+matrix[i][j] = matrix[i-1][j-1]
+}else{
+matrix[i][j] = Math.min(
+matrix[i-1][j-1] + 1,
+matrix[i][j-1] + 1,
+matrix[i-1][j] + 1
+)
+}
+
+}
+}
+
+return matrix[b.length][a.length]
+}
+
+// ================= MATCH (SMART VLOOKUP) =================
 function isMatch(templateItem, lmsItems){
 
-let temp = normalize(templateItem)
+let bestKey = null
+let bestScore = 0
 
 for(let key in lmsItems){
 
-if(temp === key) return key
+let score = similarity(templateItem, key)
 
-if(temp.includes(key) || key.includes(temp)) return key
-
-let words = temp.split(" ")
-for(let w of words){
-if(w.length > 3 && key.includes(w)){
-return key
-}
+if(score > bestScore && score > 0.5){
+bestScore = score
+bestKey = key
 }
 
 }
 
-return null
+return bestKey
 }
 
 // ================= AMBIL PROJECT & WO =================
@@ -39,21 +82,21 @@ function extractInfo(rows){
 let wo = ""
 let project = ""
 
-for(let r=0;r<10;r++){
+for(let r=0;r<15;r++){
 if(!rows[r]) continue
 
 for(let c=0;c<rows[r].length;c++){
 
-let text = String(rows[r][c])
+let text = String(rows[r][c]).trim()
 
-// ambil WO
-if(text.match(/T\d{6,}-\d+/)){
-wo = text.match(/T\d{6,}-\d+/)[0]
-}
+// WO
+let match = text.match(/T\d{6,}-\d+/)
+if(match) wo = match[0]
 
-// ambil nama project
+// PROJECT
 if(text.toLowerCase().includes("nama project")){
-project = rows[r][c+1] || text
+let parts = text.split(":")
+project = parts[1] ? parts[1].trim() : text
 }
 
 }
@@ -167,14 +210,12 @@ let qty=Number(rows[i]?.[qtyCol])
 if(item && !isNaN(qty)){
 
 let key = normalize(item)
-
 items[key] = (items[key] || 0) + qty
 
 }
 
 }
 
-// ambil info project & wo
 let info = extractInfo(rows)
 
 resolve({
@@ -198,31 +239,44 @@ const sheet = boqWorkbook.Sheets[sheetName]
 
 let lmsItems = lmsData.items
 
-// 🔥 ISI HEADER UTAMA (CUMA SEKALI)
+// isi header utama
 if(index === 0){
+
+if(lmsData.project){
 sheet["C2"] = { v: lmsData.project }
+}
+
+if(lmsData.wo){
 sheet["C3"] = { v: lmsData.wo }
 }
 
-// cari kolom LMS
-let startCol=0
+}
 
-for(let c=0;c<boqData[0].length;c++){
-if(String(boqData[0][c]).toLowerCase().includes("boq aktual")){
-startCol=c
+// cari kolom BOQ AKTUAL
+let startCol = null
+
+for(let c=0;c<boqData[3].length;c++){
+let txt = String(boqData[3][c]).toLowerCase()
+if(txt.includes("boq aktual")){
+startCol = c
 break
 }
 }
 
-// posisi kolom
-let col=startCol+(index*2)
-let totalCol=col+1
+if(startCol === null){
+alert("Kolom BOQ AKTUAL tidak ditemukan!")
+return
+}
 
-// isi QTY & TOTAL
+// posisi LMS
+let col = startCol + (index * 2)
+let totalCol = col + 1
+
+// isi data
 for(let i=5;i<boqData.length;i++){
 
-let item=boqData[i]?.[1]
-let harga=Number(boqData[i]?.[3]) || 0
+let item = boqData[i]?.[1]
+let harga = Number(boqData[i]?.[4]) || 0
 
 if(!item) continue
 
@@ -236,12 +290,13 @@ let total = qty * harga
 let cellQty = XLSX.utils.encode_cell({r:i,c:col})
 let cellTotal = XLSX.utils.encode_cell({r:i,c:totalCol})
 
-if(!sheet[cellQty]) sheet[cellQty] = {}
-sheet[cellQty].v = qty
+sheet[cellQty] = { v: qty, t:"n" }
 
-if(!sheet[cellTotal]) sheet[cellTotal] = {}
-sheet[cellTotal].v = total
-sheet[cellTotal].z = '"Rp"#,##0'
+sheet[cellTotal] = {
+v: total,
+t:"n",
+z:'"Rp"#,##0'
+}
 
 }
 
@@ -251,15 +306,21 @@ sheet[cellTotal].z = '"Rp"#,##0'
 let grandTotal = 0
 
 for(let i=5;i<boqData.length;i++){
-let cellTotal = XLSX.utils.encode_cell({r:i,c:totalCol})
-if(sheet[cellTotal]){
-grandTotal += Number(sheet[cellTotal].v || 0)
+let cell = XLSX.utils.encode_cell({r:i,c:totalCol})
+if(sheet[cell]){
+grandTotal += Number(sheet[cell].v || 0)
 }
 }
 
-let totalRow = boqData.findIndex(r =>
-r && String(r[1]).toLowerCase().includes("total")
-)
+// cari total paling bawah
+let totalRow = -1
+
+for(let i=boqData.length-1;i>=0;i--){
+if(boqData[i] && String(boqData[i][1]).toLowerCase().includes("total")){
+totalRow = i
+break
+}
+}
 
 if(totalRow !== -1){
 
@@ -267,8 +328,8 @@ let cellGT = XLSX.utils.encode_cell({r:totalRow,c:totalCol})
 
 sheet[cellGT] = {
 v: grandTotal,
-t: "n",
-z: '"Rp"#,##0'
+t:"n",
+z:'"Rp"#,##0'
 }
 
 }
