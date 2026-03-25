@@ -4,30 +4,25 @@ from processor import process_boQ
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = "uploads"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
 @app.route("/process", methods=["POST"])
 def process():
 
     boq = request.files["boq"]
-    lms_files = request.files.getlist("lms")
+    lms = request.files.getlist("lms")
 
-    boq_path = os.path.join(UPLOAD_FOLDER, boq.filename)
+    boq_path = "boq.xlsx"
     boq.save(boq_path)
 
     lms_paths = []
-    for f in lms_files:
-        path = os.path.join(UPLOAD_FOLDER, f.filename)
+    for i,f in enumerate(lms):
+        path = f"lms_{i}.xlsx"
         f.save(path)
         lms_paths.append(path)
 
-    output_path = os.path.join(UPLOAD_FOLDER, "hasil.xlsx")
+    output = "hasil.xlsx"
 
-    process_boQ(boq_path, lms_paths, output_path)
+    process_boQ(boq_path, lms_paths, output)
 
-    return send_file(output_path, as_attachment=True)
+    return send_file(output, as_attachment=True)
 
-
-if __name__ == "__main__":
-    app.run(debug=True)
+app.run(debug=True)
