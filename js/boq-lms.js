@@ -10,7 +10,7 @@ return String(text)
 .trim()
 }
 
-// ================= SIMILARITY (FUZZY MATCH) =================
+// ================= SIMILARITY =================
 function similarity(a, b){
 
 a = normalize(a)
@@ -20,27 +20,21 @@ let longer = a.length > b.length ? a : b
 let shorter = a.length > b.length ? b : a
 
 let longerLength = longer.length
-if(longerLength === 0) return 1.0
+if(longerLength === 0) return 1
 
 return (longerLength - editDistance(longer, shorter)) / longerLength
 }
 
 function editDistance(a, b){
-
 let matrix = []
 
-for(let i=0;i<=b.length;i++){
-matrix[i] = [i]
-}
-
-for(let j=0;j<=a.length;j++){
-matrix[0][j] = j
-}
+for(let i=0;i<=b.length;i++) matrix[i] = [i]
+for(let j=0;j<=a.length;j++) matrix[0][j] = j
 
 for(let i=1;i<=b.length;i++){
 for(let j=1;j<=a.length;j++){
 
-if(b.charAt(i-1) === a.charAt(j-1)){
+if(b[i-1] === a[j-1]){
 matrix[i][j] = matrix[i-1][j-1]
 }else{
 matrix[i][j] = Math.min(
@@ -56,7 +50,7 @@ matrix[i-1][j] + 1
 return matrix[b.length][a.length]
 }
 
-// ================= MATCH (SMART VLOOKUP) =================
+// ================= MATCH =================
 function isMatch(templateItem, lmsItems){
 
 let bestKey = null
@@ -76,7 +70,7 @@ bestKey = key
 return bestKey
 }
 
-// ================= AMBIL PROJECT & WO =================
+// ================= AMBIL INFO =================
 function extractInfo(rows){
 
 let wo = ""
@@ -87,7 +81,7 @@ if(!rows[r]) continue
 
 for(let c=0;c<rows[r].length;c++){
 
-let text = String(rows[r][c]).trim()
+let text = String(rows[r][c])
 
 // WO
 let match = text.match(/T\d{6,}-\d+/)
@@ -180,8 +174,8 @@ let itemCol=-1
 let qtyCol=-1
 let headerRow=0
 
-// cari header
-for(let r=0;r<10;r++){
+// cari header fleksibel
+for(let r=0;r<15;r++){
 
 if(!rows[r]) continue
 
@@ -208,10 +202,8 @@ let item=rows[i]?.[itemCol]
 let qty=Number(rows[i]?.[qtyCol])
 
 if(item && !isNaN(qty)){
-
 let key = normalize(item)
 items[key] = (items[key] || 0) + qty
-
 }
 
 }
@@ -237,113 +229,83 @@ function fillBOQ(lmsData,index){
 const sheetName = boqWorkbook.SheetNames[0]
 const sheet = boqWorkbook.Sheets[sheetName]
 
-let lmsItems = lmsData.items
-
 // isi header utama
 if(index === 0){
-
-if(lmsData.project){
-sheet["C2"] = { v: lmsData.project }
+if(lmsData.project) sheet["C2"] = { v: lmsData.project }
+if(lmsData.wo) sheet["C3"] = { v: lmsData.wo }
 }
 
-if(lmsData.wo){
-sheet["C3"] = { v: lmsData.wo }
-}
-
-}
-
-// cari kolom BOQ AKTUAL
+// cari kolom penting otomatis
 let startCol = null
+let hargaCol = null
 
-for(let c=0;c<boqData[3].length;c++){
-let txt = String(boqData[3][c]).toLowerCase()
-if(txt.includes("boq aktual")){
-startCol = c
-break
+for(let r=0;r<10;r++){
+for(let c=0;c<boqData[r]?.length;c++){
+
+let txt = String(boqData[r][c]).toLowerCase()
+
+if(txt.includes("boq aktual")) startCol = c
+if(txt.includes("harga satuan")) hargaCol = c
+
 }
 }
 
-if(startCol === null){
-alert("Kolom BOQ AKTUAL tidak ditemukan!")
+if(startCol === null || hargaCol === null){
+alert("Kolom tidak ditemukan!")
 return
 }
 
-// posisi LMS
-let col = startCol + (index * 2)
+let col = startCol + (index*2)
 let totalCol = col + 1
 
 // isi data
 for(let i=5;i<boqData.length;i++){
 
 let item = boqData[i]?.[1]
-let harga = Number(boqData[i]?.[4]) || 0
+let harga = Number(boqData[i]?.[hargaCol]) || 0
 
 if(!item) continue
 
-let matchKey = isMatch(item, lmsItems)
+let matchKey = isMatch(item, lmsData.items)
 
 if(matchKey){
 
-let qty = lmsItems[matchKey]
+let qty = lmsData.items[matchKey]
 let total = qty * harga
 
-let cellQty = XLSX.utils.encode_cell({r:i,c:col})
-let cellTotal = XLSX.utils.encode_cell({r:i,c:totalCol})
+let cQty = XLSX.utils.encode_cell({r:i,c:col})
+let cTot = XLSX.utils.encode_cell({r:i,c:totalCol})
 
-sheet[cellQty] = { v: qty, t:"n" }
-
-sheet[cellTotal] = {
-v: total,
-t:"n",
-z:'"Rp"#,##0'
-}
+sheet[cQty] = { v: qty, t:"n" }
+sheet[cTot] = { v: total, t:"n", z:'"Rp"#,##0' }
 
 }
 
 }
 
-// GRAND TOTAL
-let grandTotal = 0
+// grand total
+let grand = 0
 
 for(let i=5;i<boqData.length;i++){
-let cell = XLSX.utils.encode_cell({r:i,c:totalCol})
-if(sheet[cell]){
-grandTotal += Number(sheet[cell].v || 0)
-}
+let cTot = XLSX.utils.encode_cell({r:i,c:totalCol})
+if(sheet[cTot]) grand += Number(sheet[cTot].v || 0)
 }
 
-// cari total paling bawah
-let totalRow = -1
-
+// cari grand total paling bawah
 for(let i=boqData.length-1;i>=0;i--){
-if(boqData[i] && String(boqData[i][1]).toLowerCase().includes("total")){
-totalRow = i
+if(boqData[i] && String(boqData[i][1]).toLowerCase().includes("grand total")){
+
+let cGT = XLSX.utils.encode_cell({r:i,c:totalCol})
+sheet[cGT] = { v: grand, t:"n", z:'"Rp"#,##0' }
 break
+
 }
-}
-
-if(totalRow !== -1){
-
-let cellGT = XLSX.utils.encode_cell({r:totalRow,c:totalCol})
-
-sheet[cellGT] = {
-v: grandTotal,
-t:"n",
-z:'"Rp"#,##0'
-}
-
 }
 
 }
 
 // ================= DOWNLOAD =================
 function downloadBOQ(){
-
-if(!boqWorkbook){
-alert("Proses dulu")
-return
-}
-
+if(!boqWorkbook) return alert("Proses dulu")
 XLSX.writeFile(boqWorkbook,"BOQ_FINAL.xlsx")
-
 }
