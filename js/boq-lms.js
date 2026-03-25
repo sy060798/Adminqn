@@ -23,7 +23,6 @@ if(temp.includes(key) || key.includes(temp)){
 return key
 }
 
-// pecah kata penting
 let words = temp.split(" ")
 
 for(let w of words){
@@ -187,10 +186,10 @@ const sheet = boqWorkbook.Sheets[sheetName]
 let lmsItems = lmsData.items
 let wo = lmsData.wo
 
-// tampilkan WO (tidak ganggu format)
+// tampilkan WO
 sheet["C1"] = { v: "WO : " + wo }
 
-// cari kolom LMS di template
+// cari kolom LMS awal
 let startCol=0
 
 for(let c=0;c<boqData[0].length;c++){
@@ -200,21 +199,25 @@ break
 }
 }
 
+// posisi kolom (QTY & TOTAL)
 let col=startCol+(index*2)
 let totalCol=col+1
 
-// header
+// HEADER SESUAI CONTOH KAMU
 let headerCell = XLSX.utils.encode_cell({r:1,c:col})
-let totalHeaderCell = XLSX.utils.encode_cell({r:1,c:totalCol})
+let totalHeaderCell = XLSX.utils.encode_cell({r:2,c:col})
 
-sheet[headerCell] = { v: fileName.replace(".xlsx","") }
-sheet[totalHeaderCell] = { v: "TOTAL" }
+sheet[headerCell] = { v: wo }      // baris 2: WO
+sheet[totalHeaderCell] = { v: "QTY" }
 
-// isi data (mulai baris 6)
+let headerTotal = XLSX.utils.encode_cell({r:2,c:totalCol})
+sheet[headerTotal] = { v: "TOTAL" }
+
+// isi data
 for(let i=5;i<boqData.length;i++){
 
-let item=boqData[i]?.[1] // kolom B
-let harga=Number(boqData[i]?.[2]) || 0 // kolom C
+let item=boqData[i]?.[1]
+let harga=Number(boqData[i]?.[2]) || 0
 
 if(!item) continue
 
@@ -228,7 +231,6 @@ let total = qty * harga
 let cellQty = XLSX.utils.encode_cell({r:i,c:col})
 let cellTotal = XLSX.utils.encode_cell({r:i,c:totalCol})
 
-// isi tanpa rusak format
 if(!sheet[cellQty]) sheet[cellQty] = {}
 sheet[cellQty].v = qty
 sheet[cellQty].t = "n"
@@ -242,7 +244,7 @@ sheet[cellTotal].z = '"Rp"#,##0'
 
 }
 
-// GRAND TOTAL (pakai baris terakhir template)
+// GRAND TOTAL ke baris yang SUDAH ADA
 let grandTotal = 0
 
 for(let i=5;i<boqData.length;i++){
@@ -252,7 +254,7 @@ grandTotal += Number(sheet[cellTotal].v || 0)
 }
 }
 
-// cari baris "GRAND TOTAL" di template
+// cari tulisan GRAND TOTAL
 let totalRow = boqData.findIndex(row =>
 row && String(row[1]).toLowerCase().includes("grand total")
 )
