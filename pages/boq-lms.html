@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BOQ LMS Processor</title>
 
-<!-- XLSX WAJIB -->
+<!-- XLSX -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
@@ -25,13 +25,6 @@ button{
     padding:10px;
     margin:5px;
     cursor:pointer;
-    border:none;
-    border-radius:5px;
-    background:#007bff;
-    color:white;
-}
-button:hover{
-    background:#0056b3;
 }
 #status{
     margin-top:10px;
@@ -39,7 +32,6 @@ button:hover{
     color:blue;
 }
 </style>
-
 </head>
 
 <body>
@@ -48,11 +40,10 @@ button:hover{
 
 <h2>BOQ LMS PROCESSOR</h2>
 
-<!-- INPUT -->
-<input type="file" id="boqFile" accept=".xlsx,.xls"><br>
-<input type="file" id="lmsFiles" multiple accept=".xlsx,.xls"><br>
+<input type="file" id="boqFile"><br>
+<input type="file" id="lmsFiles" multiple><br>
 
-<!-- BUTTON (PAKAI ID, BUKAN onclick) -->
+<!-- ❗ HAPUS onclick -->
 <button id="btnProcess">🔄 PROSES</button>
 <button id="btnDownload">⬇ DOWNLOAD</button>
 
@@ -60,25 +51,32 @@ button:hover{
 
 </div>
 
-<!-- JS -->
+<!-- JS UTAMA -->
 <script src="js/boq-lms.js"></script>
 
-<!-- 🔥 PENTING: CONNECT BUTTON KE JS -->
+<!-- 🔥 PENGHUBUNG -->
 <script>
-document.getElementById("btnProcess").addEventListener("click", function(){
-    if(typeof processFiles === "function"){
-        processFiles();
-    }else{
-        alert("JS belum kebaca!");
-    }
-});
+document.addEventListener("DOMContentLoaded", function(){
 
-document.getElementById("btnDownload").addEventListener("click", function(){
-    if(typeof downloadBOQ === "function"){
-        downloadBOQ();
-    }else{
-        alert("JS belum kebaca!");
-    }
+    const btnProcess = document.getElementById("btnProcess");
+    const btnDownload = document.getElementById("btnDownload");
+
+    btnProcess.addEventListener("click", function(){
+        if(typeof processFiles === "function"){
+            processFiles();
+        }else{
+            alert("JS tidak terbaca!");
+        }
+    });
+
+    btnDownload.addEventListener("click", function(){
+        if(typeof downloadBOQ === "function"){
+            downloadBOQ();
+        }else{
+            alert("JS tidak terbaca!");
+        }
+    });
+
 });
 </script>
 
