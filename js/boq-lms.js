@@ -47,17 +47,26 @@ matrix[i-1][j] + 1
 return matrix[b.length][a.length]
 }
 
-// ================= MATCH ITEM =================
-function findBestMatch(templateItem, lmsItems){
+// ================= MATCH KETAT =================
+function smartMatch(templateItem, lmsItems){
+
+let templateWords = normalize(templateItem).split(" ")
 
 let bestKey = null
 let bestScore = 0
 
 for(let key in lmsItems){
 
+let keyWords = key.split(" ")
+
+// HARUS ADA KATA YANG SAMA
+let common = templateWords.filter(w => keyWords.includes(w))
+if(common.length === 0) continue
+
 let score = similarity(templateItem, key)
 
-if(score > bestScore && score > 0.5){
+// WAJIB MIRIP TINGGI
+if(score > bestScore && score >= 0.75){
 bestScore = score
 bestKey = key
 }
@@ -67,7 +76,7 @@ bestKey = key
 return bestKey
 }
 
-// ================= FIND COLUMN (ANTI ERROR) =================
+// ================= CARI KOLOM =================
 function findColumns(){
 
 let startCol = null
@@ -100,34 +109,31 @@ hargaCol = c
 }
 }
 
-// fallback (biar gak error)
+// fallback aman
 if(startCol === null) startCol = 5
 if(hargaCol === null) hargaCol = 4
 
 return {startCol, hargaCol}
 }
 
-// ================= AMBIL WO & PROJECT =================
+// ================= AMBIL INFO =================
 function extractInfo(rows){
 
 let wo = ""
 let project = ""
 
-for(let r=0;r<15;r++){
-if(!rows[r]) continue
-
-for(let c=0;c<rows[r].length;c++){
+for(let r=0;r<20;r++){
+for(let c=0;c<rows[r]?.length;c++){
 
 let text = String(rows[r][c])
 
-// WO
-let match = text.match(/T\d{6,}-\d+/)
+// WO format fix
+let match = text.match(/T\d{6,}-\d{6}/)
 if(match) wo = match[0]
 
 // PROJECT
 if(text.toLowerCase().includes("nama project")){
-let parts = text.split(":")
-project = parts[1] ? parts[1].trim() : text
+project = text.split(":")[1]?.trim() || text
 }
 
 }
@@ -145,15 +151,19 @@ const lmsFiles=document.getElementById("lmsFiles").files
 if(!boqFile) return alert("Upload BOQ Template dulu")
 if(lmsFiles.length===0) return alert("Upload file LMS dulu")
 
-document.getElementById("status").innerText="⏳ Memproses..."
-
 await readBOQ(boqFile)
 
 for(let i=0;i<lmsFiles.length;i++){
 
-let lmsData=await readLMS(lmsFiles[i])
+document.getElementById("status").innerText =
+`⏳ Memproses file ${i+1} dari ${lmsFiles.length}...`
 
-fillBOQ(lmsData,i)
+// delay biar stabil (boleh dinaikin jadi 1000 kalau mau lebih aman)
+await new Promise(r => setTimeout(r,500))
+
+let lmsData = await readLMS(lmsFiles[i])
+
+fillBOQ(lmsData, i)
 
 }
 
@@ -230,13 +240,13 @@ break
 
 }
 
-// ambil data
+// ambil data (TIDAK MAKSA)
 for(let i=headerRow+1;i<rows.length;i++){
 
 let item=rows[i]?.[itemCol]
 let qty=Number(rows[i]?.[qtyCol])
 
-if(item && !isNaN(qty)){
+if(item && !isNaN(qty) && qty > 0){
 let key = normalize(item)
 items[key] = (items[key] || 0) + qty
 }
@@ -264,7 +274,7 @@ function fillBOQ(lmsData,index){
 const sheetName = boqWorkbook.SheetNames[0]
 const sheet = boqWorkbook.Sheets[sheetName]
 
-// isi project & WO sekali
+// isi project & WO dari file pertama
 if(index === 0){
 if(lmsData.project) sheet["C2"] = { v: lmsData.project }
 if(lmsData.wo) sheet["C3"] = { v: lmsData.wo }
@@ -278,7 +288,7 @@ let hargaCol = cols.hargaCol
 let col = startCol + (index*2)
 let totalCol = col + 1
 
-// isi data
+// isi hanya yang cocok
 for(let i=5;i<boqData.length;i++){
 
 let item = boqData[i]?.[1]
@@ -286,7 +296,7 @@ let harga = Number(boqData[i]?.[hargaCol]) || 0
 
 if(!item) continue
 
-let matchKey = findBestMatch(item, lmsData.items)
+let matchKey = smartMatch(item, lmsData.items)
 
 if(matchKey){
 
