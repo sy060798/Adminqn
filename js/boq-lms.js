@@ -23,7 +23,7 @@ if(temp.includes(key) || key.includes(temp)){
 return key
 }
 
-// pecah kata
+// pecah kata penting
 let words = temp.split(" ")
 
 for(let w of words){
@@ -37,29 +37,10 @@ return key
 return null
 }
 
-// ================= AMBIL WO & PROJECT =================
-function extractProjectInfo(fileName, rows){
-
-let wo = ""
-let project = fileName.replace(".xlsx","")
-
-let match = fileName.match(/T\d{7,}-\d+/)
-if(match) wo = match[0]
-
-// fallback dari isi excel
-for(let r=0; r<10; r++){
-if(!rows[r]) continue
-
-for(let c=0; c<rows[r].length; c++){
-let text = String(rows[r][c])
-
-if(text.includes("T") && text.includes("-")){
-wo = text
-}
-}
-}
-
-return {wo, project}
+// ================= AMBIL WO =================
+function extractWO(fileName){
+let match = fileName.match(/T\d{6,}-\d+/)
+return match ? match[0] : fileName.replace(".xlsx","")
 }
 
 // ================= PROCESS =================
@@ -135,9 +116,7 @@ const data=new Uint8Array(e.target.result)
 const wb=XLSX.read(data,{type:'array'})
 
 let sheet=wb.Sheets["BoQ Aktual (Mitra)"]
-if(!sheet){
-sheet=wb.Sheets[wb.SheetNames[0]]
-}
+if(!sheet) sheet=wb.Sheets[wb.SheetNames[0]]
 
 const rows=XLSX.utils.sheet_to_json(sheet,{header:1})
 
@@ -166,12 +145,6 @@ break
 
 }
 
-// kalau gak ketemu
-if(itemCol==-1 || qtyCol==-1){
-resolve({items:{},wo:"",project:file.name})
-return
-}
-
 // ambil data
 for(let i=headerRow+1;i<rows.length;i++){
 
@@ -192,13 +165,10 @@ items[key] = qty
 
 }
 
-// ambil info project
-let info = extractProjectInfo(file.name, rows)
-
 resolve({
 items,
-wo: info.wo,
-project: info.project
+wo: extractWO(file.name),
+project: file.name.replace(".xlsx","")
 })
 
 }
@@ -216,13 +186,11 @@ const sheet = boqWorkbook.Sheets[sheetName]
 
 let lmsItems = lmsData.items
 let wo = lmsData.wo
-let project = lmsData.project
 
-// tampilkan info
+// tampilkan WO (tidak ganggu format)
 sheet["C1"] = { v: "WO : " + wo }
-sheet["C2"] = { v: "PROJECT : " + project }
 
-// cari kolom LMS
+// cari kolom LMS di template
 let startCol=0
 
 for(let c=0;c<boqData[0].length;c++){
@@ -239,14 +207,14 @@ let totalCol=col+1
 let headerCell = XLSX.utils.encode_cell({r:1,c:col})
 let totalHeaderCell = XLSX.utils.encode_cell({r:1,c:totalCol})
 
-sheet[headerCell] = { v: project }
+sheet[headerCell] = { v: fileName.replace(".xlsx","") }
 sheet[totalHeaderCell] = { v: "TOTAL" }
 
-// isi data
+// isi data (mulai baris 6)
 for(let i=5;i<boqData.length;i++){
 
-let item=boqData[i]?.[1]
-let harga=Number(boqData[i]?.[2]) || 0
+let item=boqData[i]?.[1] // kolom B
+let harga=Number(boqData[i]?.[2]) || 0 // kolom C
 
 if(!item) continue
 
@@ -260,6 +228,7 @@ let total = qty * harga
 let cellQty = XLSX.utils.encode_cell({r:i,c:col})
 let cellTotal = XLSX.utils.encode_cell({r:i,c:totalCol})
 
+// isi tanpa rusak format
 if(!sheet[cellQty]) sheet[cellQty] = {}
 sheet[cellQty].v = qty
 sheet[cellQty].t = "n"
@@ -273,7 +242,7 @@ sheet[cellTotal].z = '"Rp"#,##0'
 
 }
 
-// hitung grand total
+// GRAND TOTAL (pakai baris terakhir template)
 let grandTotal = 0
 
 for(let i=5;i<boqData.length;i++){
@@ -283,14 +252,21 @@ grandTotal += Number(sheet[cellTotal].v || 0)
 }
 }
 
-// taruh di baris terakhir template
-let totalRow = boqData.length - 1
+// cari baris "GRAND TOTAL" di template
+let totalRow = boqData.findIndex(row =>
+row && String(row[1]).toLowerCase().includes("grand total")
+)
+
+if(totalRow !== -1){
+
 let cellGT = XLSX.utils.encode_cell({r:totalRow,c:totalCol})
 
 if(!sheet[cellGT]) sheet[cellGT] = {}
 sheet[cellGT].v = grandTotal
 sheet[cellGT].t = "n"
 sheet[cellGT].z = '"Rp"#,##0'
+
+}
 
 }
 
