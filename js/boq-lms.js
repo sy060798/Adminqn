@@ -47,7 +47,7 @@ matrix[i-1][j] + 1
 return matrix[b.length][a.length]
 }
 
-// ================= MATCH KETAT =================
+// ================= MATCH =================
 function smartMatch(templateItem, lmsItems){
 
 let templateWords = normalize(templateItem).split(" ")
@@ -59,13 +59,11 @@ for(let key in lmsItems){
 
 let keyWords = key.split(" ")
 
-// HARUS ADA KATA YANG SAMA
 let common = templateWords.filter(w => keyWords.includes(w))
 if(common.length === 0) continue
 
 let score = similarity(templateItem, key)
 
-// WAJIB MIRIP TINGGI
 if(score > bestScore && score >= 0.75){
 bestScore = score
 bestKey = key
@@ -76,70 +74,25 @@ bestKey = key
 return bestKey
 }
 
-// ================= CARI KOLOM =================
-function findColumns(){
-
-let startCol = null
-let hargaCol = null
-
-for(let r=0;r<15;r++){
-for(let c=0;c<boqData[r]?.length;c++){
-
-let txt = normalize(boqData[r][c])
-
-// QTY / LMS
-if(
-txt.includes("boq") ||
-txt.includes("aktual") ||
-txt.includes("qty") ||
-txt.includes("lms")
-){
-if(startCol === null) startCol = c
-}
-
-// HARGA
-if(
-txt.includes("harga") ||
-txt.includes("price") ||
-txt.includes("satuan")
-){
-hargaCol = c
-}
-
-}
-}
-
-// fallback aman
-if(startCol === null) startCol = 5
-if(hargaCol === null) hargaCol = 4
-
-return {startCol, hargaCol}
-}
-
-// ================= AMBIL INFO =================
+// ================= AMBIL WO SAJA =================
 function extractInfo(rows){
 
 let wo = ""
-let project = ""
 
 for(let r=0;r<20;r++){
 for(let c=0;c<rows[r]?.length;c++){
 
 let text = String(rows[r][c])
 
-// WO format fix
-let match = text.match(/T\d{6,}-\d{6}/)
-if(match) wo = match[0]
-
-// PROJECT
-if(text.toLowerCase().includes("nama project")){
-project = text.split(":")[1]?.trim() || text
+let match = text.match(/T\d{6,}-\d{6}(-\d+)?/)
+if(match){
+wo = match[0]
 }
 
 }
 }
 
-return {wo, project}
+return {wo}
 }
 
 // ================= PROCESS =================
@@ -156,10 +109,9 @@ await readBOQ(boqFile)
 for(let i=0;i<lmsFiles.length;i++){
 
 document.getElementById("status").innerText =
-`⏳ Memproses file ${i+1} dari ${lmsFiles.length}...`
+`⏳ Processing ${i+1}/${lmsFiles.length}...`
 
-// delay biar stabil (boleh dinaikin jadi 1000 kalau mau lebih aman)
-await new Promise(r => setTimeout(r,500))
+await new Promise(r => setTimeout(r,300))
 
 let lmsData = await readLMS(lmsFiles[i])
 
@@ -167,7 +119,7 @@ fillBOQ(lmsData, i)
 
 }
 
-document.getElementById("status").innerText="✅ Selesai ✔"
+document.getElementById("status").innerText="✅ Selesai"
 }
 
 // ================= READ BOQ =================
@@ -219,9 +171,7 @@ let itemCol=-1
 let qtyCol=-1
 let headerRow=0
 
-// cari header fleksibel
 for(let r=0;r<15;r++){
-
 if(!rows[r]) continue
 
 for(let c=0;c<rows[r].length;c++){
@@ -237,10 +187,9 @@ if(itemCol!=-1 && qtyCol!=-1){
 headerRow=r
 break
 }
-
 }
 
-// ambil data (TIDAK MAKSA)
+// ambil data
 for(let i=headerRow+1;i<rows.length;i++){
 
 let item=rows[i]?.[itemCol]
@@ -257,8 +206,7 @@ let info = extractInfo(rows)
 
 resolve({
 items,
-wo: info.wo,
-project: info.project
+wo: info.wo
 })
 
 }
@@ -268,27 +216,24 @@ reader.readAsArrayBuffer(file)
 })
 }
 
-// ================= FILL BOQ =================
+// ================= FILL =================
 function fillBOQ(lmsData,index){
 
 const sheetName = boqWorkbook.SheetNames[0]
 const sheet = boqWorkbook.Sheets[sheetName]
 
-// isi project & WO dari file pertama
+// isi WO saja
 if(index === 0){
-if(lmsData.project) sheet["C2"] = { v: lmsData.project }
 if(lmsData.wo) sheet["C3"] = { v: lmsData.wo }
 }
 
-// ambil kolom
-let cols = findColumns()
-let startCol = cols.startCol
-let hargaCol = cols.hargaCol
+// cari kolom
+let startCol = 5
+let hargaCol = 4
 
 let col = startCol + (index*2)
 let totalCol = col + 1
 
-// isi hanya yang cocok
 for(let i=5;i<boqData.length;i++){
 
 let item = boqData[i]?.[1]
@@ -306,34 +251,16 @@ let total = qty * harga
 let cQty = XLSX.utils.encode_cell({r:i,c:col})
 let cTot = XLSX.utils.encode_cell({r:i,c:totalCol})
 
-sheet[cQty] = { v: qty, t:"n" }
-sheet[cTot] = { v: total, t:"n", z:'"Rp"#,##0' }
+sheet[cQty] = { v: qty }
+sheet[cTot] = { v: total }
 
 }
 
-}
-
-// GRAND TOTAL
-let grand = 0
-
-for(let i=5;i<boqData.length;i++){
-let cTot = XLSX.utils.encode_cell({r:i,c:totalCol})
-if(sheet[cTot]) grand += Number(sheet[cTot].v || 0)
-}
-
-// isi ke baris GRAND TOTAL
-for(let i=boqData.length-1;i>=0;i--){
-if(boqData[i] && String(boqData[i][1]).toLowerCase().includes("grand total")){
-let cGT = XLSX.utils.encode_cell({r:i,c:totalCol})
-sheet[cGT] = { v: grand, t:"n", z:'"Rp"#,##0' }
-break
-}
 }
 
 }
 
 // ================= DOWNLOAD =================
 function downloadBOQ(){
-if(!boqWorkbook) return alert("Proses dulu")
 XLSX.writeFile(boqWorkbook,"BOQ_FINAL.xlsx")
 }
