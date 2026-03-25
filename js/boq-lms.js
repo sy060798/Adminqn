@@ -1,19 +1,36 @@
 let boqWorkbook;
 let boqData;
+let woList = []
 
 // ================= NORMALIZE =================
 function normalize(text){
 return String(text)
 .toLowerCase()
-.replace(/[^a-z0-9 ]/g," ")
+.replace(/[^a-z0-9: ]/g," ")
 .replace(/\s+/g," ")
 .trim()
 }
 
+// ================= AMBIL RATIO =================
+function extractRatio(text){
+let match = text.match(/\d+:\d+/)
+return match ? match[0] : null
+}
+
+// ================= AMBIL KEYWORD UTAMA =================
+function getMainKeyword(text){
+let words = normalize(text).split(" ")
+
+return words.filter(w => 
+!w.match(/\d+:\d+/) && 
+w !== "pcs" &&
+w !== "unit" &&
+w.length > 2
+)
+}
+
 // ================= SIMILARITY =================
 function similarity(a, b){
-a = normalize(a)
-b = normalize(b)
 
 let longer = a.length > b.length ? a : b
 let shorter = a.length > b.length ? b : a
@@ -47,24 +64,35 @@ matrix[i-1][j] + 1
 return matrix[b.length][a.length]
 }
 
-// ================= MATCH =================
+// ================= MATCH SUPER KETAT =================
 function smartMatch(templateItem, lmsItems){
 
-let templateWords = normalize(templateItem).split(" ")
+let templateNorm = normalize(templateItem)
+let templateRatio = extractRatio(templateNorm)
+let templateKeywords = getMainKeyword(templateNorm)
 
 let bestKey = null
 let bestScore = 0
 
 for(let key in lmsItems){
 
-let keyWords = key.split(" ")
+let keyNorm = normalize(key)
+let keyRatio = extractRatio(keyNorm)
+let keyKeywords = getMainKeyword(keyNorm)
 
-let common = templateWords.filter(w => keyWords.includes(w))
+// ❌ ratio wajib sama
+if(templateRatio && keyRatio && templateRatio !== keyRatio){
+continue
+}
+
+// ❌ harus ada keyword utama yang sama
+let common = templateKeywords.filter(w => keyKeywords.includes(w))
 if(common.length === 0) continue
 
-let score = similarity(templateItem, key)
+let score = similarity(templateNorm, keyNorm)
 
-if(score > bestScore && score >= 0.75){
+// threshold dinaikin biar gak ngawur
+if(score > bestScore && score >= 0.8){
 bestScore = score
 bestKey = key
 }
@@ -74,7 +102,7 @@ bestKey = key
 return bestKey
 }
 
-// ================= AMBIL WO SAJA =================
+// ================= EXTRACT WO =================
 function extractInfo(rows){
 
 let wo = ""
@@ -83,69 +111,14 @@ for(let r=0;r<20;r++){
 for(let c=0;c<rows[r]?.length;c++){
 
 let text = String(rows[r][c])
-
 let match = text.match(/T\d{6,}-\d{6}(-\d+)?/)
-if(match){
-wo = match[0]
-}
+
+if(match) wo = match[0]
 
 }
 }
 
 return {wo}
-}
-
-// ================= PROCESS =================
-async function processFiles(){
-
-const boqFile=document.getElementById("boqFile").files[0]
-const lmsFiles=document.getElementById("lmsFiles").files
-
-if(!boqFile) return alert("Upload BOQ Template dulu")
-if(lmsFiles.length===0) return alert("Upload file LMS dulu")
-
-await readBOQ(boqFile)
-
-for(let i=0;i<lmsFiles.length;i++){
-
-document.getElementById("status").innerText =
-`⏳ Processing ${i+1}/${lmsFiles.length}...`
-
-await new Promise(r => setTimeout(r,300))
-
-let lmsData = await readLMS(lmsFiles[i])
-
-fillBOQ(lmsData, i)
-
-}
-
-document.getElementById("status").innerText="✅ Selesai"
-}
-
-// ================= READ BOQ =================
-function readBOQ(file){
-
-return new Promise(resolve=>{
-
-const reader=new FileReader()
-
-reader.onload=e=>{
-
-const data=new Uint8Array(e.target.result)
-
-boqWorkbook=XLSX.read(data,{type:'array'})
-
-const sheet=boqWorkbook.Sheets[boqWorkbook.SheetNames[0]]
-
-boqData=XLSX.utils.sheet_to_json(sheet,{header:1})
-
-resolve()
-
-}
-
-reader.readAsArrayBuffer(file)
-
-})
 }
 
 // ================= READ LMS =================
@@ -158,7 +131,6 @@ const reader=new FileReader()
 reader.onload=e=>{
 
 const data=new Uint8Array(e.target.result)
-
 const wb=XLSX.read(data,{type:'array'})
 
 let sheet=wb.Sheets["BoQ Aktual (Mitra)"]
@@ -171,6 +143,7 @@ let itemCol=-1
 let qtyCol=-1
 let headerRow=0
 
+// cari header
 for(let r=0;r<15;r++){
 if(!rows[r]) continue
 
@@ -189,7 +162,7 @@ break
 }
 }
 
-// ambil data
+// ambil data (AKTUAL SAJA)
 for(let i=headerRow+1;i<rows.length;i++){
 
 let item=rows[i]?.[itemCol]
@@ -216,18 +189,12 @@ reader.readAsArrayBuffer(file)
 })
 }
 
-// ================= FILL =================
+// ================= FILL BOQ =================
 function fillBOQ(lmsData,index){
 
 const sheetName = boqWorkbook.SheetNames[0]
 const sheet = boqWorkbook.Sheets[sheetName]
 
-// isi WO saja
-if(index === 0){
-if(lmsData.wo) sheet["C3"] = { v: lmsData.wo }
-}
-
-// cari kolom
 let startCol = 5
 let hargaCol = 4
 
@@ -251,16 +218,22 @@ let total = qty * harga
 let cQty = XLSX.utils.encode_cell({r:i,c:col})
 let cTot = XLSX.utils.encode_cell({r:i,c:totalCol})
 
-sheet[cQty] = { v: qty }
-sheet[cTot] = { v: total }
+sheet[cQty] = { v: qty, t:"n" }
+sheet[cTot] = { v: total, t:"n", z:'"Rp"#,##0' }
 
 }
 
 }
 
+// WO di bawah
+let lastRow = boqData.length + 2
+
+let woCell = XLSX.utils.encode_cell({r:lastRow,c:col})
+sheet[woCell] = { v: woList[index] || "-", t:"s" }
+
+if(index === 0){
+let labelCell = XLSX.utils.encode_cell({r:lastRow,c:col-1})
+sheet[labelCell] = { v: "NO WO", t:"s" }
 }
 
-// ================= DOWNLOAD =================
-function downloadBOQ(){
-XLSX.writeFile(boqWorkbook,"BOQ_FINAL.xlsx")
 }
