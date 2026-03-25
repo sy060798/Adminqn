@@ -12,7 +12,6 @@ return String(text)
 
 // ================= SIMILARITY =================
 function similarity(a, b){
-
 a = normalize(a)
 b = normalize(b)
 
@@ -33,7 +32,6 @@ for(let j=0;j<=a.length;j++) matrix[0][j] = j
 
 for(let i=1;i<=b.length;i++){
 for(let j=1;j<=a.length;j++){
-
 if(b[i-1] === a[j-1]){
 matrix[i][j] = matrix[i-1][j-1]
 }else{
@@ -43,15 +41,14 @@ matrix[i][j-1] + 1,
 matrix[i-1][j] + 1
 )
 }
-
 }
 }
 
 return matrix[b.length][a.length]
 }
 
-// ================= MATCH =================
-function isMatch(templateItem, lmsItems){
+// ================= MATCH ITEM =================
+function findBestMatch(templateItem, lmsItems){
 
 let bestKey = null
 let bestScore = 0
@@ -70,7 +67,47 @@ bestKey = key
 return bestKey
 }
 
-// ================= AMBIL INFO =================
+// ================= FIND COLUMN (ANTI ERROR) =================
+function findColumns(){
+
+let startCol = null
+let hargaCol = null
+
+for(let r=0;r<15;r++){
+for(let c=0;c<boqData[r]?.length;c++){
+
+let txt = normalize(boqData[r][c])
+
+// QTY / LMS
+if(
+txt.includes("boq") ||
+txt.includes("aktual") ||
+txt.includes("qty") ||
+txt.includes("lms")
+){
+if(startCol === null) startCol = c
+}
+
+// HARGA
+if(
+txt.includes("harga") ||
+txt.includes("price") ||
+txt.includes("satuan")
+){
+hargaCol = c
+}
+
+}
+}
+
+// fallback (biar gak error)
+if(startCol === null) startCol = 5
+if(hargaCol === null) hargaCol = 4
+
+return {startCol, hargaCol}
+}
+
+// ================= AMBIL WO & PROJECT =================
 function extractInfo(rows){
 
 let wo = ""
@@ -113,8 +150,6 @@ document.getElementById("status").innerText="⏳ Memproses..."
 await readBOQ(boqFile)
 
 for(let i=0;i<lmsFiles.length;i++){
-
-await new Promise(r => setTimeout(r,50))
 
 let lmsData=await readLMS(lmsFiles[i])
 
@@ -181,10 +216,10 @@ if(!rows[r]) continue
 
 for(let c=0;c<rows[r].length;c++){
 
-let text=String(rows[r][c]).toLowerCase()
+let text=normalize(rows[r][c])
 
 if(text.includes("item")) itemCol=c
-if(text.includes("boq aktual")) qtyCol=c
+if(text.includes("boq") || text.includes("qty")) qtyCol=c
 
 }
 
@@ -229,31 +264,16 @@ function fillBOQ(lmsData,index){
 const sheetName = boqWorkbook.SheetNames[0]
 const sheet = boqWorkbook.Sheets[sheetName]
 
-// isi header utama
+// isi project & WO sekali
 if(index === 0){
 if(lmsData.project) sheet["C2"] = { v: lmsData.project }
 if(lmsData.wo) sheet["C3"] = { v: lmsData.wo }
 }
 
-// cari kolom penting otomatis
-let startCol = null
-let hargaCol = null
-
-for(let r=0;r<10;r++){
-for(let c=0;c<boqData[r]?.length;c++){
-
-let txt = String(boqData[r][c]).toLowerCase()
-
-if(txt.includes("boq aktual")) startCol = c
-if(txt.includes("harga satuan")) hargaCol = c
-
-}
-}
-
-if(startCol === null || hargaCol === null){
-alert("Kolom tidak ditemukan!")
-return
-}
+// ambil kolom
+let cols = findColumns()
+let startCol = cols.startCol
+let hargaCol = cols.hargaCol
 
 let col = startCol + (index*2)
 let totalCol = col + 1
@@ -266,7 +286,7 @@ let harga = Number(boqData[i]?.[hargaCol]) || 0
 
 if(!item) continue
 
-let matchKey = isMatch(item, lmsData.items)
+let matchKey = findBestMatch(item, lmsData.items)
 
 if(matchKey){
 
@@ -283,7 +303,7 @@ sheet[cTot] = { v: total, t:"n", z:'"Rp"#,##0' }
 
 }
 
-// grand total
+// GRAND TOTAL
 let grand = 0
 
 for(let i=5;i<boqData.length;i++){
@@ -291,14 +311,12 @@ let cTot = XLSX.utils.encode_cell({r:i,c:totalCol})
 if(sheet[cTot]) grand += Number(sheet[cTot].v || 0)
 }
 
-// cari grand total paling bawah
+// isi ke baris GRAND TOTAL
 for(let i=boqData.length-1;i>=0;i--){
 if(boqData[i] && String(boqData[i][1]).toLowerCase().includes("grand total")){
-
 let cGT = XLSX.utils.encode_cell({r:i,c:totalCol})
 sheet[cGT] = { v: grand, t:"n", z:'"Rp"#,##0' }
 break
-
 }
 }
 
