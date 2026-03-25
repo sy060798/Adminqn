@@ -19,12 +19,9 @@ for(let key in lmsItems){
 
 if(temp === key) return key
 
-if(temp.includes(key) || key.includes(temp)){
-return key
-}
+if(temp.includes(key) || key.includes(temp)) return key
 
 let words = temp.split(" ")
-
 for(let w of words){
 if(w.length > 3 && key.includes(w)){
 return key
@@ -36,10 +33,33 @@ return key
 return null
 }
 
-// ================= AMBIL WO =================
-function extractWO(fileName){
-let match = fileName.match(/T\d{6,}-\d+/)
-return match ? match[0] : fileName.replace(".xlsx","")
+// ================= AMBIL PROJECT & WO =================
+function extractInfo(rows){
+
+let wo = ""
+let project = ""
+
+for(let r=0;r<10;r++){
+if(!rows[r]) continue
+
+for(let c=0;c<rows[r].length;c++){
+
+let text = String(rows[r][c])
+
+// ambil WO
+if(text.match(/T\d{6,}-\d+/)){
+wo = text.match(/T\d{6,}-\d+/)[0]
+}
+
+// ambil nama project
+if(text.toLowerCase().includes("nama project")){
+project = rows[r][c+1] || text
+}
+
+}
+}
+
+return {wo, project}
 }
 
 // ================= PROCESS =================
@@ -48,15 +68,8 @@ async function processFiles(){
 const boqFile=document.getElementById("boqFile").files[0]
 const lmsFiles=document.getElementById("lmsFiles").files
 
-if(!boqFile){
-alert("Upload BOQ Template dulu")
-return
-}
-
-if(lmsFiles.length===0){
-alert("Upload file LMS dulu")
-return
-}
+if(!boqFile) return alert("Upload BOQ Template dulu")
+if(lmsFiles.length===0) return alert("Upload file LMS dulu")
 
 document.getElementById("status").innerText="⏳ Memproses..."
 
@@ -68,7 +81,7 @@ await new Promise(r => setTimeout(r,50))
 
 let lmsData=await readLMS(lmsFiles[i])
 
-fillBOQ(lmsData,lmsFiles[i].name,i)
+fillBOQ(lmsData,i)
 
 }
 
@@ -124,6 +137,7 @@ let itemCol=-1
 let qtyCol=-1
 let headerRow=0
 
+// cari header
 for(let r=0;r<10;r++){
 
 if(!rows[r]) continue
@@ -133,7 +147,7 @@ for(let c=0;c<rows[r].length;c++){
 let text=String(rows[r][c]).toLowerCase()
 
 if(text.includes("item")) itemCol=c
-if(text.includes("boq") || text.includes("qty")) qtyCol=c
+if(text.includes("boq aktual")) qtyCol=c
 
 }
 
@@ -154,20 +168,19 @@ if(item && !isNaN(qty)){
 
 let key = normalize(item)
 
-if(items[key]){
-items[key] += qty
-}else{
-items[key] = qty
-}
+items[key] = (items[key] || 0) + qty
 
 }
 
 }
+
+// ambil info project & wo
+let info = extractInfo(rows)
 
 resolve({
 items,
-wo: extractWO(file.name),
-project: file.name.replace(".xlsx","")
+wo: info.wo,
+project: info.project
 })
 
 }
@@ -178,46 +191,38 @@ reader.readAsArrayBuffer(file)
 }
 
 // ================= FILL BOQ =================
-function fillBOQ(lmsData,fileName,index){
+function fillBOQ(lmsData,index){
 
 const sheetName = boqWorkbook.SheetNames[0]
 const sheet = boqWorkbook.Sheets[sheetName]
 
 let lmsItems = lmsData.items
-let wo = lmsData.wo
 
-// tampilkan WO
-sheet["C1"] = { v: "WO : " + wo }
+// 🔥 ISI HEADER UTAMA (CUMA SEKALI)
+if(index === 0){
+sheet["C2"] = { v: lmsData.project }
+sheet["C3"] = { v: lmsData.wo }
+}
 
-// cari kolom LMS awal
+// cari kolom LMS
 let startCol=0
 
 for(let c=0;c<boqData[0].length;c++){
-if(String(boqData[0][c]).toLowerCase().includes("lms")){
+if(String(boqData[0][c]).toLowerCase().includes("boq aktual")){
 startCol=c
 break
 }
 }
 
-// posisi kolom (QTY & TOTAL)
+// posisi kolom
 let col=startCol+(index*2)
 let totalCol=col+1
 
-// HEADER SESUAI CONTOH KAMU
-let headerCell = XLSX.utils.encode_cell({r:1,c:col})
-let totalHeaderCell = XLSX.utils.encode_cell({r:2,c:col})
-
-sheet[headerCell] = { v: wo }      // baris 2: WO
-sheet[totalHeaderCell] = { v: "QTY" }
-
-let headerTotal = XLSX.utils.encode_cell({r:2,c:totalCol})
-sheet[headerTotal] = { v: "TOTAL" }
-
-// isi data
+// isi QTY & TOTAL
 for(let i=5;i<boqData.length;i++){
 
 let item=boqData[i]?.[1]
-let harga=Number(boqData[i]?.[2]) || 0
+let harga=Number(boqData[i]?.[3]) || 0
 
 if(!item) continue
 
@@ -233,18 +238,16 @@ let cellTotal = XLSX.utils.encode_cell({r:i,c:totalCol})
 
 if(!sheet[cellQty]) sheet[cellQty] = {}
 sheet[cellQty].v = qty
-sheet[cellQty].t = "n"
 
 if(!sheet[cellTotal]) sheet[cellTotal] = {}
 sheet[cellTotal].v = total
-sheet[cellTotal].t = "n"
 sheet[cellTotal].z = '"Rp"#,##0'
 
 }
 
 }
 
-// GRAND TOTAL ke baris yang SUDAH ADA
+// GRAND TOTAL
 let grandTotal = 0
 
 for(let i=5;i<boqData.length;i++){
@@ -254,19 +257,19 @@ grandTotal += Number(sheet[cellTotal].v || 0)
 }
 }
 
-// cari tulisan GRAND TOTAL
-let totalRow = boqData.findIndex(row =>
-row && String(row[1]).toLowerCase().includes("grand total")
+let totalRow = boqData.findIndex(r =>
+r && String(r[1]).toLowerCase().includes("total")
 )
 
 if(totalRow !== -1){
 
 let cellGT = XLSX.utils.encode_cell({r:totalRow,c:totalCol})
 
-if(!sheet[cellGT]) sheet[cellGT] = {}
-sheet[cellGT].v = grandTotal
-sheet[cellGT].t = "n"
-sheet[cellGT].z = '"Rp"#,##0'
+sheet[cellGT] = {
+v: grandTotal,
+t: "n",
+z: '"Rp"#,##0'
+}
 
 }
 
@@ -276,10 +279,10 @@ sheet[cellGT].z = '"Rp"#,##0'
 function downloadBOQ(){
 
 if(!boqWorkbook){
-alert("Proses dulu sebelum download")
+alert("Proses dulu")
 return
 }
 
-XLSX.writeFile(boqWorkbook,"BOQ_REKAP_LMS.xlsx")
+XLSX.writeFile(boqWorkbook,"BOQ_FINAL.xlsx")
 
 }
