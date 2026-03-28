@@ -185,7 +185,6 @@ function renderTable(data){
     document.getElementById('total').innerText =
         "Total DPP: " + total.toLocaleString();
 }
-
 // ==========================
 // EXPORT EXCEL
 // ==========================
