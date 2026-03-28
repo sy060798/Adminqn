@@ -5,15 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TREKING</title>
 
-<link rel="stylesheet" href="../style.css">
-
-<!-- XLSX -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
 body{font-family:Arial;background:#f4f6f9;padding:20px;}
 h1{text-align:center;}
-.container{background:white;padding:20px;border-radius:10px;max-width:1000px;margin:auto;}
+.container{background:white;padding:20px;border-radius:10px;max-width:1100px;margin:auto;}
 input,select,button{padding:8px;margin:5px;}
 table{width:100%;border-collapse:collapse;margin-top:20px;}
 th,td{border:1px solid #ddd;padding:8px;}
@@ -58,24 +55,19 @@ button{cursor:pointer;}
 <th>PERIODE</th>
 <th>NOMOR INVOICE</th>
 <th>DPP</th>
+<th>TGL PEMBAYARAN</th>
+<th>PEMBAYARAN</th>
+<th>SISA</th>
 </tr>
 </thead>
 <tbody id="result">
-<tr><td colspan="4" style="text-align:center;">Belum ada data</td></tr>
+<tr><td colspan="7" style="text-align:center;">Belum ada data</td></tr>
 </tbody>
 </table>
 
 </div>
 
-<!-- JS UTAMA (pakai defer biar tidak silang) -->
-<script src="../js/treking.js" defer></script>
-
-<!-- fallback kalau JS gagal -->
-<script>
-if(!window.FileReader){
-    alert("Browser tidak support upload Excel");
-}
-</script>
+<script src="treking.js"></script>
 
 </body>
 </html>
