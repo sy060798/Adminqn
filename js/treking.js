@@ -9,14 +9,14 @@ const upload = document.getElementById('upload');
 const btnScan = document.getElementById('btnScan');
 const btnExport = document.getElementById('btnExport');
 
-if(upload) upload.addEventListener('change', handleFile);
-if(btnScan) btnScan.addEventListener('click', applyFilter);
-if(btnExport) btnExport.addEventListener('click', exportExcel);
+// 🔥 FIX EVENT (ANTI GAGAL KLIK)
+upload.addEventListener('change', handleFile);
+btnScan.addEventListener('click', applyFilter);
+btnExport.addEventListener('click', exportExcel);
 
 // ==========================
 function setStatus(msg){
-    const el = document.getElementById('status');
-    if(el) el.innerText = msg;
+    document.getElementById('status').innerText = msg;
 }
 
 // ==========================
@@ -77,10 +77,8 @@ function processWorkbook(workbook, selectedSheet){
             const keterangan = row[2];   // C
             const invoice = row[3];      // D
             const dpp = row[4];          // E
-
             const tglBayar = row[13];    // N
             const pembayaran = row[14];  // O
-            const sisaExcel = row[18];   // S
 
             if(!keterangan || !invoice) return;
             if(String(keterangan).toLowerCase().includes("keterangan")) return;
@@ -94,21 +92,18 @@ function processWorkbook(workbook, selectedSheet){
                 dpp: dppNum,
                 tglBayar: tglBayar || "-",
                 pembayaran: bayarNum,
-                sisa: dppNum - bayarNum // pakai hitung otomatis
-                // kalau mau pakai excel: parseNumber(sisaExcel)
+                sisa: dppNum - bayarNum
             });
 
         });
 
     });
 
-    console.log("DATA FINAL:", allData);
+    console.log("DATA:", allData);
 }
 
 // ==========================
 function applyFilter(){
-
-    const sheet = document.getElementById('sheetSelect').value;
 
     if(!currentWorkbook){
         alert("Upload file dulu!");
@@ -116,6 +111,8 @@ function applyFilter(){
     }
 
     setStatus("🔍 Scan data...");
+
+    const sheet = document.getElementById('sheetSelect').value;
 
     processWorkbook(currentWorkbook, sheet);
 
@@ -154,15 +151,11 @@ function renderTable(data){
         </tr>`;
     });
 
-    const result = document.getElementById('result');
-    if(result){
-        result.innerHTML = html || `<tr><td colspan="6">Tidak ada data</td></tr>`;
-    }
+    document.getElementById('result').innerHTML =
+        html || `<tr><td colspan="6">Tidak ada data</td></tr>`;
 
-    const totalEl = document.getElementById('total');
-    if(totalEl){
-        totalEl.innerText = "Total DPP: " + total.toLocaleString();
-    }
+    document.getElementById('total').innerText =
+        "Total DPP: " + total.toLocaleString();
 }
 
 // ==========================
@@ -173,16 +166,7 @@ function exportExcel(){
         return;
     }
 
-    const exportData = lastFiltered.map(d => ({
-        Keterangan: d.keterangan,
-        Invoice: d.invoice,
-        DPP: d.dpp,
-        Tgl_Pembayaran: d.tglBayar,
-        Pembayaran: d.pembayaran,
-        Sisa: d.sisa
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(exportData);
+    const ws = XLSX.utils.json_to_sheet(lastFiltered);
     const wb = XLSX.utils.book_new();
 
     XLSX.utils.book_append_sheet(wb, ws, "HASIL");
