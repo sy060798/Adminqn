@@ -103,3 +103,26 @@ tr:hover{
 background:#f1f3f7;
 
 }
+
+/* 🔥 cegah elemen nutup klik */
+* {
+  box-sizing: border-box;
+}
+
+/* pastikan container utama di atas */
+.container {
+  position: relative;
+  z-index: 1;
+}
+
+/* paksa tidak ada layer nutup */
+body::before,
+body::after {
+  pointer-events: none;
+}
+
+/* kalau ada overlay liar */
+div[style*="position: fixed"],
+div[style*="position: absolute"] {
+  pointer-events: auto;
+}
