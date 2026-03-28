@@ -55,7 +55,7 @@ function parseNumber(val){
 }
 
 // ==========================
-// PROSES DATA
+// PROSES DATA (ANTI GESER)
 // ==========================
 function processWorkbook(workbook, selectedSheet){
 
@@ -74,14 +74,16 @@ function processWorkbook(workbook, selectedSheet){
 
         rows.forEach(row => {
 
+            // 🔥 KOLOM UTAMA
             const kota = row[3];
             const periode = row[4];
             const invoice = row[6];
             const dpp = row[9];
 
-            // 🔥 TAMBAHAN KOLOM
-            const tglBayar = row[13];     // N
-            const pembayaran = row[14];   // O
+            // 🔥 KOLOM PEMBAYARAN (ANTI GESER)
+            const tglBayar = row[12] || row[13] || "-";
+            const pembayaran = row[13] || row[14] || 0;
+            const sisaExcel = row[19]; // kolom T
 
             if(!kota || !periode || !invoice) return;
 
@@ -89,6 +91,7 @@ function processWorkbook(workbook, selectedSheet){
 
             const dppNum = parseNumber(dpp);
             const bayarNum = parseNumber(pembayaran);
+            const sisaNum = parseNumber(sisaExcel);
 
             allData.push({
                 sheet: sheetName,
@@ -96,9 +99,9 @@ function processWorkbook(workbook, selectedSheet){
                 periode: String(periode),
                 invoice: String(invoice),
                 dpp: dppNum,
-                tglBayar: tglBayar || "-",
+                tglBayar: tglBayar,
                 pembayaran: bayarNum,
-                sisa: dppNum - bayarNum
+                sisa: sisaNum || (dppNum - bayarNum)
             });
 
         });
