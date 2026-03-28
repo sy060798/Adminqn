@@ -10,14 +10,10 @@ document.getElementById('btnScan').addEventListener('click', applyFilter);
 document.getElementById('btnExport').addEventListener('click', exportExcel);
 
 // ==========================
-// STATUS
-// ==========================
 function setStatus(msg){
     document.getElementById('status').innerText = msg;
 }
 
-// ==========================
-// HANDLE FILE UPLOAD
 // ==========================
 function handleFile(e){
     const file = e.target.files[0];
@@ -33,7 +29,6 @@ function handleFile(e){
 
         currentWorkbook = workbook;
 
-        // 🔥 ISI DROPDOWN SHEET
         const sheetSelect = document.getElementById('sheetSelect');
         sheetSelect.innerHTML = '<option value="">-- PILIH SHEET --</option>';
 
@@ -48,15 +43,13 @@ function handleFile(e){
 }
 
 // ==========================
-// PARSE ANGKA (AMAN)
-// ==========================
 function parseNumber(val){
     if(!val) return 0;
     return Number(String(val).replace(/[^0-9]/g,'')) || 0;
 }
 
 // ==========================
-// PROSES DATA (FIX SESUAI FILE)
+// PROSES DATA
 // ==========================
 function processWorkbook(workbook, selectedSheet){
 
@@ -77,16 +70,16 @@ function processWorkbook(workbook, selectedSheet){
 
         rows.forEach(row => {
 
-            // 🔥 POSISI KOLOM SESUAI FILE KAMU
             const kota = row[3];
             const periode = row[4];
             const invoice = row[6];
             const dpp = row[9];
 
-            // skip baris tidak valid
-            if(!kota || !periode || !invoice) return;
+            // 🔥 TAMBAHAN
+            const tglBayar = row[10];
+            const pembayaran = row[11];
 
-            // skip header (yang tulisannya KOTA, PERIODE)
+            if(!kota || !periode || !invoice) return;
             if(String(kota).toLowerCase() === "kota") return;
 
             allData.push({
@@ -94,7 +87,11 @@ function processWorkbook(workbook, selectedSheet){
                 kota: String(kota),
                 periode: String(periode),
                 invoice: String(invoice),
-                dpp: parseNumber(dpp)
+                dpp: parseNumber(dpp),
+
+                // 🔥 BARU
+                tglBayar: tglBayar || "-",
+                pembayaran: parseNumber(pembayaran)
             });
 
         });
@@ -105,7 +102,7 @@ function processWorkbook(workbook, selectedSheet){
 }
 
 // ==========================
-// FILTER + SCAN
+// FILTER
 // ==========================
 function applyFilter(){
 
@@ -118,14 +115,12 @@ function applyFilter(){
 
     setStatus("🔍 Scan data...");
 
-    // 🔥 ambil ulang data dari sheet
     processWorkbook(currentWorkbook, sheet);
 
     const kotaKey = document.getElementById('kotaInput').value.toLowerCase();
     const periodeKey = document.getElementById('periodeInput').value.toLowerCase();
 
     const filtered = allData.filter(d => {
-
         return (
             (!kotaKey || d.kota.toLowerCase().includes(kotaKey)) &&
             (!periodeKey || d.periode.toLowerCase().includes(periodeKey))
@@ -150,17 +145,23 @@ function renderTable(data){
     data.forEach(d=>{
         total += d.dpp;
 
+        const sisa = d.dpp - d.pembayaran;
+        const warna = sisa > 0 ? 'style="color:red;"' : '';
+
         html += `
         <tr>
             <td>${d.kota}</td>
             <td>${d.periode}</td>
             <td>${d.invoice}</td>
             <td>${d.dpp.toLocaleString()}</td>
+            <td>${d.tglBayar}</td>
+            <td>${d.pembayaran.toLocaleString()}</td>
+            <td ${warna}>${sisa.toLocaleString()}</td>
         </tr>`;
     });
 
     document.getElementById('result').innerHTML =
-        html || `<tr><td colspan="4" style="text-align:center;">Tidak ada data</td></tr>`;
+        html || `<tr><td colspan="7" style="text-align:center;">Tidak ada data</td></tr>`;
 
     document.getElementById('total').innerText =
         "Total DPP: " + total.toLocaleString();
@@ -176,7 +177,17 @@ function exportExcel(){
         return;
     }
 
-    const ws = XLSX.utils.json_to_sheet(lastFiltered);
+    const exportData = lastFiltered.map(d => ({
+        Kota: d.kota,
+        Periode: d.periode,
+        Invoice: d.invoice,
+        DPP: d.dpp,
+        Tgl_Pembayaran: d.tglBayar,
+        Pembayaran: d.pembayaran,
+        Sisa: d.dpp - d.pembayaran
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
 
     XLSX.utils.book_append_sheet(wb, ws, "HASIL");
