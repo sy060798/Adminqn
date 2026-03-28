@@ -9,7 +9,6 @@
 
 <style>
 body{font-family:Arial;background:#f4f6f9;padding:20px;}
-h1{text-align:center;}
 .container{background:white;padding:20px;border-radius:10px;max-width:1100px;margin:auto;}
 input,select,button{padding:8px;margin:5px;}
 table{width:100%;border-collapse:collapse;margin-top:20px;}
@@ -17,15 +16,14 @@ th,td{border:1px solid #ddd;padding:8px;}
 th{background:#333;color:white;}
 .status{margin-top:10px;font-weight:bold;color:blue;}
 .total{margin-top:10px;font-weight:bold;}
-button{cursor:pointer;}
 </style>
 </head>
 
 <body>
 
-<h1>TREKING</h1>
-
 <div class="container">
+
+<h2>TREKING PEMBAYARAN</h2>
 
 <input type="file" id="upload" accept=".xlsx,.xls">
 
@@ -37,12 +35,11 @@ button{cursor:pointer;}
 
 <br>
 
-<input type="text" id="kotaInput" placeholder="Ketik Kota (contoh: Bali)">
-<input type="text" id="periodeInput" placeholder="Ketik Periode (contoh: OKTOBER)">
+<input type="text" id="keteranganInput" placeholder="Cari Keterangan...">
 
 <br>
 
-<button id="btnScan">🔄 SCAN DATA</button>
+<button id="btnScan">🔍 SCAN DATA</button>
 <button id="btnExport">⬇ DOWNLOAD EXCEL</button>
 
 <div class="status" id="status">Belum ada file</div>
@@ -51,9 +48,8 @@ button{cursor:pointer;}
 <table>
 <thead>
 <tr>
-<th>KOTA</th>
-<th>PERIODE</th>
-<th>NOMOR INVOICE</th>
+<th>KETERANGAN</th>
+<th>INVOICE</th>
 <th>DPP</th>
 <th>TGL PEMBAYARAN</th>
 <th>PEMBAYARAN</th>
@@ -61,12 +57,13 @@ button{cursor:pointer;}
 </tr>
 </thead>
 <tbody id="result">
-<tr><td colspan="7" style="text-align:center;">Belum ada data</td></tr>
+<tr><td colspan="6">Belum ada data</td></tr>
 </tbody>
 </table>
 
 </div>
 
+<!-- 🔥 PENTING: TANPA ../ -->
 <script src="treking.js"></script>
 
 </body>
