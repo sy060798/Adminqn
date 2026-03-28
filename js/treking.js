@@ -47,7 +47,7 @@ function handleFile(e){
 }
 
 // ==========================
-// PARSE ANGKA
+// FORMAT ANGKA
 // ==========================
 function parseNumber(val){
     if(!val) return 0;
@@ -55,7 +55,20 @@ function parseNumber(val){
 }
 
 // ==========================
-// PROSES DATA (FIX KOLOM)
+// FORMAT TANGGAL (FIX)
+// ==========================
+function formatTanggal(val){
+    if(!val || val === 0) return "-";
+
+    if(typeof val === "number"){
+        return XLSX.SSF.format("dd-mmm-yyyy", val);
+    }
+
+    return val;
+}
+
+// ==========================
+// PROSES DATA
 // ==========================
 function processWorkbook(workbook, selectedSheet){
 
@@ -82,11 +95,11 @@ function processWorkbook(workbook, selectedSheet){
             const invoice = row[6];     // G
             const dpp = row[9];         // J
 
-            const tglBayar = row[13];   // N ✅
-            const pembayaran = row[14]; // O ✅
-            const sisaExcel = row[19];  // T ✅
+            const tglBayar = formatTanggal(row[13]); // N ✅
+            const pembayaran = row[14];              // O ✅
+            const sisaExcel = row[19];               // T ✅
 
-            // skip data kosong / header
+            // skip header / kosong
             if(!kota || !periode || !invoice) return;
             if(String(kota).toLowerCase() === "kota") return;
 
@@ -102,7 +115,7 @@ function processWorkbook(workbook, selectedSheet){
                 periode: String(periode),
                 invoice: String(invoice),
                 dpp: dppNum,
-                tglBayar: tglBayar || "-",
+                tglBayar: tglBayar,
                 pembayaran: bayarNum,
                 sisa: sisaNum || (dppNum - bayarNum)
             });
@@ -178,7 +191,7 @@ function renderTable(data){
 }
 
 // ==========================
-// EXPORT
+// EXPORT EXCEL
 // ==========================
 function exportExcel(){
 
