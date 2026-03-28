@@ -1,66 +1,125 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TREKING PEMBAYARAN</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TREKING</title>
 
-<!-- XLSX WAJIB -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="../style.css">
 
-<style>
-body{font-family:Arial;background:#f4f6f9;padding:20px;}
-.container{background:white;padding:20px;border-radius:10px;max-width:1100px;margin:auto;}
-button{padding:10px;margin:5px;cursor:pointer;background:#007bff;color:white;border:none;border-radius:5px;}
-table{width:100%;border-collapse:collapse;margin-top:20px;}
-th,td{border:1px solid #ddd;padding:8px;}
-th{background:#333;color:white;}
-</style>
+    <!-- XLSX -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f9;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        input, select, button {
+            padding: 8px;
+            margin: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        th {
+            background: #333;
+            color: white;
+        }
+
+        .status {
+            margin-top: 10px;
+            font-weight: bold;
+            color: blue;
+        }
+
+        .total {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        button {
+            cursor: pointer;
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="container">
+    <h1>TREKING</h1>
 
-<h2>TREKING PEMBAYARAN</h2>
+    <div class="container">
 
-<input type="file" id="upload">
+        <input type="file" id="upload" accept=".xlsx,.xls">
+        <br>
 
-<select id="sheetSelect"></select>
+        <select id="sheetSelect">
+            <option value="">-- PILIH SHEET --</option>
+        </select>
+        <br>
 
-<input type="text" id="keteranganInput" placeholder="Cari...">
+        <input type="text" id="kotaInput" placeholder="Ketik Kota (contoh: Bali)">
+        <input type="text" id="periodeInput" placeholder="Ketik Periode (contoh: OKTOBER)">
+        <br>
 
-<br>
+        <button id="btnScan">🔄 SCAN DATA</button>
+        <button id="btnExport">⬇ DOWNLOAD EXCEL</button>
 
-<button id="btnScan">SCAN DATA</button>
-<button id="btnExport">DOWNLOAD</button>
+        <div class="status" id="status">Belum ada file</div>
+        <div class="total" id="total"></div>
 
-<div id="status"></div>
-<div id="total"></div>
+        <table>
+            <thead>
+                <tr>
+                    <th>KOTA</th>
+                    <th>PERIODE</th>
+                    <th>NOMOR INVOICE</th>
+                    <th>DPP</th>
+                </tr>
+            </thead>
+            <tbody id="result">
+                <tr>
+                    <td colspan="4" style="text-align:center;">
+                        Belum ada data
+                    </td>
+                </tr>
+            </tbody>
+        </table>
 
-<table>
-<thead>
-<tr>
-<th>KETERANGAN</th>
-<th>INVOICE</th>
-<th>DPP</th>
-<th>TGL BAYAR</th>
-<th>PEMBAYARAN</th>
-<th>SISA</th>
-</tr>
-</thead>
-<tbody id="result"></tbody>
-</table>
+    </div>
 
-</div>
+    <!-- JS UTAMA -->
+    <script src="../js/treking.js" defer></script>
 
-<!-- 🔥 DEBUG JS LOAD -->
-<script>
-console.log("HTML LOADED");
-</script>
-
-<!-- 🔥 PANGGIL JS (HARUS SESUAI NAMA FILE) -->
-<script src="treking.js"></script>
+    <!-- fallback -->
+    <script>
+        if (!window.FileReader) {
+            alert("Browser tidak support upload Excel");
+        }
+    </script>
 
 </body>
 </html>
