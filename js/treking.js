@@ -1,17 +1,22 @@
+document.addEventListener("DOMContentLoaded", function(){
+
 let allData = [];
 let lastFiltered = [];
 let currentWorkbook = null;
 
 // ==========================
-// INIT EVENT
-// ==========================
-document.getElementById('upload').addEventListener('change', handleFile);
-document.getElementById('btnScan').addEventListener('click', applyFilter);
-document.getElementById('btnExport').addEventListener('click', exportExcel);
+const upload = document.getElementById('upload');
+const btnScan = document.getElementById('btnScan');
+const btnExport = document.getElementById('btnExport');
+
+if(upload) upload.addEventListener('change', handleFile);
+if(btnScan) btnScan.addEventListener('click', applyFilter);
+if(btnExport) btnExport.addEventListener('click', exportExcel);
 
 // ==========================
 function setStatus(msg){
-    document.getElementById('status').innerText = msg;
+    const el = document.getElementById('status');
+    if(el) el.innerText = msg;
 }
 
 // ==========================
@@ -49,8 +54,6 @@ function parseNumber(val){
 }
 
 // ==========================
-// PROSES DATA
-// ==========================
 function processWorkbook(workbook, selectedSheet){
 
     allData = [];
@@ -70,28 +73,29 @@ function processWorkbook(workbook, selectedSheet){
 
         rows.forEach(row => {
 
-            const kota = row[3];
-            const periode = row[4];
-            const invoice = row[6];
-            const dpp = row[9];
+            // 🔥 SESUAI EXCEL KAMU
+            const keterangan = row[2];   // C
+            const invoice = row[3];      // D
+            const dpp = row[4];          // E
 
-            // 🔥 TAMBAHAN
-            const tglBayar = row[10];
-            const pembayaran = row[11];
+            const tglBayar = row[13];    // N
+            const pembayaran = row[14];  // O
+            const sisaExcel = row[18];   // S
 
-            if(!kota || !periode || !invoice) return;
-            if(String(kota).toLowerCase() === "kota") return;
+            if(!keterangan || !invoice) return;
+            if(String(keterangan).toLowerCase().includes("keterangan")) return;
+
+            const dppNum = parseNumber(dpp);
+            const bayarNum = parseNumber(pembayaran);
 
             allData.push({
-                sheet: sheetName,
-                kota: String(kota),
-                periode: String(periode),
+                keterangan: String(keterangan),
                 invoice: String(invoice),
-                dpp: parseNumber(dpp),
-
-                // 🔥 BARU
+                dpp: dppNum,
                 tglBayar: tglBayar || "-",
-                pembayaran: parseNumber(pembayaran)
+                pembayaran: bayarNum,
+                sisa: dppNum - bayarNum // pakai hitung otomatis
+                // kalau mau pakai excel: parseNumber(sisaExcel)
             });
 
         });
@@ -101,8 +105,6 @@ function processWorkbook(workbook, selectedSheet){
     console.log("DATA FINAL:", allData);
 }
 
-// ==========================
-// FILTER
 // ==========================
 function applyFilter(){
 
@@ -117,14 +119,10 @@ function applyFilter(){
 
     processWorkbook(currentWorkbook, sheet);
 
-    const kotaKey = document.getElementById('kotaInput').value.toLowerCase();
-    const periodeKey = document.getElementById('periodeInput').value.toLowerCase();
+    const keyword = document.getElementById('keteranganInput').value.toLowerCase();
 
     const filtered = allData.filter(d => {
-        return (
-            (!kotaKey || d.kota.toLowerCase().includes(kotaKey)) &&
-            (!periodeKey || d.periode.toLowerCase().includes(periodeKey))
-        );
+        return (!keyword || d.keterangan.toLowerCase().includes(keyword));
     });
 
     lastFiltered = filtered;
@@ -135,8 +133,6 @@ function applyFilter(){
 }
 
 // ==========================
-// RENDER TABLE
-// ==========================
 function renderTable(data){
 
     let html = "";
@@ -145,46 +141,45 @@ function renderTable(data){
     data.forEach(d=>{
         total += d.dpp;
 
-        const sisa = d.dpp - d.pembayaran;
-        const warna = sisa > 0 ? 'style="color:red;"' : '';
+        const warna = d.sisa > 0 ? 'style="color:red;"' : '';
 
         html += `
         <tr>
-            <td>${d.kota}</td>
-            <td>${d.periode}</td>
+            <td>${d.keterangan}</td>
             <td>${d.invoice}</td>
             <td>${d.dpp.toLocaleString()}</td>
             <td>${d.tglBayar}</td>
             <td>${d.pembayaran.toLocaleString()}</td>
-            <td ${warna}>${sisa.toLocaleString()}</td>
+            <td ${warna}>${d.sisa.toLocaleString()}</td>
         </tr>`;
     });
 
-    document.getElementById('result').innerHTML =
-        html || `<tr><td colspan="7" style="text-align:center;">Tidak ada data</td></tr>`;
+    const result = document.getElementById('result');
+    if(result){
+        result.innerHTML = html || `<tr><td colspan="6">Tidak ada data</td></tr>`;
+    }
 
-    document.getElementById('total').innerText =
-        "Total DPP: " + total.toLocaleString();
+    const totalEl = document.getElementById('total');
+    if(totalEl){
+        totalEl.innerText = "Total DPP: " + total.toLocaleString();
+    }
 }
 
-// ==========================
-// EXPORT EXCEL
 // ==========================
 function exportExcel(){
 
     if(lastFiltered.length === 0){
-        alert("Tidak ada data untuk di export!");
+        alert("Tidak ada data!");
         return;
     }
 
     const exportData = lastFiltered.map(d => ({
-        Kota: d.kota,
-        Periode: d.periode,
+        Keterangan: d.keterangan,
         Invoice: d.invoice,
         DPP: d.dpp,
         Tgl_Pembayaran: d.tglBayar,
         Pembayaran: d.pembayaran,
-        Sisa: d.dpp - d.pembayaran
+        Sisa: d.sisa
     }));
 
     const ws = XLSX.utils.json_to_sheet(exportData);
@@ -194,3 +189,5 @@ function exportExcel(){
 
     XLSX.writeFile(wb, "hasil_treking.xlsx");
 }
+
+});
