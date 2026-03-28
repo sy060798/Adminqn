@@ -55,7 +55,7 @@ function parseNumber(val){
 }
 
 // ==========================
-// FORMAT TANGGAL (FIX)
+// FORMAT TANGGAL
 // ==========================
 function formatTanggal(val){
     if(!val || val === 0) return "-";
@@ -95,9 +95,8 @@ function processWorkbook(workbook, selectedSheet){
             const invoice = row[6];     // G
             const dpp = row[9];         // J
 
-            const tglBayar = formatTanggal(row[13]); // N ✅
-            const pembayaran = row[14];              // O ✅
-            const sisaExcel = row[19];               // T ✅
+            const tglBayar = formatTanggal(row[13]); // N
+            const pembayaran = row[14];              // O
 
             // skip header / kosong
             if(!kota || !periode || !invoice) return;
@@ -107,7 +106,6 @@ function processWorkbook(workbook, selectedSheet){
             if(dppNum === 0) return;
 
             const bayarNum = parseNumber(pembayaran);
-            const sisaNum = parseNumber(sisaExcel);
 
             allData.push({
                 sheet: sheetName,
@@ -116,8 +114,7 @@ function processWorkbook(workbook, selectedSheet){
                 invoice: String(invoice),
                 dpp: dppNum,
                 tglBayar: tglBayar,
-                pembayaran: bayarNum,
-                sisa: sisaNum || (dppNum - bayarNum)
+                pembayaran: bayarNum
             });
 
         });
@@ -179,12 +176,11 @@ function renderTable(data){
             <td>${d.dpp.toLocaleString()}</td>
             <td>${d.tglBayar}</td>
             <td>${d.pembayaran.toLocaleString()}</td>
-            <td>${d.sisa.toLocaleString()}</td>
         </tr>`;
     });
 
     document.getElementById('result').innerHTML =
-        html || `<tr><td colspan="7" style="text-align:center;">Tidak ada data</td></tr>`;
+        html || `<tr><td colspan="6" style="text-align:center;">Tidak ada data</td></tr>`;
 
     document.getElementById('total').innerText =
         "Total DPP: " + total.toLocaleString();
