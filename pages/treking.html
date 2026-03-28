@@ -5,82 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TREKING PEMBAYARAN</title>
 
-<!-- XLSX -->
+<!-- XLSX WAJIB -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
-body{
-    font-family:Arial;
-    background:#f4f6f9;
-    padding:20px;
-    margin:0;
-}
-
-/* 🔥 container aman klik */
-.container{
-    background:white;
-    padding:20px;
-    border-radius:10px;
-    max-width:1100px;
-    margin:auto;
-    position:relative;
-    z-index:10;
-}
-
-/* 🔥 tombol pasti bisa diklik */
-button{
-    padding:10px;
-    margin:5px;
-    cursor:pointer;
-    border:none;
-    background:#007bff;
-    color:white;
-    border-radius:5px;
-    position:relative;
-    z-index:20;
-}
-
-button:hover{
-    background:#0056b3;
-}
-
-input,select{
-    padding:8px;
-    margin:5px;
-}
-
-/* 🔥 table */
-table{
-    width:100%;
-    border-collapse:collapse;
-    margin-top:20px;
-}
-
-th,td{
-    border:1px solid #ddd;
-    padding:8px;
-}
-
-th{
-    background:#333;
-    color:white;
-}
-
-.status{
-    margin-top:10px;
-    font-weight:bold;
-    color:blue;
-}
-
-.total{
-    margin-top:10px;
-    font-weight:bold;
-}
-
-/* 🔥 ANTI OVERLAY */
-*{
-    pointer-events:auto;
-}
+body{font-family:Arial;background:#f4f6f9;padding:20px;}
+.container{background:white;padding:20px;border-radius:10px;max-width:1100px;margin:auto;}
+button{padding:10px;margin:5px;cursor:pointer;background:#007bff;color:white;border:none;border-radius:5px;}
+table{width:100%;border-collapse:collapse;margin-top:20px;}
+th,td{border:1px solid #ddd;padding:8px;}
+th{background:#333;color:white;}
 </style>
 </head>
 
@@ -90,25 +24,19 @@ th{
 
 <h2>TREKING PEMBAYARAN</h2>
 
-<input type="file" id="upload" accept=".xlsx,.xls">
+<input type="file" id="upload">
+
+<select id="sheetSelect"></select>
+
+<input type="text" id="keteranganInput" placeholder="Cari...">
 
 <br>
 
-<select id="sheetSelect">
-<option value="">-- PILIH SHEET --</option>
-</select>
+<button id="btnScan">SCAN DATA</button>
+<button id="btnExport">DOWNLOAD</button>
 
-<br>
-
-<input type="text" id="keteranganInput" placeholder="Cari Keterangan...">
-
-<br>
-
-<button id="btnScan">🔍 SCAN DATA</button>
-<button id="btnExport">⬇ DOWNLOAD EXCEL</button>
-
-<div class="status" id="status">Belum ada file</div>
-<div class="total" id="total"></div>
+<div id="status"></div>
+<div id="total"></div>
 
 <table>
 <thead>
@@ -116,20 +44,22 @@ th{
 <th>KETERANGAN</th>
 <th>INVOICE</th>
 <th>DPP</th>
-<th>TGL PEMBAYARAN</th>
+<th>TGL BAYAR</th>
 <th>PEMBAYARAN</th>
 <th>SISA</th>
 </tr>
 </thead>
-
-<tbody id="result">
-<tr><td colspan="6" style="text-align:center;">Belum ada data</td></tr>
-</tbody>
+<tbody id="result"></tbody>
 </table>
 
 </div>
 
-<!-- 🔥 JS TARUH DI BAWAH -->
+<!-- 🔥 DEBUG JS LOAD -->
+<script>
+console.log("HTML LOADED");
+</script>
+
+<!-- 🔥 PANGGIL JS (HARUS SESUAI NAMA FILE) -->
 <script src="treking.js"></script>
 
 </body>
