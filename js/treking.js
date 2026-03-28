@@ -33,7 +33,6 @@ function handleFile(e){
 
         currentWorkbook = workbook;
 
-        // 🔥 ISI DROPDOWN SHEET
         const sheetSelect = document.getElementById('sheetSelect');
         sheetSelect.innerHTML = '<option value="">-- PILIH SHEET --</option>';
 
@@ -48,7 +47,7 @@ function handleFile(e){
 }
 
 // ==========================
-// PARSE ANGKA (AMAN)
+// PARSE ANGKA
 // ==========================
 function parseNumber(val){
     if(!val) return 0;
@@ -75,24 +74,31 @@ function processWorkbook(workbook, selectedSheet){
 
         rows.forEach(row => {
 
-            // 🔥 POSISI KOLOM SESUAI FILE KAMU
             const kota = row[3];
             const periode = row[4];
             const invoice = row[6];
             const dpp = row[9];
 
-            // skip baris tidak valid
+            // 🔥 TAMBAHAN KOLOM
+            const tglBayar = row[13];     // N
+            const pembayaran = row[14];   // O
+
             if(!kota || !periode || !invoice) return;
 
-            // skip header
             if(String(kota).toLowerCase() === "kota") return;
+
+            const dppNum = parseNumber(dpp);
+            const bayarNum = parseNumber(pembayaran);
 
             allData.push({
                 sheet: sheetName,
                 kota: String(kota),
                 periode: String(periode),
                 invoice: String(invoice),
-                dpp: parseNumber(dpp)
+                dpp: dppNum,
+                tglBayar: tglBayar || "-",
+                pembayaran: bayarNum,
+                sisa: dppNum - bayarNum
             });
 
         });
@@ -116,7 +122,6 @@ function applyFilter(){
 
     setStatus("🔍 Scan data...");
 
-    // 🔥 ambil ulang data dari sheet
     processWorkbook(currentWorkbook, sheet);
 
     const kotaKey = document.getElementById('kotaInput').value.toLowerCase();
@@ -153,11 +158,14 @@ function renderTable(data){
             <td>${d.periode}</td>
             <td>${d.invoice}</td>
             <td>${d.dpp.toLocaleString()}</td>
+            <td>${d.tglBayar}</td>
+            <td>${d.pembayaran.toLocaleString()}</td>
+            <td>${d.sisa.toLocaleString()}</td>
         </tr>`;
     });
 
     document.getElementById('result').innerHTML =
-        html || `<tr><td colspan="4" style="text-align:center;">Tidak ada data</td></tr>`;
+        html || `<tr><td colspan="7" style="text-align:center;">Tidak ada data</td></tr>`;
 
     document.getElementById('total').innerText =
         "Total DPP: " + total.toLocaleString();
