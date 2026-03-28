@@ -3,19 +3,84 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TREKING</title>
+<title>TREKING PEMBAYARAN</title>
 
+<!-- XLSX -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
-body{font-family:Arial;background:#f4f6f9;padding:20px;}
-.container{background:white;padding:20px;border-radius:10px;max-width:1100px;margin:auto;}
-input,select,button{padding:8px;margin:5px;}
-table{width:100%;border-collapse:collapse;margin-top:20px;}
-th,td{border:1px solid #ddd;padding:8px;}
-th{background:#333;color:white;}
-.status{margin-top:10px;font-weight:bold;color:blue;}
-.total{margin-top:10px;font-weight:bold;}
+body{
+    font-family:Arial;
+    background:#f4f6f9;
+    padding:20px;
+    margin:0;
+}
+
+/* 🔥 container aman klik */
+.container{
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    max-width:1100px;
+    margin:auto;
+    position:relative;
+    z-index:10;
+}
+
+/* 🔥 tombol pasti bisa diklik */
+button{
+    padding:10px;
+    margin:5px;
+    cursor:pointer;
+    border:none;
+    background:#007bff;
+    color:white;
+    border-radius:5px;
+    position:relative;
+    z-index:20;
+}
+
+button:hover{
+    background:#0056b3;
+}
+
+input,select{
+    padding:8px;
+    margin:5px;
+}
+
+/* 🔥 table */
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+}
+
+th,td{
+    border:1px solid #ddd;
+    padding:8px;
+}
+
+th{
+    background:#333;
+    color:white;
+}
+
+.status{
+    margin-top:10px;
+    font-weight:bold;
+    color:blue;
+}
+
+.total{
+    margin-top:10px;
+    font-weight:bold;
+}
+
+/* 🔥 ANTI OVERLAY */
+*{
+    pointer-events:auto;
+}
 </style>
 </head>
 
@@ -56,14 +121,15 @@ th{background:#333;color:white;}
 <th>SISA</th>
 </tr>
 </thead>
+
 <tbody id="result">
-<tr><td colspan="6">Belum ada data</td></tr>
+<tr><td colspan="6" style="text-align:center;">Belum ada data</td></tr>
 </tbody>
 </table>
 
 </div>
 
-<!-- 🔥 PENTING: TANPA ../ -->
+<!-- 🔥 JS TARUH DI BAWAH -->
 <script src="treking.js"></script>
 
 </body>
