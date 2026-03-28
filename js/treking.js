@@ -17,7 +17,7 @@ function setStatus(msg){
 }
 
 // ==========================
-// HANDLE FILE UPLOAD
+// HANDLE FILE
 // ==========================
 function handleFile(e){
     const file = e.target.files[0];
@@ -55,7 +55,7 @@ function parseNumber(val){
 }
 
 // ==========================
-// PROSES DATA (ANTI GESER)
+// PROSES DATA (FIX KOLOM)
 // ==========================
 function processWorkbook(workbook, selectedSheet){
 
@@ -74,22 +74,25 @@ function processWorkbook(workbook, selectedSheet){
 
         rows.forEach(row => {
 
-            // 🔥 KOLOM UTAMA
-            const kota = row[3];
-            const periode = row[4];
-            const invoice = row[6];
-            const dpp = row[9];
+            // ======================
+            // MAPPING SESUAI EXCEL
+            // ======================
+            const kota = row[3];        // D
+            const periode = row[4];     // E
+            const invoice = row[6];     // G
+            const dpp = row[9];         // J
 
-            // 🔥 KOLOM PEMBAYARAN (ANTI GESER)
-            const tglBayar = row[12] || row[13] || "-";
-            const pembayaran = row[13] || row[14] || 0;
-            const sisaExcel = row[19]; // kolom T
+            const tglBayar = row[13];   // N ✅
+            const pembayaran = row[14]; // O ✅
+            const sisaExcel = row[19];  // T ✅
 
+            // skip data kosong / header
             if(!kota || !periode || !invoice) return;
-
             if(String(kota).toLowerCase() === "kota") return;
 
             const dppNum = parseNumber(dpp);
+            if(dppNum === 0) return;
+
             const bayarNum = parseNumber(pembayaran);
             const sisaNum = parseNumber(sisaExcel);
 
@@ -99,7 +102,7 @@ function processWorkbook(workbook, selectedSheet){
                 periode: String(periode),
                 invoice: String(invoice),
                 dpp: dppNum,
-                tglBayar: tglBayar,
+                tglBayar: tglBayar || "-",
                 pembayaran: bayarNum,
                 sisa: sisaNum || (dppNum - bayarNum)
             });
@@ -112,7 +115,7 @@ function processWorkbook(workbook, selectedSheet){
 }
 
 // ==========================
-// FILTER + SCAN
+// FILTER
 // ==========================
 function applyFilter(){
 
@@ -175,7 +178,7 @@ function renderTable(data){
 }
 
 // ==========================
-// EXPORT EXCEL
+// EXPORT
 // ==========================
 function exportExcel(){
 
