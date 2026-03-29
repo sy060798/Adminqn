@@ -100,13 +100,18 @@
         <input type="file" id="upload" accept=".xlsx,.xls">
         <br>
 
-        <!-- 🔥 Pilih Sheet + Filter -->
+        <!-- 🔥 Pilih Sheet + Tahun + Filter -->
         <div class="row-flex">
             <select id="sheetSelect">
                 <option value="">-- PILIH SHEET --</option>
             </select>
 
-            <!-- 🔥 GANTI JADI CHECKBOX -->
+            <!-- 🔥 FILTER TAHUN (AUTO DARI EXCEL) -->
+            <select id="tahunSelect">
+                <option value="">-- PILIH TAHUN --</option>
+            </select>
+
+            <!-- 🔥 CHECKBOX TIPE -->
             <div class="filter-box">
                 <label>
                     <input type="checkbox" class="tipeCheck" value="proforma" checked>
