@@ -34,15 +34,29 @@
             margin: 5px;
         }
 
+        /* 🔥 biar rapi sejajar */
+        .row-flex {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        #filterTipe {
+            min-width: 150px;
+            height: 70px;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            table-layout: fixed;
         }
 
         th, td {
             border: 1px solid #ddd;
             padding: 8px;
+            white-space: nowrap;
         }
 
         th {
@@ -77,10 +91,18 @@
         <input type="file" id="upload" accept=".xlsx,.xls">
         <br>
 
-        <!-- Pilih Sheet -->
-        <select id="sheetSelect">
-            <option value="">-- PILIH SHEET --</option>
-        </select>
+        <!-- 🔥 Pilih Sheet + Filter -->
+        <div class="row-flex">
+            <select id="sheetSelect">
+                <option value="">-- PILIH SHEET --</option>
+            </select>
+
+            <!-- 🔥 FILTER MULTI (Excel style) -->
+            <select id="filterTipe" multiple>
+                <option value="proforma">PROFORMA</option>
+                <option value="invoice">INVOICE</option>
+            </select>
+        </div>
         <br>
 
         <!-- Filter -->
@@ -105,7 +127,7 @@
                     <th>NOMOR INVOICE</th>
                     <th>DPP</th>
                     <th style="background:#555;">TOTAL PROFORMA</th>
-                    <th style="background:#444;">TOTAL INVOICE</th> <!-- ✅ TAMBAHAN -->
+                    <th style="background:#444;">TOTAL INVOICE</th>
                     <th>TGL PEMBAYARAN</th>
                     <th>PEMBAYARAN</th>
                 </tr>
