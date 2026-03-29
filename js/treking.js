@@ -7,7 +7,7 @@ document.getElementById('upload').addEventListener('change', handleFile);
 document.getElementById('btnScan').addEventListener('click', applyFilter);
 document.getElementById('btnExport').addEventListener('click', exportExcel);
 
-// 🔥 RESET saat ganti filter (biar tidak nge-lock)
+// reset saat filter berubah
 document.getElementById('sheetSelect').addEventListener('change', resetView);
 document.getElementById('tahunSelect').addEventListener('change', resetView);
 document.querySelectorAll('.tipeCheck').forEach(cb=>{
@@ -42,11 +42,29 @@ function handleFile(e){
 
         currentWorkbook = workbook;
 
+        // isi sheet
         const sheetSelect = document.getElementById('sheetSelect');
         sheetSelect.innerHTML = '<option value="">-- PILIH SHEET --</option>';
 
         workbook.SheetNames.forEach(name=>{
             sheetSelect.innerHTML += `<option value="${name}">${name}</option>`;
+        });
+
+        // 🔥 isi tahun dari nama sheet
+        const tahunSet = new Set();
+
+        workbook.SheetNames.forEach(name => {
+            const match = name.match(/\b(20\d{2})\b/);
+            if(match){
+                tahunSet.add(match[1]);
+            }
+        });
+
+        const tahunSelect = document.getElementById('tahunSelect');
+        tahunSelect.innerHTML = '<option value="">-- PILIH TAHUN --</option>';
+
+        [...tahunSet].sort().forEach(th => {
+            tahunSelect.innerHTML += `<option value="${th}">${th}</option>`;
         });
 
         setStatus("✅ File siap, pilih filter lalu klik SCAN");
@@ -87,8 +105,9 @@ function processWorkbook(workbook, selectedSheet){
 
     sheets.forEach(sheetName => {
 
-        // 🔥 hanya ambil sheet PROFORMA / INVOICE
         const lower = sheetName.toLowerCase();
+
+        // 🔥 hanya ambil proforma & invoice
         if(!lower.includes("proforma") && !lower.includes("invoice")) return;
 
         const sheet = workbook.Sheets[sheetName];
@@ -184,7 +203,7 @@ function applyFilter(){
 
     });
 
-    // 🔥🔥🔥 HAPUS DUPLIKAT BERDASARKAN NOMOR INVOICE
+    // 🔥 HAPUS DUPLIKAT BERDASARKAN INVOICE
     const uniqueMap = {};
     filtered.forEach(d=>{
         if(!uniqueMap[d.invoice]){
