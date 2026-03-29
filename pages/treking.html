@@ -73,24 +73,30 @@
 
     <div class="container">
 
+        <!-- Upload -->
         <input type="file" id="upload" accept=".xlsx,.xls">
         <br>
 
+        <!-- Pilih Sheet -->
         <select id="sheetSelect">
             <option value="">-- PILIH SHEET --</option>
         </select>
         <br>
 
+        <!-- Filter -->
         <input type="text" id="kotaInput" placeholder="Ketik Kota (contoh: Bali)">
         <input type="text" id="periodeInput" placeholder="Ketik Periode (contoh: OKTOBER)">
         <br>
 
+        <!-- Button -->
         <button id="btnScan">🔄 SCAN DATA</button>
         <button id="btnExport">⬇ DOWNLOAD EXCEL</button>
 
+        <!-- Status -->
         <div class="status" id="status">Belum ada file</div>
         <div class="total" id="total"></div>
 
+        <!-- TABLE -->
         <table>
             <thead>
                <tr>
@@ -98,13 +104,14 @@
                     <th>PERIODE</th>
                     <th>NOMOR INVOICE</th>
                     <th>DPP</th>
+                    <th style="background:#555;">TOTAL PROFORMA</th> <!-- ✅ BARU -->
                     <th>TGL PEMBAYARAN</th>
                     <th>PEMBAYARAN</th>
                 </tr>
             </thead>
             <tbody id="result">
                 <tr>
-                    <td colspan="6" style="text-align:center;">
+                    <td colspan="7" style="text-align:center;">
                         Belum ada data
                     </td>
                 </tr>
