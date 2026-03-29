@@ -80,8 +80,8 @@ function processWorkbook(workbook, selectedSheet){
             const invoice = row[6];
 
             const dpp = row[9];
-            const totalProforma = row[10]; // 👉 kemungkinan PPN
-            const totalInvoice = row[11];  // 👉 kemungkinan PPN
+            const totalProforma = row[10]; // PPN Proforma
+            const totalInvoice = row[11];  // PPN Invoice
 
             const tglBayar = formatTanggal(row[13]);
             const pembayaran = row[14];
@@ -95,7 +95,7 @@ function processWorkbook(workbook, selectedSheet){
             const bayarNum = parseNumber(pembayaran);
             const isProforma = sheetName.toLowerCase().includes("proforma");
 
-            // 🔥 FIX UTAMA DI SINI
+            // 🔥 FIX HITUNG TOTAL
             const ppnProforma = parseNumber(totalProforma);
             const ppnInvoice = parseNumber(totalInvoice);
 
@@ -138,10 +138,23 @@ function applyFilter(){
     const kotaKey = document.getElementById('kotaInput').value.toLowerCase();
     const periodeKey = document.getElementById('periodeInput').value.toLowerCase();
 
+    // 🔥 FILTER TAMBAHAN (MULTI SELECT)
+    const tipeSelect = document.getElementById('filterTipe');
+    const selectedTipe = tipeSelect
+        ? Array.from(tipeSelect.selectedOptions).map(o => o.value)
+        : [];
+
     const filtered = allData.filter(d => {
+
+        const matchTipe =
+            selectedTipe.length === 0 ||
+            (selectedTipe.includes("proforma") && d.totalProforma > 0) ||
+            (selectedTipe.includes("invoice") && d.totalInvoice > 0);
+
         return (
             (!kotaKey || d.kota.toLowerCase().includes(kotaKey)) &&
-            (!periodeKey || d.periode.toLowerCase().includes(periodeKey))
+            (!periodeKey || d.periode.toLowerCase().includes(periodeKey)) &&
+            matchTipe
         );
     });
 
