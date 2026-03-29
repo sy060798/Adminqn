@@ -42,7 +42,7 @@ function handleFile(e){
 
         currentWorkbook = workbook;
 
-        // isi sheet
+        // sheet
         const sheetSelect = document.getElementById('sheetSelect');
         sheetSelect.innerHTML = '<option value="">-- PILIH SHEET --</option>';
 
@@ -50,7 +50,7 @@ function handleFile(e){
             sheetSelect.innerHTML += `<option value="${name}">${name}</option>`;
         });
 
-        // 🔥 isi tahun dari nama sheet
+        // tahun
         const tahunSet = new Set();
 
         workbook.SheetNames.forEach(name => {
@@ -67,7 +67,7 @@ function handleFile(e){
             tahunSelect.innerHTML += `<option value="${th}">${th}</option>`;
         });
 
-        setStatus("✅ File siap, pilih filter lalu klik SCAN");
+        setStatus("✅ File siap, klik SCAN DATA");
     };
 
     reader.readAsArrayBuffer(file);
@@ -107,7 +107,7 @@ function processWorkbook(workbook, selectedSheet){
 
         const lower = sheetName.toLowerCase();
 
-        // 🔥 hanya ambil proforma & invoice
+        // hanya proforma & invoice
         if(!lower.includes("proforma") && !lower.includes("invoice")) return;
 
         const sheet = workbook.Sheets[sheetName];
@@ -119,32 +119,35 @@ function processWorkbook(workbook, selectedSheet){
 
         rows.forEach(row => {
 
-            const kota = row[3];
-            const periode = row[4];
-            const invoice = row[6];
+            let kota = row[3];
+            let periode = row[4];
+            let invoice = row[6];
 
-            const dpp = row[9];
-            const totalProforma = row[10];
-            const totalInvoice = row[11];
+            let dpp = 0;
+            let totalProforma = 0;
+            let totalInvoice = 0;
 
             const tglBayar = formatTanggal(row[13]);
             const pembayaran = row[14];
 
+            if(lower.includes("proforma")){
+                // 🔥 FIX PROFORMA (SESUAI EXCEL KAMU)
+                dpp = row[7];               // H = DPP
+                totalProforma = row[10];   // K = TOTAL FINAL
+                invoice = row[6];          // nomor proforma
+            }else{
+                // 🔥 INVOICE NORMAL
+                dpp = row[9];
+                totalInvoice = row[11];
+            }
+
             if(!kota || !periode || !invoice) return;
-            if(String(kota).toLowerCase() === "kota") return;
+            if(String(kota).toLowerCase().includes("kota")) return;
 
             const dppNum = parseNumber(dpp);
             if(dppNum === 0) return;
 
             const bayarNum = parseNumber(pembayaran);
-
-            const isProforma = lower.includes("proforma");
-
-            const ppnProforma = parseNumber(totalProforma);
-            const ppnInvoice = parseNumber(totalInvoice);
-
-            const totalProformaFix = ppnProforma ? dppNum + ppnProforma : 0;
-            const totalInvoiceFix = ppnInvoice ? dppNum + ppnInvoice : 0;
 
             const tahun =
                 extractTahun(periode) ||
@@ -157,19 +160,17 @@ function processWorkbook(workbook, selectedSheet){
                 periode: String(periode),
                 invoice: String(invoice),
                 dpp: dppNum,
-                totalProforma: isProforma ? totalProformaFix : 0,
-                totalInvoice: !isProforma ? totalInvoiceFix : 0,
+                totalProforma: parseNumber(totalProforma), // 🔥 TIDAK DIUBAH LAGI
+                totalInvoice: parseNumber(totalInvoice),
                 tglBayar: tglBayar,
                 pembayaran: bayarNum,
-                tipe: isProforma ? "proforma" : "invoice",
+                tipe: lower.includes("proforma") ? "proforma" : "invoice",
                 tahun: tahun
             });
 
         });
 
     });
-
-    console.log("DATA RAW:", allData);
 }
 
 // ==========================
@@ -193,17 +194,15 @@ function applyFilter(){
         .map(el => el.value);
 
     let filtered = allData.filter(d => {
-
         return (
             (!kotaKey || d.kota.toLowerCase().includes(kotaKey)) &&
             (!periodeKey || d.periode.toLowerCase().includes(periodeKey)) &&
             (!tahunKey || d.tahun === tahunKey) &&
             (tipeChecked.length === 0 || tipeChecked.includes(d.tipe))
         );
-
     });
 
-    // 🔥 HAPUS DUPLIKAT BERDASARKAN INVOICE
+    // 🔥 HAPUS DUPLIKAT INVOICE
     const uniqueMap = {};
     filtered.forEach(d=>{
         if(!uniqueMap[d.invoice]){
