@@ -58,6 +58,13 @@ function formatTanggal(val){
 }
 
 // ==========================
+// 🔥 AMBIL TAHUN DARI TEXT
+function extractYear(text){
+    const match = String(text).match(/\b(20\d{2})\b/);
+    return match ? match[1] : null;
+}
+
+// ==========================
 function processWorkbook(workbook, selectedSheet){
 
     allData = [];
@@ -118,6 +125,24 @@ function processWorkbook(workbook, selectedSheet){
 
     });
 
+    // ==========================
+    // 🔥 AUTO ISI DROPDOWN TAHUN
+    const tahunSet = new Set();
+
+    allData.forEach(d => {
+        const th = extractYear(d.periode);
+        if(th) tahunSet.add(th);
+    });
+
+    const tahunSelect = document.getElementById('tahunSelect');
+    if(tahunSelect){
+        tahunSelect.innerHTML = '<option value="">-- PILIH TAHUN --</option>';
+
+        [...tahunSet].sort().forEach(th => {
+            tahunSelect.innerHTML += `<option value="${th}">${th}</option>`;
+        });
+    }
+
     console.log("DATA FINAL:", allData);
 }
 
@@ -137,8 +162,9 @@ function applyFilter(){
 
     const kotaKey = document.getElementById('kotaInput').value.toLowerCase();
     const periodeKey = document.getElementById('periodeInput').value.toLowerCase();
+    const tahunKey = document.getElementById('tahunSelect')?.value || "";
 
-    // 🔥 FILTER DARI CHECKBOX (PROFORMA / INVOICE)
+    // 🔥 FILTER CHECKBOX
     const selectedTipe = Array.from(document.querySelectorAll('.tipeCheck:checked'))
         .map(el => el.value);
 
@@ -149,9 +175,12 @@ function applyFilter(){
             (selectedTipe.includes("proforma") && d.totalProforma > 0) ||
             (selectedTipe.includes("invoice") && d.totalInvoice > 0);
 
+        const tahunData = extractYear(d.periode);
+
         return (
             (!kotaKey || d.kota.toLowerCase().includes(kotaKey)) &&
             (!periodeKey || d.periode.toLowerCase().includes(periodeKey)) &&
+            (!tahunKey || tahunData === tahunKey) &&
             matchTipe
         );
     });
