@@ -16,20 +16,23 @@ document.querySelectorAll('.tipeCheck').forEach(el => {
     el.addEventListener('change', applyFilter);
 });
 
-// 🔥 GANTI SHEET (FIX TOTAL)
+// 🔥 GANTI SHEET (RESET TOTAL)
 document.getElementById('sheetSelect').addEventListener('change', function(){
     if(!currentWorkbook) return;
 
     setStatus("🔄 Memuat sheet...");
 
-    // 🔥 RESET SEMUA FILTER (BIAR TIDAK NGUNCI)
+    // 🔥 RESET FILTER (BIAR TIDAK NGUNCI)
     document.getElementById('tahunSelect').value = "";
     document.getElementById('kotaInput').value = "";
     document.getElementById('periodeInput').value = "";
 
+    // 🔥 DEFAULT CHECKBOX = AKTIF SEMUA
+    document.querySelectorAll('.tipeCheck').forEach(el => el.checked = true);
+
     processWorkbook(currentWorkbook, this.value);
 
-    // 🔥 TAMPILKAN DATA LANGSUNG TANPA FILTER LAMA
+    // tampilkan semua data
     renderTable(allData);
 
     setStatus(`✅ Sheet dimuat (${allData.length} data)`);
@@ -129,7 +132,7 @@ function processWorkbook(workbook, selectedSheet){
         const bayarNum = parseNumber(pembayaran);
         const isProforma = selectedSheet.toLowerCase().includes("proforma");
 
-        // 🔥 FIX TOTAL (DPP + PPN)
+        // 🔥 FIX TOTAL
         const ppnProforma = parseNumber(totalProforma);
         const ppnInvoice = parseNumber(totalInvoice);
 
@@ -154,7 +157,7 @@ function processWorkbook(workbook, selectedSheet){
 
     });
 
-    // 🔥 UPDATE DROPDOWN TAHUN (TIDAK NGUNCI)
+    // 🔥 UPDATE TAHUN (TIDAK NGUNCI)
     const tahunSelect = document.getElementById('tahunSelect');
     tahunSelect.innerHTML = '<option value="">-- PILIH TAHUN --</option>';
 
@@ -163,8 +166,6 @@ function processWorkbook(workbook, selectedSheet){
         .forEach(t => {
             tahunSelect.innerHTML += `<option value="${t}">${t}</option>`;
         });
-
-    console.log("DATA:", allData.length);
 }
 
 // ==========================
@@ -181,10 +182,14 @@ function applyFilter(){
 
     const filtered = allData.filter(d => {
 
-        const matchTipe =
-            selectedTipe.length === 0 ||
-            (selectedTipe.includes("proforma") && d.totalProforma > 0) ||
-            (selectedTipe.includes("invoice") && d.totalInvoice > 0);
+        // 🔥 FIX INDEPENDEN CHECKBOX
+        let matchTipe = true;
+
+        if(selectedTipe.length > 0){
+            matchTipe =
+                (selectedTipe.includes("proforma") && d.totalProforma > 0) ||
+                (selectedTipe.includes("invoice") && d.totalInvoice > 0);
+        }
 
         const tahunData = extractYear(d.periode);
 
