@@ -126,3 +126,89 @@ div[style*="position: fixed"],
 div[style*="position: absolute"] {
   pointer-events: auto;
 }
+
+
+/* ===================== */
+/* FIX TABLE AGAR SEJAJAR */
+/* ===================== */
+table {
+  margin-top: 25px;
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed; /* 🔥 WAJIB BIAR KOLOM GA LONCAT */
+}
+
+th, td {
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+  white-space: nowrap; /* 🔥 BIAR GA TURUN BARIS */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Lebar kolom biar konsisten */
+th:nth-child(1), td:nth-child(1) { width: 150px; }
+th:nth-child(2), td:nth-child(2) { width: 120px; }
+th:nth-child(3), td:nth-child(3) { width: 140px; }
+th:nth-child(4), td:nth-child(4) { width: 120px; text-align:right; }
+th:nth-child(5), td:nth-child(5) { width: 140px; text-align:right; }
+th:nth-child(6), td:nth-child(6) { width: 140px; text-align:right; }
+th:nth-child(7), td:nth-child(7) { width: 130px; }
+th:nth-child(8), td:nth-child(8) { width: 140px; text-align:right; }
+
+/* ===================== */
+/* FIX BUG LAYER ANEH (PENTING BANGET) */
+/* ===================== */
+
+/* 🔥 cegah elemen random nutup layar */
+body {
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* hapus kemungkinan overlay liar */
+body::before,
+body::after {
+  content: none !important;
+}
+
+/* matikan elemen aneh dari luar */
+img, video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* paksa semua elemen tidak keluar container */
+.container {
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+}
+
+/* ===================== */
+/* RAPIIIN BUTTON & UI */
+/* ===================== */
+button {
+  padding: 10px 16px;
+  background: #2c7be5;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: 5px;
+  transition: 0.2s;
+}
+
+button:hover {
+  background: #1a68d1;
+  transform: translateY(-1px);
+}
+
+/* ===================== */
+/* TABLE HOVER HALUS */
+/* ===================== */
+tr:hover {
+  background: #f1f3f7;
+  transition: 0.2s;
+}
