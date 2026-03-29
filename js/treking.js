@@ -80,7 +80,7 @@ function processWorkbook(workbook, selectedSheet){
             const invoice = row[6];
 
             const dpp = row[9];
-            const totalProforma = row[10]; // ✅ KOLOM TOTAL PROFORMA (sesuaikan jika beda)
+            const totalProforma = row[10];
 
             const tglBayar = formatTanggal(row[13]);
             const pembayaran = row[14];
@@ -90,22 +90,18 @@ function processWorkbook(workbook, selectedSheet){
 
             let dppFix = 0;
 
-            // 🔍 Deteksi jenis sheet
             const isProforma = sheetName.toLowerCase().includes("proforma");
 
             if(isProforma){
-                // ✅ PROFORMA → ambil dari TOTAL PROFORMA
                 const totalNum = parseNumber(totalProforma);
                 if(totalNum === 0) return;
 
                 dppFix = totalNum;
-
             } else {
-                // ✅ INVOICE → DPP + PPN 11%
                 const dppNum = parseNumber(dpp);
                 if(dppNum === 0) return;
 
-                dppFix = Math.round(dppNum * 1.11);
+                dppFix = dppNum; // ✅ FIX: TANPA PPN
             }
 
             const bayarNum = parseNumber(pembayaran);
@@ -116,7 +112,7 @@ function processWorkbook(workbook, selectedSheet){
                 periode: String(periode),
                 invoice: String(invoice),
                 dpp: dppFix,
-                totalProforma: parseNumber(totalProforma), // ✅ tambahan
+                totalProforma: parseNumber(totalProforma),
                 tglBayar: tglBayar,
                 pembayaran: bayarNum
             });
@@ -184,7 +180,7 @@ function renderTable(data){
         html || `<tr><td colspan="7" style="text-align:center;">Tidak ada data</td></tr>`;
 
     document.getElementById('total').innerText =
-        "Total DPP (Include PPN / Proforma): " + total.toLocaleString();
+        "Total DPP: " + total.toLocaleString();
 }
 
 // ==========================
@@ -199,7 +195,7 @@ function exportExcel(){
         Kota: d.kota,
         Periode: d.periode,
         Invoice: d.invoice,
-        DPP_Include_PPN: d.dpp,
+        DPP: d.dpp,
         Total_Proforma: d.totalProforma,
         Tgl_Bayar: d.tglBayar,
         Pembayaran: d.pembayaran
