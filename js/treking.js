@@ -81,6 +81,7 @@ function processWorkbook(workbook, selectedSheet){
 
             const dpp = row[9];
             const totalProforma = row[10];
+            const totalInvoice = row[11];
 
             const tglBayar = formatTanggal(row[13]);
             const pembayaran = row[14];
@@ -88,31 +89,22 @@ function processWorkbook(workbook, selectedSheet){
             if(!kota || !periode || !invoice) return;
             if(String(kota).toLowerCase() === "kota") return;
 
-            let dppFix = 0;
-
-            const isProforma = sheetName.toLowerCase().includes("proforma");
-
-            if(isProforma){
-                const totalNum = parseNumber(totalProforma);
-                if(totalNum === 0) return;
-
-                dppFix = totalNum;
-            } else {
-                const dppNum = parseNumber(dpp);
-                if(dppNum === 0) return;
-
-                dppFix = dppNum; // ✅ FIX: TANPA PPN
-            }
+            // ✅ DPP = nilai asli (tanpa PPN)
+            const dppNum = parseNumber(dpp);
+            if(dppNum === 0) return;
 
             const bayarNum = parseNumber(pembayaran);
+
+            const isProforma = sheetName.toLowerCase().includes("proforma");
 
             allData.push({
                 sheet: sheetName,
                 kota: String(kota),
                 periode: String(periode),
                 invoice: String(invoice),
-                dpp: dppFix,
-                totalProforma: parseNumber(totalProforma),
+                dpp: dppNum,
+                totalProforma: isProforma ? parseNumber(totalProforma) : 0,
+                totalInvoice: !isProforma ? parseNumber(totalInvoice) : 0,
                 tglBayar: tglBayar,
                 pembayaran: bayarNum
             });
@@ -171,13 +163,14 @@ function renderTable(data){
             <td>${d.invoice}</td>
             <td>${d.dpp.toLocaleString()}</td>
             <td>${d.totalProforma ? d.totalProforma.toLocaleString() : '-'}</td>
+            <td>${d.totalInvoice ? d.totalInvoice.toLocaleString() : '-'}</td>
             <td>${d.tglBayar}</td>
             <td>${d.pembayaran.toLocaleString()}</td>
         </tr>`;
     });
 
     document.getElementById('result').innerHTML =
-        html || `<tr><td colspan="7" style="text-align:center;">Tidak ada data</td></tr>`;
+        html || `<tr><td colspan="8" style="text-align:center;">Tidak ada data</td></tr>`;
 
     document.getElementById('total').innerText =
         "Total DPP: " + total.toLocaleString();
@@ -197,6 +190,7 @@ function exportExcel(){
         Invoice: d.invoice,
         DPP: d.dpp,
         Total_Proforma: d.totalProforma,
+        Total_Invoice: d.totalInvoice,
         Tgl_Bayar: d.tglBayar,
         Pembayaran: d.pembayaran
     }));
