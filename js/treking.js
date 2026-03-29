@@ -78,7 +78,9 @@ function processWorkbook(workbook, selectedSheet){
             const kota = row[3];
             const periode = row[4];
             const invoice = row[6];
+
             const dpp = row[9];
+            const totalProforma = row[10]; // ✅ KOLOM TOTAL PROFORMA (sesuaikan jika beda)
 
             const tglBayar = formatTanggal(row[13]);
             const pembayaran = row[14];
@@ -86,11 +88,25 @@ function processWorkbook(workbook, selectedSheet){
             if(!kota || !periode || !invoice) return;
             if(String(kota).toLowerCase() === "kota") return;
 
-            const dppNum = parseNumber(dpp);
-            if(dppNum === 0) return;
+            let dppFix = 0;
 
-            // ✅ LANGSUNG INCLUDE PPN 11%
-            const dppFix = Math.round(dppNum * 1.11);
+            // 🔍 Deteksi jenis sheet
+            const isProforma = sheetName.toLowerCase().includes("proforma");
+
+            if(isProforma){
+                // ✅ PROFORMA → ambil dari TOTAL PROFORMA
+                const totalNum = parseNumber(totalProforma);
+                if(totalNum === 0) return;
+
+                dppFix = totalNum;
+
+            } else {
+                // ✅ INVOICE → DPP + PPN 11%
+                const dppNum = parseNumber(dpp);
+                if(dppNum === 0) return;
+
+                dppFix = Math.round(dppNum * 1.11);
+            }
 
             const bayarNum = parseNumber(pembayaran);
 
@@ -100,6 +116,7 @@ function processWorkbook(workbook, selectedSheet){
                 periode: String(periode),
                 invoice: String(invoice),
                 dpp: dppFix,
+                totalProforma: parseNumber(totalProforma), // ✅ tambahan
                 tglBayar: tglBayar,
                 pembayaran: bayarNum
             });
@@ -157,16 +174,17 @@ function renderTable(data){
             <td>${d.periode}</td>
             <td>${d.invoice}</td>
             <td>${d.dpp.toLocaleString()}</td>
+            <td>${d.totalProforma ? d.totalProforma.toLocaleString() : '-'}</td>
             <td>${d.tglBayar}</td>
             <td>${d.pembayaran.toLocaleString()}</td>
         </tr>`;
     });
 
     document.getElementById('result').innerHTML =
-        html || `<tr><td colspan="6" style="text-align:center;">Tidak ada data</td></tr>`;
+        html || `<tr><td colspan="7" style="text-align:center;">Tidak ada data</td></tr>`;
 
     document.getElementById('total').innerText =
-        "Total DPP (Include PPN 11%): " + total.toLocaleString();
+        "Total DPP (Include PPN / Proforma): " + total.toLocaleString();
 }
 
 // ==========================
@@ -182,6 +200,7 @@ function exportExcel(){
         Periode: d.periode,
         Invoice: d.invoice,
         DPP_Include_PPN: d.dpp,
+        Total_Proforma: d.totalProforma,
         Tgl_Bayar: d.tglBayar,
         Pembayaran: d.pembayaran
     }));
