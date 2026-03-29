@@ -87,9 +87,6 @@ function processWorkbook(workbook, selectedSheet){
 
         rows.forEach(row => {
 
-            // ======================
-            // MAPPING SESUAI EXCEL
-            // ======================
             const kota = row[3];        // D
             const periode = row[4];     // E
             const invoice = row[6];     // G
@@ -98,12 +95,15 @@ function processWorkbook(workbook, selectedSheet){
             const tglBayar = formatTanggal(row[13]); // N
             const pembayaran = row[14];              // O
 
-            // skip header / kosong
             if(!kota || !periode || !invoice) return;
             if(String(kota).toLowerCase() === "kota") return;
 
             const dppNum = parseNumber(dpp);
             if(dppNum === 0) return;
+
+            // ✅ TAMBAHAN PPN
+            const ppnAmount = dppNum * 0.11;
+            const dppPlusPpn = dppNum * 1.11;
 
             const bayarNum = parseNumber(pembayaran);
 
@@ -113,6 +113,8 @@ function processWorkbook(workbook, selectedSheet){
                 periode: String(periode),
                 invoice: String(invoice),
                 dpp: dppNum,
+                ppn: ppnAmount,
+                totalDppPpn: dppPlusPpn,
                 tglBayar: tglBayar,
                 pembayaran: bayarNum
             });
@@ -164,9 +166,13 @@ function renderTable(data){
 
     let html = "";
     let total = 0;
+    let totalPPN = 0;
+    let totalAll = 0;
 
     data.forEach(d=>{
         total += d.dpp;
+        totalPPN += d.ppn;
+        totalAll += d.totalDppPpn;
 
         html += `
         <tr>
@@ -174,17 +180,22 @@ function renderTable(data){
             <td>${d.periode}</td>
             <td>${d.invoice}</td>
             <td>${d.dpp.toLocaleString()}</td>
+            <td>${d.ppn.toLocaleString()}</td>
+            <td>${d.totalDppPpn.toLocaleString()}</td>
             <td>${d.tglBayar}</td>
             <td>${d.pembayaran.toLocaleString()}</td>
         </tr>`;
     });
 
     document.getElementById('result').innerHTML =
-        html || `<tr><td colspan="6" style="text-align:center;">Tidak ada data</td></tr>`;
+        html || `<tr><td colspan="8" style="text-align:center;">Tidak ada data</td></tr>`;
 
     document.getElementById('total').innerText =
-        "Total DPP: " + total.toLocaleString();
+        "Total DPP: " + total.toLocaleString() +
+        " | Total PPN: " + totalPPN.toLocaleString() +
+        " | Grand Total: " + totalAll.toLocaleString();
 }
+
 // ==========================
 // EXPORT EXCEL
 // ==========================
@@ -195,7 +206,18 @@ function exportExcel(){
         return;
     }
 
-    const ws = XLSX.utils.json_to_sheet(lastFiltered);
+    const exportData = lastFiltered.map(d => ({
+        Kota: d.kota,
+        Periode: d.periode,
+        Invoice: d.invoice,
+        DPP: d.dpp,
+        PPN_11: d.ppn,
+        Total_DPP_PPN: d.totalDppPpn,
+        Tgl_Bayar: d.tglBayar,
+        Pembayaran: d.pembayaran
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
 
     XLSX.utils.book_append_sheet(wb, ws, "HASIL");
