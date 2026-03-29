@@ -80,8 +80,8 @@ function processWorkbook(workbook, selectedSheet){
             const invoice = row[6];
 
             const dpp = row[9];
-            const totalProforma = row[10]; // PPN Proforma
-            const totalInvoice = row[11];  // PPN Invoice
+            const totalProforma = row[10];
+            const totalInvoice = row[11];
 
             const tglBayar = formatTanggal(row[13]);
             const pembayaran = row[14];
@@ -95,7 +95,7 @@ function processWorkbook(workbook, selectedSheet){
             const bayarNum = parseNumber(pembayaran);
             const isProforma = sheetName.toLowerCase().includes("proforma");
 
-            // 🔥 FIX HITUNG TOTAL
+            // 🔥 hitung total (DPP + PPN)
             const ppnProforma = parseNumber(totalProforma);
             const ppnInvoice = parseNumber(totalInvoice);
 
@@ -138,11 +138,9 @@ function applyFilter(){
     const kotaKey = document.getElementById('kotaInput').value.toLowerCase();
     const periodeKey = document.getElementById('periodeInput').value.toLowerCase();
 
-    // 🔥 FILTER TAMBAHAN (MULTI SELECT)
-    const tipeSelect = document.getElementById('filterTipe');
-    const selectedTipe = tipeSelect
-        ? Array.from(tipeSelect.selectedOptions).map(o => o.value)
-        : [];
+    // 🔥 FILTER DARI CHECKBOX (PROFORMA / INVOICE)
+    const selectedTipe = Array.from(document.querySelectorAll('.tipeCheck:checked'))
+        .map(el => el.value);
 
     const filtered = allData.filter(d => {
 
