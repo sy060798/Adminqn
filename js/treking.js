@@ -3,7 +3,6 @@ let lastFiltered = [];
 let currentWorkbook = null;
 
 // ==========================
-// EVENT UTAMA
 document.getElementById('upload').addEventListener('change', handleFile);
 document.getElementById('btnScan').addEventListener('click', applyFilter);
 document.getElementById('btnExport').addEventListener('click', exportExcel);
@@ -17,12 +16,20 @@ document.querySelectorAll('.tipeCheck').forEach(el => {
     el.addEventListener('change', applyFilter);
 });
 
-// 🔥 LOAD ULANG SAAT GANTI SHEET (BIAR TIDAK LAG)
+// 🔥 FIX ANTI LAG SAAT GANTI SHEET
 document.getElementById('sheetSelect').addEventListener('change', function(){
     if(!currentWorkbook) return;
 
     setStatus("🔄 Memuat sheet...");
+
+    // 🔥 RESET SEMUA FILTER (BIAR GA NYANGKUT)
+    document.getElementById('tahunSelect').value = "";
+    document.getElementById('kotaInput').value = "";
+    document.getElementById('periodeInput').value = "";
+
+    // reload data hanya 1 sheet (ringan)
     processWorkbook(currentWorkbook, this.value);
+
     applyFilter();
 });
 
@@ -77,7 +84,6 @@ function formatTanggal(val){
 }
 
 // ==========================
-// 🔥 AMBIL TAHUN
 function extractYear(text){
     const str = String(text);
     const match = str.match(/20\d{2}/);
@@ -90,94 +96,81 @@ function processWorkbook(workbook, selectedSheet){
     allData = [];
     let tahunSet = new Set();
 
-    const sheets = selectedSheet ? [selectedSheet] : workbook.SheetNames;
+    if(!selectedSheet) return; // 🔥 jangan load semua sheet (anti lag)
 
-    sheets.forEach(sheetName => {
+    const sheet = workbook.Sheets[selectedSheet];
 
-        const sheet = workbook.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(sheet, {
+        header: 1,
+        defval: ""
+    });
 
-        const rows = XLSX.utils.sheet_to_json(sheet, {
-            header: 1,
-            defval: ""
-        });
+    rows.forEach(row => {
 
-        rows.forEach(row => {
+        const kota = row[3];
+        const periode = row[4];
+        const invoice = row[6];
 
-            const kota = row[3];
-            const periode = row[4];
-            const invoice = row[6];
+        const dpp = row[9];
+        const totalProforma = row[10];
+        const totalInvoice = row[11];
 
-            const dpp = row[9];
-            const totalProforma = row[10];
-            const totalInvoice = row[11];
+        const tglBayar = formatTanggal(row[13]);
+        const pembayaran = row[14];
 
-            const tglBayar = formatTanggal(row[13]);
-            const pembayaran = row[14];
+        if(!kota || !periode || !invoice) return;
+        if(String(kota).toLowerCase() === "kota") return;
 
-            if(!kota || !periode || !invoice) return;
-            if(String(kota).toLowerCase() === "kota") return;
+        const dppNum = parseNumber(dpp);
+        if(dppNum === 0) return;
 
-            const dppNum = parseNumber(dpp);
-            if(dppNum === 0) return;
+        const bayarNum = parseNumber(pembayaran);
+        const isProforma = selectedSheet.toLowerCase().includes("proforma");
 
-            const bayarNum = parseNumber(pembayaran);
-            const isProforma = sheetName.toLowerCase().includes("proforma");
+        const ppnProforma = parseNumber(totalProforma);
+        const ppnInvoice = parseNumber(totalInvoice);
 
-            // 🔥 FIX TOTAL (DPP + PPN)
-            const ppnProforma = parseNumber(totalProforma);
-            const ppnInvoice = parseNumber(totalInvoice);
+        const totalProformaFix = ppnProforma ? dppNum + ppnProforma : 0;
+        const totalInvoiceFix = ppnInvoice ? dppNum + ppnInvoice : 0;
 
-            const totalProformaFix = ppnProforma ? dppNum + ppnProforma : 0;
-            const totalInvoiceFix = ppnInvoice ? dppNum + ppnInvoice : 0;
+        // 🔥 AMBIL TAHUN (HANYA PROFORMA & INVOICE)
+        const sheetLower = selectedSheet.toLowerCase();
+        if(sheetLower.includes("proforma") || sheetLower.includes("invoice")){
+            const tahun = extractYear(periode);
+            if(tahun) tahunSet.add(tahun);
+        }
 
-            // 🔥 AMBIL TAHUN HANYA DARI PROFORMA & INVOICE
-            const sheetLower = sheetName.toLowerCase();
-            if(sheetLower.includes("proforma") || sheetLower.includes("invoice")){
-                const tahun = extractYear(periode);
-                if(tahun) tahunSet.add(tahun);
-            }
-
-            allData.push({
-                sheet: sheetName,
-                kota: String(kota),
-                periode: String(periode),
-                invoice: String(invoice),
-                dpp: dppNum,
-                totalProforma: isProforma ? totalProformaFix : 0,
-                totalInvoice: !isProforma ? totalInvoiceFix : 0,
-                tglBayar: tglBayar,
-                pembayaran: bayarNum
-            });
-
+        allData.push({
+            sheet: selectedSheet,
+            kota: String(kota),
+            periode: String(periode),
+            invoice: String(invoice),
+            dpp: dppNum,
+            totalProforma: isProforma ? totalProformaFix : 0,
+            totalInvoice: !isProforma ? totalInvoiceFix : 0,
+            tglBayar: tglBayar,
+            pembayaran: bayarNum
         });
 
     });
 
-    // 🔥 UPDATE DROPDOWN TAHUN (TIDAK RESET PILIHAN)
+    // 🔥 UPDATE TAHUN (ringan)
     const tahunSelect = document.getElementById('tahunSelect');
-    const selectedValue = tahunSelect.value;
-
     tahunSelect.innerHTML = '<option value="">-- PILIH TAHUN --</option>';
 
     Array.from(tahunSet)
-        .sort()
+        .sort((a,b)=>b-a)
         .forEach(t => {
             tahunSelect.innerHTML += `<option value="${t}">${t}</option>`;
         });
 
-    if(selectedValue){
-        tahunSelect.value = selectedValue;
-    }
-
-    console.log("DATA FINAL:", allData);
+    console.log("DATA:", allData.length);
 }
 
 // ==========================
 function applyFilter(){
 
     if(!currentWorkbook) return;
-
-    setStatus("🔄 Memfilter...");
 
     const kotaKey = document.getElementById('kotaInput').value.toLowerCase();
     const periodeKey = document.getElementById('periodeInput').value.toLowerCase();
