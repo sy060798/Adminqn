@@ -39,11 +39,20 @@
             display: flex;
             flex-wrap: wrap;
             align-items: center;
+            gap: 10px;
         }
 
-        #filterTipe {
-            min-width: 150px;
-            height: 70px;
+        /* 🔥 checkbox style */
+        .filter-box {
+            border: 1px solid #ccc;
+            padding: 6px 10px;
+            border-radius: 6px;
+            background: #fafafa;
+        }
+
+        .filter-box label {
+            margin-right: 10px;
+            cursor: pointer;
         }
 
         table {
@@ -97,11 +106,17 @@
                 <option value="">-- PILIH SHEET --</option>
             </select>
 
-            <!-- 🔥 FILTER MULTI (Excel style) -->
-            <select id="filterTipe" multiple>
-                <option value="proforma">PROFORMA</option>
-                <option value="invoice">INVOICE</option>
-            </select>
+            <!-- 🔥 GANTI JADI CHECKBOX -->
+            <div class="filter-box">
+                <label>
+                    <input type="checkbox" class="tipeCheck" value="proforma" checked>
+                    PROFORMA
+                </label>
+                <label>
+                    <input type="checkbox" class="tipeCheck" value="invoice" checked>
+                    INVOICE
+                </label>
+            </div>
         </div>
         <br>
 
