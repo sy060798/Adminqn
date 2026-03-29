@@ -16,21 +16,23 @@ document.querySelectorAll('.tipeCheck').forEach(el => {
     el.addEventListener('change', applyFilter);
 });
 
-// 🔥 FIX ANTI LAG SAAT GANTI SHEET
+// 🔥 GANTI SHEET (FIX TOTAL)
 document.getElementById('sheetSelect').addEventListener('change', function(){
     if(!currentWorkbook) return;
 
     setStatus("🔄 Memuat sheet...");
 
-    // 🔥 RESET SEMUA FILTER (BIAR GA NYANGKUT)
+    // 🔥 RESET SEMUA FILTER (BIAR TIDAK NGUNCI)
     document.getElementById('tahunSelect').value = "";
     document.getElementById('kotaInput').value = "";
     document.getElementById('periodeInput').value = "";
 
-    // reload data hanya 1 sheet (ringan)
     processWorkbook(currentWorkbook, this.value);
 
-    applyFilter();
+    // 🔥 TAMPILKAN DATA LANGSUNG TANPA FILTER LAMA
+    renderTable(allData);
+
+    setStatus(`✅ Sheet dimuat (${allData.length} data)`);
 });
 
 // ==========================
@@ -96,7 +98,7 @@ function processWorkbook(workbook, selectedSheet){
     allData = [];
     let tahunSet = new Set();
 
-    if(!selectedSheet) return; // 🔥 jangan load semua sheet (anti lag)
+    if(!selectedSheet) return;
 
     const sheet = workbook.Sheets[selectedSheet];
 
@@ -127,18 +129,16 @@ function processWorkbook(workbook, selectedSheet){
         const bayarNum = parseNumber(pembayaran);
         const isProforma = selectedSheet.toLowerCase().includes("proforma");
 
+        // 🔥 FIX TOTAL (DPP + PPN)
         const ppnProforma = parseNumber(totalProforma);
         const ppnInvoice = parseNumber(totalInvoice);
 
         const totalProformaFix = ppnProforma ? dppNum + ppnProforma : 0;
         const totalInvoiceFix = ppnInvoice ? dppNum + ppnInvoice : 0;
 
-        // 🔥 AMBIL TAHUN (HANYA PROFORMA & INVOICE)
-        const sheetLower = selectedSheet.toLowerCase();
-        if(sheetLower.includes("proforma") || sheetLower.includes("invoice")){
-            const tahun = extractYear(periode);
-            if(tahun) tahunSet.add(tahun);
-        }
+        // 🔥 AMBIL TAHUN
+        const tahun = extractYear(periode);
+        if(tahun) tahunSet.add(tahun);
 
         allData.push({
             sheet: selectedSheet,
@@ -154,7 +154,7 @@ function processWorkbook(workbook, selectedSheet){
 
     });
 
-    // 🔥 UPDATE TAHUN (ringan)
+    // 🔥 UPDATE DROPDOWN TAHUN (TIDAK NGUNCI)
     const tahunSelect = document.getElementById('tahunSelect');
     tahunSelect.innerHTML = '<option value="">-- PILIH TAHUN --</option>';
 
