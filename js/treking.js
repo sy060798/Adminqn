@@ -58,16 +58,18 @@ function formatTanggal(val){
 }
 
 // ==========================
-// 🔥 AMBIL TAHUN DARI TEXT
+// 🔥 AMBIL TAHUN DARI PERIODE
 function extractYear(text){
-    const match = String(text).match(/\b(20\d{2})\b/);
-    return match ? match[1] : null;
+    const str = String(text);
+    const match = str.match(/20\d{2}/);
+    return match ? match[0] : null;
 }
 
 // ==========================
 function processWorkbook(workbook, selectedSheet){
 
     allData = [];
+    let tahunSet = new Set();
 
     const sheets = selectedSheet ? [selectedSheet] : workbook.SheetNames;
 
@@ -102,12 +104,16 @@ function processWorkbook(workbook, selectedSheet){
             const bayarNum = parseNumber(pembayaran);
             const isProforma = sheetName.toLowerCase().includes("proforma");
 
-            // 🔥 hitung total (DPP + PPN)
+            // 🔥 FIX TOTAL (DPP + PPN)
             const ppnProforma = parseNumber(totalProforma);
             const ppnInvoice = parseNumber(totalInvoice);
 
             const totalProformaFix = ppnProforma ? dppNum + ppnProforma : 0;
             const totalInvoiceFix = ppnInvoice ? dppNum + ppnInvoice : 0;
+
+            // 🔥 ambil tahun
+            const tahun = extractYear(periode);
+            if(tahun) tahunSet.add(tahun);
 
             allData.push({
                 sheet: sheetName,
@@ -125,23 +131,15 @@ function processWorkbook(workbook, selectedSheet){
 
     });
 
-    // ==========================
-    // 🔥 AUTO ISI DROPDOWN TAHUN
-    const tahunSet = new Set();
-
-    allData.forEach(d => {
-        const th = extractYear(d.periode);
-        if(th) tahunSet.add(th);
-    });
-
+    // 🔥 isi dropdown tahun
     const tahunSelect = document.getElementById('tahunSelect');
-    if(tahunSelect){
-        tahunSelect.innerHTML = '<option value="">-- PILIH TAHUN --</option>';
+    tahunSelect.innerHTML = '<option value="">-- PILIH TAHUN --</option>';
 
-        [...tahunSet].sort().forEach(th => {
-            tahunSelect.innerHTML += `<option value="${th}">${th}</option>`;
+    Array.from(tahunSet)
+        .sort()
+        .forEach(t => {
+            tahunSelect.innerHTML += `<option value="${t}">${t}</option>`;
         });
-    }
 
     console.log("DATA FINAL:", allData);
 }
@@ -162,9 +160,9 @@ function applyFilter(){
 
     const kotaKey = document.getElementById('kotaInput').value.toLowerCase();
     const periodeKey = document.getElementById('periodeInput').value.toLowerCase();
-    const tahunKey = document.getElementById('tahunSelect')?.value || "";
+    const tahunKey = document.getElementById('tahunSelect').value;
 
-    // 🔥 FILTER CHECKBOX
+    // 🔥 ambil checkbox
     const selectedTipe = Array.from(document.querySelectorAll('.tipeCheck:checked'))
         .map(el => el.value);
 
