@@ -3,21 +3,15 @@ let lastFiltered = [];
 let currentWorkbook = null;
 
 // ==========================
-// INIT EVENT
-// ==========================
 document.getElementById('upload').addEventListener('change', handleFile);
 document.getElementById('btnScan').addEventListener('click', applyFilter);
 document.getElementById('btnExport').addEventListener('click', exportExcel);
 
 // ==========================
-// STATUS
-// ==========================
 function setStatus(msg){
     document.getElementById('status').innerText = msg;
 }
 
-// ==========================
-// HANDLE FILE
 // ==========================
 function handleFile(e){
     const file = e.target.files[0];
@@ -47,15 +41,11 @@ function handleFile(e){
 }
 
 // ==========================
-// FORMAT ANGKA
-// ==========================
 function parseNumber(val){
     if(!val) return 0;
     return Number(String(val).replace(/[^0-9]/g,'')) || 0;
 }
 
-// ==========================
-// FORMAT TANGGAL
 // ==========================
 function formatTanggal(val){
     if(!val || val === 0) return "-";
@@ -67,8 +57,6 @@ function formatTanggal(val){
     return val;
 }
 
-// ==========================
-// PROSES DATA
 // ==========================
 function processWorkbook(workbook, selectedSheet){
 
@@ -87,13 +75,13 @@ function processWorkbook(workbook, selectedSheet){
 
         rows.forEach(row => {
 
-            const kota = row[3];        // D
-            const periode = row[4];     // E
-            const invoice = row[6];     // G
-            const dpp = row[9];         // J
+            const kota = row[3];
+            const periode = row[4];
+            const invoice = row[6];
+            const dpp = row[9];
 
-            const tglBayar = formatTanggal(row[13]); // N
-            const pembayaran = row[14];              // O
+            const tglBayar = formatTanggal(row[13]);
+            const pembayaran = row[14];
 
             if(!kota || !periode || !invoice) return;
             if(String(kota).toLowerCase() === "kota") return;
@@ -101,9 +89,8 @@ function processWorkbook(workbook, selectedSheet){
             const dppNum = parseNumber(dpp);
             if(dppNum === 0) return;
 
-            // ✅ TAMBAHAN PPN
-            const ppnAmount = dppNum * 0.11;
-            const dppPlusPpn = dppNum * 1.11;
+            // ✅ LANGSUNG INCLUDE PPN 11%
+            const dppFix = Math.round(dppNum * 1.11);
 
             const bayarNum = parseNumber(pembayaran);
 
@@ -112,9 +99,7 @@ function processWorkbook(workbook, selectedSheet){
                 kota: String(kota),
                 periode: String(periode),
                 invoice: String(invoice),
-                dpp: dppNum,
-                ppn: ppnAmount,
-                totalDppPpn: dppPlusPpn,
+                dpp: dppFix,
                 tglBayar: tglBayar,
                 pembayaran: bayarNum
             });
@@ -126,8 +111,6 @@ function processWorkbook(workbook, selectedSheet){
     console.log("DATA FINAL:", allData);
 }
 
-// ==========================
-// FILTER
 // ==========================
 function applyFilter(){
 
@@ -160,19 +143,13 @@ function applyFilter(){
 }
 
 // ==========================
-// RENDER TABLE
-// ==========================
 function renderTable(data){
 
     let html = "";
     let total = 0;
-    let totalPPN = 0;
-    let totalAll = 0;
 
     data.forEach(d=>{
         total += d.dpp;
-        totalPPN += d.ppn;
-        totalAll += d.totalDppPpn;
 
         html += `
         <tr>
@@ -180,24 +157,18 @@ function renderTable(data){
             <td>${d.periode}</td>
             <td>${d.invoice}</td>
             <td>${d.dpp.toLocaleString()}</td>
-            <td>${d.ppn.toLocaleString()}</td>
-            <td>${d.totalDppPpn.toLocaleString()}</td>
             <td>${d.tglBayar}</td>
             <td>${d.pembayaran.toLocaleString()}</td>
         </tr>`;
     });
 
     document.getElementById('result').innerHTML =
-        html || `<tr><td colspan="8" style="text-align:center;">Tidak ada data</td></tr>`;
+        html || `<tr><td colspan="6" style="text-align:center;">Tidak ada data</td></tr>`;
 
     document.getElementById('total').innerText =
-        "Total DPP: " + total.toLocaleString() +
-        " | Total PPN: " + totalPPN.toLocaleString() +
-        " | Grand Total: " + totalAll.toLocaleString();
+        "Total DPP (Include PPN 11%): " + total.toLocaleString();
 }
 
-// ==========================
-// EXPORT EXCEL
 // ==========================
 function exportExcel(){
 
@@ -210,9 +181,7 @@ function exportExcel(){
         Kota: d.kota,
         Periode: d.periode,
         Invoice: d.invoice,
-        DPP: d.dpp,
-        PPN_11: d.ppn,
-        Total_DPP_PPN: d.totalDppPpn,
+        DPP_Include_PPN: d.dpp,
         Tgl_Bayar: d.tglBayar,
         Pembayaran: d.pembayaran
     }));
