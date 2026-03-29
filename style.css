@@ -212,3 +212,65 @@ tr:hover {
   background: #f1f3f7;
   transition: 0.2s;
 }
+
+/* ===================== */
+/* FIX HALAMAN KEPOTONG */
+/* ===================== */
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; /* 🔥 cegah geser samping */
+}
+
+/* container utama */
+.container {
+  max-width: 1200px;
+  margin: auto;
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+}
+
+/* ===================== */
+/* FIX ELEMENT NYASAR (PENTING) */
+/* ===================== */
+
+/* matikan semua media liar */
+img, video, iframe {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* 🔥 kalau ada elemen aneh dari luar */
+body > *:not(.container):not(script) {
+  max-width: 100%;
+}
+
+/* ===================== */
+/* FIX TABLE BIAR GA KELUAR */
+/* ===================== */
+
+table {
+  width: 100%;
+  table-layout: fixed;
+  display: block;
+  overflow-x: auto; /* 🔥 kalau kepanjangan jadi scroll, bukan kepotong */
+}
+
+th, td {
+  white-space: nowrap;
+}
+
+/* ===================== */
+/* OPTIONAL: BIAR LEBIH RAPI */
+/* ===================== */
+
+h1 {
+  text-align: center;
+}
+
+input, select {
+  max-width: 200px;
+}
