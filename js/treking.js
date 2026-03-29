@@ -80,8 +80,8 @@ function processWorkbook(workbook, selectedSheet){
             const invoice = row[6];
 
             const dpp = row[9];
-            const totalProforma = row[10];
-            const totalInvoice = row[11];
+            const totalProforma = row[10]; // 👉 kemungkinan PPN
+            const totalInvoice = row[11];  // 👉 kemungkinan PPN
 
             const tglBayar = formatTanggal(row[13]);
             const pembayaran = row[14];
@@ -89,13 +89,18 @@ function processWorkbook(workbook, selectedSheet){
             if(!kota || !periode || !invoice) return;
             if(String(kota).toLowerCase() === "kota") return;
 
-            // ✅ DPP = nilai asli (tanpa PPN)
             const dppNum = parseNumber(dpp);
             if(dppNum === 0) return;
 
             const bayarNum = parseNumber(pembayaran);
-
             const isProforma = sheetName.toLowerCase().includes("proforma");
+
+            // 🔥 FIX UTAMA DI SINI
+            const ppnProforma = parseNumber(totalProforma);
+            const ppnInvoice = parseNumber(totalInvoice);
+
+            const totalProformaFix = ppnProforma ? dppNum + ppnProforma : 0;
+            const totalInvoiceFix = ppnInvoice ? dppNum + ppnInvoice : 0;
 
             allData.push({
                 sheet: sheetName,
@@ -103,8 +108,8 @@ function processWorkbook(workbook, selectedSheet){
                 periode: String(periode),
                 invoice: String(invoice),
                 dpp: dppNum,
-                totalProforma: isProforma ? parseNumber(totalProforma) : 0,
-                totalInvoice: !isProforma ? parseNumber(totalInvoice) : 0,
+                totalProforma: isProforma ? totalProformaFix : 0,
+                totalInvoice: !isProforma ? totalInvoiceFix : 0,
                 tglBayar: tglBayar,
                 pembayaran: bayarNum
             });
@@ -161,11 +166,11 @@ function renderTable(data){
             <td>${d.kota}</td>
             <td>${d.periode}</td>
             <td>${d.invoice}</td>
-            <td>${d.dpp.toLocaleString()}</td>
-            <td>${d.totalProforma ? d.totalProforma.toLocaleString() : '-'}</td>
-            <td>${d.totalInvoice ? d.totalInvoice.toLocaleString() : '-'}</td>
+            <td style="text-align:right">${d.dpp.toLocaleString()}</td>
+            <td style="text-align:right">${d.totalProforma ? d.totalProforma.toLocaleString() : '-'}</td>
+            <td style="text-align:right">${d.totalInvoice ? d.totalInvoice.toLocaleString() : '-'}</td>
             <td>${d.tglBayar}</td>
-            <td>${d.pembayaran.toLocaleString()}</td>
+            <td style="text-align:right">${d.pembayaran.toLocaleString()}</td>
         </tr>`;
     });
 
