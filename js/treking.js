@@ -3,18 +3,27 @@ let lastFiltered = [];
 let currentWorkbook = null;
 
 // ==========================
-// 🔥 EVENT
+// EVENT UTAMA
 document.getElementById('upload').addEventListener('change', handleFile);
 document.getElementById('btnScan').addEventListener('click', applyFilter);
 document.getElementById('btnExport').addEventListener('click', exportExcel);
 
-// 🔥 AUTO FILTER (tanpa klik scan)
+// 🔥 AUTO FILTER
 document.getElementById('tahunSelect').addEventListener('change', applyFilter);
 document.getElementById('kotaInput').addEventListener('input', applyFilter);
 document.getElementById('periodeInput').addEventListener('input', applyFilter);
 
 document.querySelectorAll('.tipeCheck').forEach(el => {
     el.addEventListener('change', applyFilter);
+});
+
+// 🔥 LOAD ULANG SAAT GANTI SHEET (BIAR TIDAK LAG)
+document.getElementById('sheetSelect').addEventListener('change', function(){
+    if(!currentWorkbook) return;
+
+    setStatus("🔄 Memuat sheet...");
+    processWorkbook(currentWorkbook, this.value);
+    applyFilter();
 });
 
 // ==========================
@@ -121,9 +130,12 @@ function processWorkbook(workbook, selectedSheet){
             const totalProformaFix = ppnProforma ? dppNum + ppnProforma : 0;
             const totalInvoiceFix = ppnInvoice ? dppNum + ppnInvoice : 0;
 
-            // 🔥 ambil tahun
-            const tahun = extractYear(periode);
-            if(tahun) tahunSet.add(tahun);
+            // 🔥 AMBIL TAHUN HANYA DARI PROFORMA & INVOICE
+            const sheetLower = sheetName.toLowerCase();
+            if(sheetLower.includes("proforma") || sheetLower.includes("invoice")){
+                const tahun = extractYear(periode);
+                if(tahun) tahunSet.add(tahun);
+            }
 
             allData.push({
                 sheet: sheetName,
@@ -141,9 +153,9 @@ function processWorkbook(workbook, selectedSheet){
 
     });
 
-    // 🔥 isi dropdown tahun
+    // 🔥 UPDATE DROPDOWN TAHUN (TIDAK RESET PILIHAN)
     const tahunSelect = document.getElementById('tahunSelect');
-    const currentVal = tahunSelect.value;
+    const selectedValue = tahunSelect.value;
 
     tahunSelect.innerHTML = '<option value="">-- PILIH TAHUN --</option>';
 
@@ -153,9 +165,8 @@ function processWorkbook(workbook, selectedSheet){
             tahunSelect.innerHTML += `<option value="${t}">${t}</option>`;
         });
 
-    // 🔥 balikin pilihan sebelumnya (biar gak reset)
-    if(currentVal){
-        tahunSelect.value = currentVal;
+    if(selectedValue){
+        tahunSelect.value = selectedValue;
     }
 
     console.log("DATA FINAL:", allData);
@@ -168,18 +179,10 @@ function applyFilter(){
 
     setStatus("🔄 Memfilter...");
 
-    const sheet = document.getElementById('sheetSelect').value;
-
-    // 🔥 hanya proses sekali (tidak reset terus)
-    if(allData.length === 0){
-        processWorkbook(currentWorkbook, sheet);
-    }
-
     const kotaKey = document.getElementById('kotaInput').value.toLowerCase();
     const periodeKey = document.getElementById('periodeInput').value.toLowerCase();
     const tahunKey = document.getElementById('tahunSelect').value;
 
-    // 🔥 checkbox
     const selectedTipe = Array.from(document.querySelectorAll('.tipeCheck:checked'))
         .map(el => el.value);
 
