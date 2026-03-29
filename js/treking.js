@@ -3,9 +3,19 @@ let lastFiltered = [];
 let currentWorkbook = null;
 
 // ==========================
+// 🔥 EVENT
 document.getElementById('upload').addEventListener('change', handleFile);
 document.getElementById('btnScan').addEventListener('click', applyFilter);
 document.getElementById('btnExport').addEventListener('click', exportExcel);
+
+// 🔥 AUTO FILTER (tanpa klik scan)
+document.getElementById('tahunSelect').addEventListener('change', applyFilter);
+document.getElementById('kotaInput').addEventListener('input', applyFilter);
+document.getElementById('periodeInput').addEventListener('input', applyFilter);
+
+document.querySelectorAll('.tipeCheck').forEach(el => {
+    el.addEventListener('change', applyFilter);
+});
 
 // ==========================
 function setStatus(msg){
@@ -58,7 +68,7 @@ function formatTanggal(val){
 }
 
 // ==========================
-// 🔥 AMBIL TAHUN DARI PERIODE
+// 🔥 AMBIL TAHUN
 function extractYear(text){
     const str = String(text);
     const match = str.match(/20\d{2}/);
@@ -133,6 +143,8 @@ function processWorkbook(workbook, selectedSheet){
 
     // 🔥 isi dropdown tahun
     const tahunSelect = document.getElementById('tahunSelect');
+    const currentVal = tahunSelect.value;
+
     tahunSelect.innerHTML = '<option value="">-- PILIH TAHUN --</option>';
 
     Array.from(tahunSet)
@@ -141,28 +153,33 @@ function processWorkbook(workbook, selectedSheet){
             tahunSelect.innerHTML += `<option value="${t}">${t}</option>`;
         });
 
+    // 🔥 balikin pilihan sebelumnya (biar gak reset)
+    if(currentVal){
+        tahunSelect.value = currentVal;
+    }
+
     console.log("DATA FINAL:", allData);
 }
 
 // ==========================
 function applyFilter(){
 
+    if(!currentWorkbook) return;
+
+    setStatus("🔄 Memfilter...");
+
     const sheet = document.getElementById('sheetSelect').value;
 
-    if(!currentWorkbook){
-        alert("Upload file dulu!");
-        return;
+    // 🔥 hanya proses sekali (tidak reset terus)
+    if(allData.length === 0){
+        processWorkbook(currentWorkbook, sheet);
     }
-
-    setStatus("🔍 Scan data...");
-
-    processWorkbook(currentWorkbook, sheet);
 
     const kotaKey = document.getElementById('kotaInput').value.toLowerCase();
     const periodeKey = document.getElementById('periodeInput').value.toLowerCase();
     const tahunKey = document.getElementById('tahunSelect').value;
 
-    // 🔥 ambil checkbox
+    // 🔥 checkbox
     const selectedTipe = Array.from(document.querySelectorAll('.tipeCheck:checked'))
         .map(el => el.value);
 
