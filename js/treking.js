@@ -37,7 +37,6 @@ function handleFile(e){
 
         currentWorkbook = workbook;
 
-        // sheet list
         const sheetSelect = document.getElementById('sheetSelect');
         sheetSelect.innerHTML = '<option value="">-- PILIH SHEET --</option>';
 
@@ -45,7 +44,6 @@ function handleFile(e){
             sheetSelect.innerHTML += `<option value="${name}">${name}</option>`;
         });
 
-        // tahun otomatis
         extractYears(workbook);
 
         setStatus("✅ File siap di scan");
@@ -55,18 +53,16 @@ function handleFile(e){
 }
 
 // ==========================
-// 🔥 FIX ANGKA (TIDAK KURANG NOL)
+// FIX ANGKA
 function parseNumber(val){
     if(!val) return 0;
-
     val = String(val).trim();
     val = val.replace(/\./g, '').replace(/,/g, '');
-
     return Number(val) || 0;
 }
 
 // ==========================
-// 💰 FORMAT RUPIAH
+// FORMAT RP
 function formatRupiah(num){
     if(!num) return "-";
     return "Rp " + num.toLocaleString("id-ID");
@@ -84,7 +80,6 @@ function formatTanggal(val){
 }
 
 // ==========================
-// 🔥 AMBIL TAHUN DARI EXCEL
 function extractYears(workbook){
     let years = new Set();
 
@@ -125,7 +120,6 @@ function processWorkbook(workbook, selectedSheet){
 
     sheets.forEach(sheetName => {
 
-        // 🔥 hanya ambil PROFORMA & INVOICE
         const lower = sheetName.toLowerCase();
         if(!lower.includes("proforma") && !lower.includes("invoice")) return;
 
@@ -143,8 +137,7 @@ function processWorkbook(workbook, selectedSheet){
             const invoice = row[6];
 
             const dpp = row[9];
-            const totalProforma = row[10];
-            const totalInvoice = row[11];
+            const totalProforma = row[10]; // ❌ jangan diubah
 
             const tglBayar = formatTanggal(row[13]);
             const pembayaran = row[14];
@@ -152,7 +145,6 @@ function processWorkbook(workbook, selectedSheet){
             if(!kota || !periode || !invoice) return;
             if(String(kota).toLowerCase() === "kota") return;
 
-            // 🔥 HAPUS DUPLIKAT INVOICE
             if(seenInvoice.has(invoice)) return;
             seenInvoice.add(invoice);
 
@@ -163,9 +155,11 @@ function processWorkbook(workbook, selectedSheet){
 
             const isProforma = lower.includes("proforma");
 
-            // 🔥 FIX PERFORMA (JANGAN TAMBAH DPP LAGI)
-            const totalProformaFix = parseNumber(totalProforma);
-            const totalInvoiceFix = parseNumber(totalInvoice);
+            // ==========================
+            // 🔥 FIX TOTAL INVOICE (AMBIL PPN LALU JUMLAHKAN)
+            const ppn = parseNumber(row[11] || row[12] || 0);
+            const totalInvoiceFix = dppNum + ppn;
+            // ==========================
 
             allData.push({
                 sheet: sheetName,
@@ -173,7 +167,7 @@ function processWorkbook(workbook, selectedSheet){
                 periode: String(periode),
                 invoice: String(invoice),
                 dpp: dppNum,
-                totalProforma: isProforma ? totalProformaFix : 0,
+                totalProforma: isProforma ? parseNumber(totalProforma) : 0,
                 totalInvoice: !isProforma ? totalInvoiceFix : 0,
                 tglBayar: tglBayar,
                 pembayaran: bayarNum
