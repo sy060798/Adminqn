@@ -7,35 +7,11 @@ document.getElementById('upload').addEventListener('change', handleFile);
 document.getElementById('btnScan').addEventListener('click', applyFilter);
 document.getElementById('btnExport').addEventListener('click', exportExcel);
 
-// 🔥 AUTO FILTER
-document.getElementById('tahunSelect').addEventListener('change', applyFilter);
-document.getElementById('kotaInput').addEventListener('input', applyFilter);
-document.getElementById('periodeInput').addEventListener('input', applyFilter);
-
-document.querySelectorAll('.tipeCheck').forEach(el => {
-    el.addEventListener('change', applyFilter);
-});
-
-// 🔥 GANTI SHEET (RESET TOTAL)
-document.getElementById('sheetSelect').addEventListener('change', function(){
-    if(!currentWorkbook) return;
-
-    setStatus("🔄 Memuat sheet...");
-
-    // 🔥 RESET FILTER (BIAR TIDAK NGUNCI)
-    document.getElementById('tahunSelect').value = "";
-    document.getElementById('kotaInput').value = "";
-    document.getElementById('periodeInput').value = "";
-
-    // 🔥 DEFAULT CHECKBOX = AKTIF SEMUA
-    document.querySelectorAll('.tipeCheck').forEach(el => el.checked = true);
-
-    processWorkbook(currentWorkbook, this.value);
-
-    // tampilkan semua data
-    renderTable(allData);
-
-    setStatus(`✅ Sheet dimuat (${allData.length} data)`);
+// 🔥 AUTO FILTER (REALTIME TANPA SCAN)
+document.getElementById('sheetSelect').addEventListener('change', autoFilter);
+document.getElementById('tahunSelect').addEventListener('change', autoFilter);
+document.querySelectorAll('.tipeCheck').forEach(cb => {
+    cb.addEventListener('change', autoFilter);
 });
 
 // ==========================
@@ -65,10 +41,44 @@ function handleFile(e){
             sheetSelect.innerHTML += `<option value="${name}">${name}</option>`;
         });
 
+        // 🔥 isi tahun
+        extractYears(workbook);
+
         setStatus("✅ File siap di scan");
     };
 
     reader.readAsArrayBuffer(file);
+}
+
+// ==========================
+function extractYears(workbook){
+
+    const tahunSet = new Set();
+
+    workbook.SheetNames.forEach(sheetName=>{
+        const sheet = workbook.Sheets[sheetName];
+
+        const rows = XLSX.utils.sheet_to_json(sheet, {
+            header:1,
+            defval:""
+        });
+
+        rows.forEach(row=>{
+            const periode = String(row[4] || "");
+
+            const match = periode.match(/\b(20\d{2})\b/);
+            if(match){
+                tahunSet.add(match[1]);
+            }
+        });
+    });
+
+    const tahunSelect = document.getElementById('tahunSelect');
+    tahunSelect.innerHTML = '<option value="">-- PILIH TAHUN --</option>';
+
+    [...tahunSet].sort().forEach(t=>{
+        tahunSelect.innerHTML += `<option value="${t}">${t}</option>`;
+    });
 }
 
 // ==========================
@@ -89,116 +99,125 @@ function formatTanggal(val){
 }
 
 // ==========================
-function extractYear(text){
-    const str = String(text);
-    const match = str.match(/20\d{2}/);
-    return match ? match[0] : null;
-}
-
-// ==========================
 function processWorkbook(workbook, selectedSheet){
 
     allData = [];
-    let tahunSet = new Set();
 
-    if(!selectedSheet) return;
+    const sheets = selectedSheet ? [selectedSheet] : workbook.SheetNames;
 
-    const sheet = workbook.Sheets[selectedSheet];
+    sheets.forEach(sheetName => {
 
-    const rows = XLSX.utils.sheet_to_json(sheet, {
-        header: 1,
-        defval: ""
-    });
+        const sheet = workbook.Sheets[sheetName];
 
-    rows.forEach(row => {
+        const rows = XLSX.utils.sheet_to_json(sheet, {
+            header: 1,
+            defval: ""
+        });
 
-        const kota = row[3];
-        const periode = row[4];
-        const invoice = row[6];
+        rows.forEach(row => {
 
-        const dpp = row[9];
-        const totalProforma = row[10];
-        const totalInvoice = row[11];
+            const kota = row[3];
+            const periode = row[4];
+            const invoice = row[6];
 
-        const tglBayar = formatTanggal(row[13]);
-        const pembayaran = row[14];
+            const dpp = row[9];
+            const totalProforma = row[10];
+            const totalInvoice = row[11];
 
-        if(!kota || !periode || !invoice) return;
-        if(String(kota).toLowerCase() === "kota") return;
+            const tglBayar = formatTanggal(row[13]);
+            const pembayaran = row[14];
 
-        const dppNum = parseNumber(dpp);
-        if(dppNum === 0) return;
+            if(!kota || !periode || !invoice) return;
+            if(String(kota).toLowerCase() === "kota") return;
 
-        const bayarNum = parseNumber(pembayaran);
-        const isProforma = selectedSheet.toLowerCase().includes("proforma");
+            const dppNum = parseNumber(dpp);
+            if(dppNum === 0) return;
 
-        // 🔥 FIX TOTAL
-        const ppnProforma = parseNumber(totalProforma);
-        const ppnInvoice = parseNumber(totalInvoice);
+            const bayarNum = parseNumber(pembayaran);
 
-        const totalProformaFix = ppnProforma ? dppNum + ppnProforma : 0;
-        const totalInvoiceFix = ppnInvoice ? dppNum + ppnInvoice : 0;
+            const sheetLower = sheetName.toLowerCase();
+            const isProforma = sheetLower.includes("proforma");
+            const isInvoice = sheetLower.includes("invoice");
 
-        // 🔥 AMBIL TAHUN
-        const tahun = extractYear(periode);
-        if(tahun) tahunSet.add(tahun);
+            const ppnProforma = parseNumber(totalProforma);
+            const ppnInvoice = parseNumber(totalInvoice);
 
-        allData.push({
-            sheet: selectedSheet,
-            kota: String(kota),
-            periode: String(periode),
-            invoice: String(invoice),
-            dpp: dppNum,
-            totalProforma: isProforma ? totalProformaFix : 0,
-            totalInvoice: !isProforma ? totalInvoiceFix : 0,
-            tglBayar: tglBayar,
-            pembayaran: bayarNum
+            const totalProformaFix = ppnProforma ? dppNum + ppnProforma : 0;
+            const totalInvoiceFix = ppnInvoice ? dppNum + ppnInvoice : 0;
+
+            allData.push({
+                sheet: sheetName,
+                kota: String(kota),
+                periode: String(periode),
+                invoice: String(invoice),
+                dpp: dppNum,
+                totalProforma: isProforma ? totalProformaFix : 0,
+                totalInvoice: isInvoice ? totalInvoiceFix : 0,
+                tglBayar: tglBayar,
+                pembayaran: bayarNum
+            });
+
         });
 
     });
-
-    // 🔥 UPDATE TAHUN (TIDAK NGUNCI)
-    const tahunSelect = document.getElementById('tahunSelect');
-    tahunSelect.innerHTML = '<option value="">-- PILIH TAHUN --</option>';
-
-    Array.from(tahunSet)
-        .sort((a,b)=>b-a)
-        .forEach(t => {
-            tahunSelect.innerHTML += `<option value="${t}">${t}</option>`;
-        });
 }
 
 // ==========================
-function applyFilter(){
-
+function autoFilter(){
     if(!currentWorkbook) return;
+
+    const sheet = document.getElementById('sheetSelect').value;
+
+    processWorkbook(currentWorkbook, sheet);
+
+    applyFilter(true); // 🔥 tanpa scan ulang berat
+}
+
+// ==========================
+function applyFilter(isAuto = false){
+
+    if(!currentWorkbook){
+        alert("Upload file dulu!");
+        return;
+    }
+
+    if(!isAuto){
+        setStatus("🔍 Scan data...");
+    }
 
     const kotaKey = document.getElementById('kotaInput').value.toLowerCase();
     const periodeKey = document.getElementById('periodeInput').value.toLowerCase();
-    const tahunKey = document.getElementById('tahunSelect').value;
+    const tahun = document.getElementById('tahunSelect').value;
 
-    const selectedTipe = Array.from(document.querySelectorAll('.tipeCheck:checked'))
+    // 🔥 checkbox
+    const tipeChecked = Array.from(document.querySelectorAll('.tipeCheck:checked'))
         .map(el => el.value);
 
     const filtered = allData.filter(d => {
 
-        // 🔥 FIX INDEPENDEN CHECKBOX
-        let matchTipe = true;
+        // 🔥 filter kota
+        if(kotaKey && !d.kota.toLowerCase().includes(kotaKey)) return false;
 
-        if(selectedTipe.length > 0){
-            matchTipe =
-                (selectedTipe.includes("proforma") && d.totalProforma > 0) ||
-                (selectedTipe.includes("invoice") && d.totalInvoice > 0);
+        // 🔥 filter periode
+        if(periodeKey && !d.periode.toLowerCase().includes(periodeKey)) return false;
+
+        // 🔥 filter tahun (HANYA JIKA DIPILIH)
+        if(tahun){
+            if(!d.periode.includes(tahun)) return false;
         }
 
-        const tahunData = extractYear(d.periode);
+        // 🔥 filter tipe (HANYA JIKA ADA YANG DICENTANG)
+        if(tipeChecked.length > 0){
+            const isProforma = d.totalProforma > 0;
+            const isInvoice = d.totalInvoice > 0;
 
-        return (
-            (!kotaKey || d.kota.toLowerCase().includes(kotaKey)) &&
-            (!periodeKey || d.periode.toLowerCase().includes(periodeKey)) &&
-            (!tahunKey || tahunData === tahunKey) &&
-            matchTipe
-        );
+            if(tipeChecked.includes("proforma") && isProforma) return true;
+            if(tipeChecked.includes("invoice") && isInvoice) return true;
+
+            return false;
+        }
+
+        return true;
     });
 
     lastFiltered = filtered;
